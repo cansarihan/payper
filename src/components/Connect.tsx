@@ -32,6 +32,50 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
       .catch(() => {});
   }, []);
 
+  /**
+   * WebAuthn, both halves.
+   *
+   * `register` when the device has no credential for this site yet, `login`
+   * when it does — the browser decides by what the authenticator offers, so a
+   * failed login falls through to registration rather than dead-ending.
+   */
+  async function withPasskey(mode: "login" | "register") {
+    setBusy("passkey");
+    setError(null);
+    try {
+      const { startAuthentication, startRegistration } = await import("@simplewebauthn/browser");
+      const opts = await post({ step: `${mode}-options`, label: name, role });
+      const response =
+        mode === "register"
+          ? await startRegistration({ optionsJSON: opts.options })
+          : await startAuthentication({ optionsJSON: opts.options });
+      const done = await post({ step: mode, nonce: opts.nonce, response, name, role });
+      onSignedIn(done.session);
+    } catch (e) {
+      const message = (e as Error).message;
+      // No credential on this device: registering is the useful next step, not
+      // an error the person has to interpret.
+      if (mode === "login" && /not recognised|No passkey|NotAllowed/i.test(message)) {
+        setBusy(null);
+        return void withPasskey("register");
+      }
+      setError(message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function post(body: Record<string, unknown>) {
+    const res = await fetch("/api/auth/passkey", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const json = (await res.json()) as Record<string, unknown> & { ok: boolean; error?: string };
+    if (!json.ok) throw new Error(json.error ?? "The passkey step failed");
+    return json as never as { options: never; nonce: string; session: Session };
+  }
+
   async function withDemo() {
     setBusy("demo");
     setError(null);
@@ -215,6 +259,39 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
           >
             {busy === "wallet" ? `${d.loading}…` : lang === "tr" ? "Cüzdan bağla" : "Connect a wallet"}
           </button>
+
+          <button
+            onClick={() => void withPasskey("login")}
+            disabled={busy !== null}
+            style={{
+              border: "1px solid rgba(61,226,156,.4)",
+              borderRadius: 999,
+              padding: "14px 24px",
+              background: "rgba(61,226,156,.08)",
+              color: C.mint,
+              fontSize: 14.5,
+              fontWeight: 700,
+            }}
+          >
+            {busy === "passkey"
+              ? `${d.loading}…`
+              : lang === "tr"
+                ? "Passkey ile gir"
+                : "Use a passkey"}
+          </button>
+          <span
+            style={{
+              fontSize: 11,
+              opacity: 0.45,
+              lineHeight: 1.5,
+              fontFamily: FONT.mono,
+              textAlign: "center",
+            }}
+          >
+            {lang === "tr"
+              ? "Face ID, Touch ID ya da cihaz PIN'i. Seed phrase yok; cüzdanı sonradan bağlayabilirsin."
+              : "Face ID, Touch ID or a device PIN. No seed phrase — link a wallet afterwards."}
+          </span>
 
           {demoAllowed && (
             <>

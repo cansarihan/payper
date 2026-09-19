@@ -26,9 +26,9 @@ export function challengeMessage(address: string, nonce: string): string {
   return [
     "Payper sign-in verification",
     "",
-    `Adres: ${address}`,
-    `Tek kullanımlık kod: ${nonce}`,
-    `Zaman: ${new Date().toISOString()}`,
+    `Address: ${address}`,
+    `One-time code: ${nonce}`,
+    `Time: ${new Date().toISOString()}`,
     "",
     "This signature only proves that you own the wallet.",
     "No asset is transferred and no transaction is authorised.",

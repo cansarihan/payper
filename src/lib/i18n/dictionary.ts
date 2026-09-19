@@ -52,6 +52,20 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  walletTitle: string;
+  walletLead: string;
+  signerLabel: string;
+  methods: Readonly<Record<"wallet" | "passkey" | "demo", string>>;
+  sessionAddress: string;
+  roleLabel: string;
+  passkeyNote: string;
+  linkedWallet: string;
+  linkLead: string;
+  linkCta: string;
+  unlinkCta: string;
+  walletName: string;
+  address: string;
+  linkedAt: string;
   statsLabel: string;
   statsTitle: string;
   statsLead: string;
@@ -275,6 +289,27 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  walletTitle: "Identity and wallet",
+  walletLead:
+    "Who this session signs as, and which browser wallet has been proved alongside it. The two are separate on purpose.",
+  signerLabel: "How you signed in",
+  methods: {
+    wallet: "a browser wallet signed a message",
+    passkey: "a passkey on this device",
+    demo: "a server-held key, for the stage",
+  },
+  sessionAddress: "Session address",
+  roleLabel: "Role",
+  passkeyNote:
+    "A passkey proves who is asking; it cannot sign Soroban XDR on its own. The address above is derived from the credential and its key lives on the server. Linking a browser wallet gives this session a key you hold.",
+  linkedWallet: "Linked wallet",
+  linkLead:
+    "The proof is the same challenge and signature as signing in, so a wallet cannot be attached by claiming an address.",
+  linkCta: "Link a wallet",
+  unlinkCta: "Detach",
+  walletName: "Wallet",
+  address: "Address",
+  linkedAt: "Linked",
   statsLabel: "STATISTICS",
   statsTitle: "The book, measured",
   statsLead:
@@ -572,6 +607,27 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  walletTitle: "Kimlik ve cüzdan",
+  walletLead:
+    "Bu oturumun kim olarak imzaladığı ve yanında hangi tarayıcı cüzdanının kanıtlandığı. İkisi bilerek ayrı.",
+  signerLabel: "Nasıl giriş yaptın",
+  methods: {
+    wallet: "tarayıcı cüzdanı bir metin imzaladı",
+    passkey: "bu cihazdaki passkey",
+    demo: "sahne için sunucuda tutulan anahtar",
+  },
+  sessionAddress: "Oturum adresi",
+  roleLabel: "Rol",
+  passkeyNote:
+    "Passkey kimin sorduğunu kanıtlar; Soroban XDR'ı tek başına imzalayamaz. Yukarıdaki adres kimlik bilgisinden türetiliyor ve anahtarı sunucuda duruyor. Tarayıcı cüzdanı bağlamak bu oturuma senin tuttuğun bir anahtar kazandırır.",
+  linkedWallet: "Bağlı cüzdan",
+  linkLead:
+    "Kanıt, girişteki ile aynı challenge ve imza. Yani bir cüzdan, adresi beyan ederek bağlanamıyor.",
+  linkCta: "Cüzdan bağla",
+  unlinkCta: "Bağlantıyı kes",
+  walletName: "Cüzdan",
+  address: "Adres",
+  linkedAt: "Bağlandı",
   statsLabel: "İSTATİSTİK",
   statsTitle: "Defterin ölçümü",
   statsLead:

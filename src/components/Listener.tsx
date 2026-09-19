@@ -160,6 +160,24 @@ export function Listener({ lang }: { lang: Lang }) {
             {status.message}
           </span>
         )}
+
+        {status?.diag && !heard && (
+          <span
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 10.5,
+              color: "rgba(255,255,255,.4)",
+              textAlign: "center",
+              lineHeight: 1.6,
+            }}
+          >
+            {status.diag.sampleRate} Hz · {status.diag.contextState} · peak{" "}
+            {status.diag.peakDb} dB · floor {status.diag.floorDb} dB
+            <br />
+            {status.state}
+            {status.symbol !== null ? ` · symbol ${status.symbol}` : ""}
+          </span>
+        )}
       </div>
 
       <div style={{ display: "grid", gap: 10, justifyItems: "center" }}>

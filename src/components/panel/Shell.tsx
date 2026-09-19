@@ -7,7 +7,7 @@ import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
 
-export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats";
+export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats" | "wallet";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "pay", "board", "settle"];
 
 const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.green, C.mint, C.lime];
@@ -338,6 +338,7 @@ function AccountMenu({
       icon: "◎",
       bg: session ? C.mint : "rgba(245,165,36,.25)",
       fg: C.ink,
+      go: "wallet",
     },
     { label: d.acct[1][0], meta: d.acct[1][1], icon: "₺", bg: C.blue, fg: C.white },
     {

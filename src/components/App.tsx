@@ -16,6 +16,7 @@ import { Settle } from "@/components/panel/Settle";
 import { Stats } from "@/components/panel/Stats";
 import { Tour } from "@/components/panel/Tour";
 import { Upload } from "@/components/panel/Upload";
+import { Wallet } from "@/components/panel/Wallet";
 import { C } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
@@ -127,6 +128,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "wallet" ? (
+            <Wallet lang={lang} state={state} session={session} onSession={setSession} />
           ) : screen === "stats" ? (
             <Stats lang={lang} state={state} onGo={setScreen} />
           ) : screen === "invoices" ? (

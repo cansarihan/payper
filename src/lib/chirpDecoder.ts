@@ -41,10 +41,17 @@ const SYMBOLS = Array.from({ length: 16 }, (_, i) => i);
 /** Reads per symbol. Six gives the lock enough timing resolution. */
 const READS_PER_SYMBOL = 6;
 const READ_INTERVAL_MS = CHIRP_MS / READS_PER_SYMBOL;
-/** A read this quiet is treated as silence rather than a symbol. */
-const MIN_MAGNITUDE = 24;
-/** A tone must beat the runner-up by this much to be trusted. */
-const MIN_CONTRAST = 1.35;
+/**
+ * How far above the noise floor a tone has to sit, in dB.
+ *
+ * A fixed magnitude gate works on a laptop and fails on a phone, where the
+ * input chain lifts the whole spectrum and a quiet-but-clear tone still reads
+ * as loud. The floor is measured from the bins between the tones on every read,
+ * so the gate follows whatever the device is doing.
+ */
+const MIN_ABOVE_FLOOR = 6;
+/** A tone must also beat the runner-up tone by this much, in dB. */
+const MIN_CONTRAST_DB = 3;
 
 export interface DecodedFrame extends ChirpRequest {
   /** Fraction of slots that produced a confident read. */
@@ -59,6 +66,14 @@ export interface DecoderStatus {
   /** Payload symbols captured so far, once locked. */
   captured: number;
   message?: string;
+  /** What the audio chain is actually doing, so a silent failure is visible. */
+  diag?: {
+    sampleRate: number;
+    contextState: string;
+    /** Loudest tone bin and the measured floor, in dB. */
+    peakDb: number;
+    floorDb: number;
+  };
 }
 
 interface Read {
@@ -84,6 +99,27 @@ export class ChirpDecoder {
   ) {}
 
   async start(): Promise<void> {
+    // The context is created and resumed here, before the first await: iOS
+    // grants audio on a user gesture and does not carry that grant across a
+    // promise, so a context built after getUserMedia stays suspended and every
+    // spectrum read comes back as silence.
+    const AC =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AC) {
+      this.onStatus({
+        state: "error",
+        symbol: null,
+        level: 0,
+        captured: 0,
+        message: "This browser has no Web Audio.",
+      });
+      return;
+    }
+    const ctx = new AC();
+    this.ctx = ctx;
+    void ctx.resume();
+
     if (!navigator.mediaDevices?.getUserMedia) {
       this.onStatus({
         state: "error",
@@ -119,16 +155,22 @@ export class ChirpDecoder {
       return;
     }
 
-    const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new AC();
-    this.ctx = ctx;
+    // Resuming again after the grant: Safari can leave the context suspended
+    // while the permission sheet is up.
+    if (ctx.state !== "running") {
+      try {
+        await ctx.resume();
+      } catch {
+        /* reported through the diagnostics line rather than thrown */
+      }
+    }
 
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 4096;
     // Little smoothing: averaging across frames would blur symbol boundaries.
     analyser.smoothingTimeConstant = 0.1;
-    analyser.minDecibels = -100;
-    analyser.maxDecibels = -10;
+    analyser.minDecibels = -120;
+    analyser.maxDecibels = 0;
     this.analyser = analyser;
     this.spectrum = new Float32Array(new ArrayBuffer(analyser.frequencyBinCount * 4));
 
@@ -183,10 +225,27 @@ export class ChirpDecoder {
       }
     }
 
-    // dB are negative; shift into a 0..100 level for both the gate and the UI.
-    const level = Math.max(0, Math.min(100, bestDb + 100));
-    const contrast = (bestDb + 100) / Math.max(1, secondDb + 100);
-    const symbol = level >= MIN_MAGNITUDE && contrast >= MIN_CONTRAST ? best : null;
+    // The floor is read from the gaps between the tones, which carry no signal
+    // by construction. Comparing against it rather than against a constant is
+    // what lets the same code work on a laptop and on a phone whose input
+    // chain lifts the whole spectrum.
+    const floorDb = this.noiseFloor(spectrum);
+    const aboveFloor = bestDb - floorDb;
+    const contrast = bestDb - secondDb;
+    const symbol =
+      Number.isFinite(bestDb) && aboveFloor >= MIN_ABOVE_FLOOR && contrast >= MIN_CONTRAST_DB
+        ? best
+        : null;
+
+    // A 0..100 reading for the meter, scaled to how far above the floor the
+    // loudest tone sits rather than to an absolute level.
+    const level = Math.max(0, Math.min(100, aboveFloor * 4));
+    const diag = {
+      sampleRate: Math.round(this.ctx?.sampleRate ?? 0),
+      contextState: this.ctx?.state ?? "none",
+      peakDb: Math.round(bestDb),
+      floorDb: Math.round(floorDb),
+    };
 
     const at = performance.now();
     this.reads.push({ at, symbol, level });
@@ -198,10 +257,10 @@ export class ChirpDecoder {
       const lock = this.findPreamble();
       if (lock !== null) {
         this.lockedAt = lock;
-        this.onStatus({ state: "locked", symbol, level, captured: 0 });
+        this.onStatus({ state: "locked", symbol, level, captured: 0, diag });
         return;
       }
-      this.onStatus({ state: "listening", symbol, level, captured: 0 });
+      this.onStatus({ state: "listening", symbol, level, captured: 0, diag });
       return;
     }
 
@@ -210,7 +269,7 @@ export class ChirpDecoder {
     const captured = Math.min(needed, Math.floor(elapsed / CHIRP_MS));
 
     if (captured < needed) {
-      this.onStatus({ state: "decoding", symbol, level, captured });
+      this.onStatus({ state: "decoding", symbol, level, captured, diag });
       return;
     }
 
@@ -225,11 +284,31 @@ export class ChirpDecoder {
         level,
         captured: 0,
         message: "The frame did not verify — still listening",
+        diag,
       });
       return;
     }
-    this.onStatus({ state: "done", symbol, level, captured: needed });
+    this.onStatus({ state: "done", symbol, level, captured: needed, diag });
     this.onFrame(frame);
+  }
+
+  /**
+   * The median of the bins that sit between the tones.
+   *
+   * Tones are 150 Hz apart, so the midpoints carry nothing we transmit. The
+   * median rather than the mean, because a stray peak from the room should not
+   * drag the floor up and mute a real symbol.
+   */
+  private noiseFloor(spectrum: Float32Array): number {
+    const gaps: number[] = [];
+    for (let i = 0; i < this.bins.length - 1; i++) {
+      const mid = Math.round((this.bins[i] + this.bins[i + 1]) / 2);
+      const db = spectrum[mid];
+      if (Number.isFinite(db)) gaps.push(db);
+    }
+    if (gaps.length === 0) return -120;
+    gaps.sort((a, b) => a - b);
+    return gaps[Math.floor(gaps.length / 2)];
   }
 
   /**
