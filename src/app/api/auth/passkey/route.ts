@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as {
       name?: string;
       step: "register-options" | "register" | "login-options" | "login";
+      /** Allow the cross-device QR flow. Off by default; see below. */
+      anyDevice?: boolean;
       label?: string;
       role?: SessionRole;
       nonce?: string;
@@ -62,7 +64,17 @@ export async function POST(req: NextRequest) {
         userDisplayName: body.label?.trim() || "payper user",
         challenge: Buffer.from(challenge.nonce, "utf8"),
         attestationType: "none",
+        // Two minutes rather than the default one. The cross-device flow needs
+        // Bluetooth to pair and a phone to be unlocked, and a minute is not
+        // always enough for someone doing it for the first time.
+        timeout: 120_000,
         authenticatorSelection: {
+          // This device's own biometric, unless the caller asks otherwise.
+          // The product's promise is "like unlocking your phone", and the
+          // cross-device QR is a different, flakier thing wearing the same
+          // name — it needs Bluetooth on both ends and hangs when either is
+          // unavailable, which is a poor first impression to hand someone.
+          authenticatorAttachment: body.anyDevice ? undefined : "platform",
           residentKey: "preferred",
           userVerification: "preferred",
         },
@@ -121,6 +133,7 @@ export async function POST(req: NextRequest) {
       const options = await generateAuthenticationOptions({
         rpID,
         challenge: Buffer.from(challenge.nonce, "utf8"),
+        timeout: 120_000,
         userVerification: "preferred",
         allowCredentials: allPasskeys().map((p) => ({ id: p.credentialId })),
       });

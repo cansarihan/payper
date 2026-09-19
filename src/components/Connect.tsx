@@ -40,12 +40,12 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
    * when it does — the browser decides by what the authenticator offers, so a
    * failed login falls through to registration rather than dead-ending.
    */
-  async function withPasskey(mode: "login" | "register") {
+  async function withPasskey(mode: "login" | "register", anyDevice = false) {
     setBusy("passkey");
     setError(null);
     try {
       const { startAuthentication, startRegistration } = await import("@simplewebauthn/browser");
-      const opts = await post({ step: `${mode}-options`, label: name, role });
+      const opts = await post({ step: `${mode}-options`, label: name, role, anyDevice });
       const response =
         mode === "register"
           ? await startRegistration({ optionsJSON: opts.options })
@@ -60,7 +60,19 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
         setBusy(null);
         return void withPasskey("register");
       }
-      setError(message);
+      // No built-in biometric here. Fall back to the cross-device flow, which
+      // is what the QR is for, rather than leaving someone with nothing.
+      if (!anyDevice && /NotSupported|no available authenticator|not supported/i.test(message)) {
+        setBusy(null);
+        return void withPasskey(mode, true);
+      }
+      setError(
+        /timed out|NotAllowed/i.test(message)
+          ? lang === "tr"
+            ? "Passkey isteği zaman aşımına uğradı ya da iptal edildi. Tekrar dene."
+            : "The passkey request timed out or was dismissed. Try again."
+          : message,
+      );
     } finally {
       setBusy(null);
     }
