@@ -42,10 +42,11 @@
     RISE IN × STELLAR PRO HACKATHON 2026 · GENESIS TRACK
   </div>
   <h1>payper<br><span class="mint">teknik özet ve teslim dosyası</span></h1>
-  <p>Türkiye'nin işletme sermayesi, her yerden fonlanabilir. Alıcısı zincir üstünde onaylamış bir
+  <p>Tedarikçinin işletme sermayesi, her yerden fonlanabilir. Alıcısı zincir üstünde onaylamış bir
   e-fatura, USDC tutan herkesin saniyeler içinde ve elli dolardan başlayarak fonlayabildiği bir
-  enstrümana dönüşüyor. Tedarikçiye aynı gün lira geçiyor; fonlayıcı hiçbir Türk bankasına
-  dokunmuyor.</p>
+  enstrümana dönüşüyor. Tedarikçiye aynı gün kendi para biriminde ödeniyor; fonlayıcı o ülkede
+  hesap açmıyor. Mekanizma her ülkede aynı; değişen şey belge standardı, fatura kimliği ve anchor.
+  İlk koridor Türkiye ve testnet'te çalışan da o.</p>
   <div class="meta">
     <span>payper.live</span>
     <span>github.com/cansarihan/payper</span>
@@ -134,12 +135,12 @@ büyüklüğünün altında altyapı hiç yok.</p>
 </table>
 
 <div class="kpi">
-  <div><b>2.262</b><span>satır Rust · 9 dosya</span></div>
-  <div><b>15.416</b><span>satır TS/TSX · 82 dosya</span></div>
-  <div><b>22</b><span>kontrat testi</span></div>
-  <div><b>20</b><span>API route</span></div>
-  <div><b>14</b><span>panel ekranı</span></div>
-  <div><b>7</b><span>SEP standardı</span></div>
+  <div><b>2.475</b><span>satır Rust · 9 dosya</span></div>
+  <div><b>17.392</b><span>satır TS/TSX · 89 dosya</span></div>
+  <div><b>29</b><span>kontrat testi</span></div>
+  <div><b>22</b><span>API route</span></div>
+  <div><b>15</b><span>panel ekranı</span></div>
+  <div><b>9</b><span>SEP standardı</span></div>
 </div>
 <h2 class="page">3 · Teknik dokümantasyon</h2>
 
@@ -201,7 +202,8 @@ büyüklüğünün altında altyapı hiç yok.</p>
   Üç depolama katmanı da kullanılıyor: <code>instance</code> yapılandırma, <code>persistent</code> ETTN
   kaydı (TTL maksimuma çekilir), <code>temporary</code> teklif kilidi (kendiliğinden düşer)</td></tr>
   <tr><td><b>DeFindex</b></td><td>Hazine, kendi factory'leri üzerinden açılmış bir vault. Katkı vault
-  payına dönüşüyor, ödeme payı yakıyor</td></tr>
+  payına dönüşüyor, ödeme payı yakıyor. Kasanın wasm hash'i DeFindex'in yayımladığı hash ile
+  bayt bayt aynı — entegrasyonun kanıtı anlatı değil, kriptografik</td></tr>
   <tr><td><b>Reflector</b> · SEP-40</td><td>Kur beslemesi bu oracle arayüzüyle, yapılandırılabilir bir
   adresten okunuyor</td></tr>
   <tr><td><b>SEP-1</b></td><td>Anchor keşfi. Tüm uç noktalar çalışma anında okunuyor</td></tr>
@@ -210,8 +212,30 @@ büyüklüğünün altında altyapı hiç yok.</p>
   <tr><td><b>SEP-12</b></td><td>Müşteri kaydı</td></tr>
   <tr><td><b>SEP-38</b></td><td>Kesin teklif — gösterilen ödeme, ödenen ödeme olsun diye</td></tr>
   <tr><td><b>SEP-7</b></td><td>QR'daki ödeme URI'si; tonların taşıdığı isteği herhangi bir cüzdan okuyabilsin</td></tr>
+  <tr><td><b>SEP-41</b></td><td>Hazine pozisyonunun kendisi bir SEP-41 token — DeFindex vault payı.
+  Tam arayüz: <code>transfer</code>, <code>transfer_from</code>, <code>approve</code>,
+  <code>allowance</code>, <code>balance</code>, <code>burn</code>, <code>burn_from</code>,
+  <code>name</code>, <code>symbol</code>, <code>decimals</code>, <code>total_supply</code></td></tr>
   <tr><td><b>SEP-53</b></td><td>Cüzdan girişi için imzalı mesajlar; spec'in kendi test vektörleriyle doğrulanıyor</td></tr>
 </table>
+
+<h3>Devredilebilir alacak · tokenizasyonun somut hâli</h3>
+<p>Fonlayan kişi faturada oransal bir hak tutuyor ve bu hak vade dolmadan başkasına geçebiliyor.
+Kontrat üç fonksiyon veriyor: <code>claim_of(invoice_id, holder)</code> hakkı okuyor,
+<code>transfer_claim(invoice_id, from, to, amount)</code> devrediyor, <code>repay()</code> ise
+dağıtımı devirden <i>sonraki</i> deftere göre yapıyor. Devir yalnızca fatura hâlâ açıkken
+(<code>Acknowledged</code> veya <code>Funded</code>) mümkün; kapanmış bir faturanın hakkı taşınamıyor.
+Defter devirde en eski kayıttan başlayarak yeniden kuruluyor, böylece toplam hiçbir zaman değişmiyor —
+<code>transferring_never_changes_the_total</code> ve <code>repayment_follows_the_claim</code> testleri
+tam olarak bunu tutuyor.</p>
+<div class="box">
+  <h4>Neden ayrı bir token basmıyoruz</h4>
+  Her fatura için ayrı bir SEP-41 token basmak mümkün ama fazladan bir kontrat deploy'u ve fazladan
+  bir güven varsayımı getiriyor. Hak zaten fatura kontratının defterinde duruyor; devir de orada
+  gerçekleşiyor. Tokenizasyonun işlevi — hakkın bölünebilir, devredilebilir ve zincirde
+  doğrulanabilir olması — token basmadan da sağlanıyor. Basmadığımızı gizlemiyoruz, yaptığımızın
+  ne olduğunu söylüyoruz.
+</div>
 
 <h3>Kullanılan teknoloji yığını</h3>
 <p>
@@ -291,14 +315,38 @@ ekleniyor, sonuç taban ve tavana kıstırılıyor.</p>
   <tr><td><b>Next.js route handler yalıtımı</b></td><td>Route handler'lar ayrı bundle'lanıyor; modül
   düzeyindeki durum paylaşılmıyor. Challenge deposu, rate limiter ve oturum sırrı
   <code>globalThis</code> üzerinde tutuluyor — bu yüzden dağıtım tek kalıcı süreç gerektiriyor.</td></tr>
+  <tr><td><b>Passkey RP ID'si</b></td><td>Tünelin arkasında RP ID <code>localhost</code> çözülüyordu ve
+  tarayıcı kaydı reddediyordu. RP ID artık <code>PUBLIC_SITE_URL</code> ve
+  <code>x-forwarded-host</code> üzerinden adres çubuğundaki alan adına eşitleniyor. Windows'ta
+  tarayıcı QR/Bluetooth ile telefon arıyordu; <code>authenticatorAttachment: "platform"</code> ile
+  cihazın kendi doğrulayıcısına sabitlendi.</td></tr>
+  <tr><td><b>Passkey hesabının zincirde var olmaması</b></td><td>Passkey'den türeyen adres fonlanmamış
+  olduğu için stellar.expert "Account does not exist" diyordu. Giriş ve kayıt artık hesabı arka planda
+  friendbot ile fonlayıp USDC trustline'ını açıyor; kullanıcı hiçbir şeye basmıyor.</td></tr>
+  <tr><td><b>Demo durumunun dağıtımda kaybolması</b></td><td>Ödeme hesapları ve passkey kayıtları
+  bellekte duruyordu, her yeniden başlatmada sıfırlanıyordu. Artık <code>PAYPER_DATA_DIR</code>
+  altında JSON'a yazılıyor; yazma geçici dosya + <code>rename</code> ile atomik, yarım dosya kalmıyor.</td></tr>
 </table>
+
+<h3>Kullanılan Stellar skill dosyaları</h3>
+<div class="box warn">
+  <h4>Doldurulması gereken alan</h4>
+  Başvuru, geliştirme sırasında kullanılan <code>skills.stellar.org</code> skill dosyalarının
+  <b>yol vererek</b> belirtilmesini istiyor (örn. <code>skills/standards/SKILL.md</code>). Bu proje
+  SEP metinleri, DeFindex dokümantasyonu ve Soroban SDK kaynağından doğrudan çalışıldı; resmî skill
+  dosyaları yüklenmedi. Formda kullanılmayan dosya adı yazmak yanlış beyan olur — ya alan dürüstçe
+  "doğrudan SEP spesifikasyonları ve protokol dokümantasyonu" diye doldurulmalı, ya da teslimden önce
+  ilgili skill dosyaları gerçekten okunup öyle atıf verilmeli.
+</div>
 
 <h3>Test</h3>
 <table>
   <tr><th style="width:44mm">Komut</th><th>Kapsam</th></tr>
-  <tr><td class="mono">npm run smoke</td><td>Uçtan uca akış, testnet'e gerçek işlemler. Son adımda aynı
-  ETTN'i tekrar kaydetmeyi dener ve kontrat reddeder</td></tr>
-  <tr><td class="mono">npm run test:contracts</td><td>22 kontrat testi</td></tr>
+  <tr><td class="mono">npm run smoke</td><td>Uçtan uca akış, testnet'e gerçek işlemler: kayıt, onay,
+  canlı fiyat, iki fonlayıcı anchor'dan USDC alıp fonluyor, vadede kapanış, oransal dağıtım. Son adımda
+  aynı ETTN'i tekrar kaydetmeyi dener ve kontrat reddeder</td></tr>
+  <tr><td class="mono">npm run test:contracts</td><td>29 kontrat testi, devredilebilir alacağın
+  toplam korunumu ve devir sonrası dağıtım dahil</td></tr>
   <tr><td class="mono">npm run test:ubl</td><td>Belge doğrulayıcı</td></tr>
   <tr><td class="mono">npm run test:tranche</td><td>Anchor transfer dilimleyicisi, 1.823 tutar</td></tr>
   <tr><td class="mono">npm run test:sep53</td><td>İmzalı mesajlar, spec'in kendi vektörleriyle</td></tr>
