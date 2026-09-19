@@ -5,15 +5,21 @@
 
 <br>
 
-**Turkish working capital, funded from anywhere.** A supplier in Bursa waits
+**Working capital for suppliers, funded from anywhere.** A supplier waits
 ninety days to be paid. The capital that could bridge that gap sits inside
-Turkish bank balance sheets, and a funder abroad has no way to reach it — no
-lira account, no correspondent banking relationship, no ticket small enough to
-be worth the paperwork. Payper opens that door: an e-invoice the buyer has
-acknowledged on chain becomes an instrument anyone holding USDC can fund, in
-seconds, from fifty dollars up. The supplier is paid the same day in lira and
-never touches crypto; the funder is repaid in USDC and never touches a Turkish
-bank.
+domestic bank balance sheets, and a funder abroad has no way to reach it — no
+local-currency account, no correspondent banking relationship, no ticket small
+enough to be worth the paperwork. Payper opens that door: an e-invoice the buyer
+has acknowledged on chain becomes an instrument anyone holding USDC can fund, in
+seconds, from fifty dollars up. The supplier is paid the same day in their own
+currency and never touches crypto; the funder is repaid in USDC and never opens
+an account in the supplier's country.
+
+The mechanism is the same wherever suppliers invoice on terms; what changes per
+country is the document standard, the invoice identifier and the anchor. The
+first corridor is Türkiye, and that is what runs on testnet today — every
+country-specific detail below (ETTN, lira, the SEP-6 anchor) is that corridor's
+instance of a general rule, marked where it appears.
 
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
@@ -57,25 +63,29 @@ Known limitations are in [Honest limitations](#honest-limitations), not buried.
 
 ## The problem
 
-A Turkish SME issues an invoice with 60 to 120 days of terms. The goods have
-shipped and the wages are paid, but the money arrives in three months. The gap
-is closed by factoring: a bank or factor advances the cash and takes a discount.
+An SME issues an invoice with 60 to 120 days of terms. The goods have shipped
+and the wages are paid, but the money arrives in three months. The gap is closed
+by factoring: a bank or factor advances the cash and takes a discount. Every
+economy with commercial credit terms runs some version of this, and the market
+is large and established rather than speculative.
 
-That market is large and established. Turkey had **4,016,059 active enterprises
-in 2025, of which 99.6% are SMEs** (TÜİK), and the factoring sector turned over
-**1.875 trillion TRY across roughly 95,000 customers in 2025**, mostly SMEs. This
-is not a market that needs convincing — it is one that already pays.
+In the first corridor the numbers are public. Türkiye had **4,016,059 active
+enterprises in 2025, of which 99.6% are SMEs** (TÜİK), and the factoring sector
+turned over **1.875 trillion TRY across roughly 95,000 customers in 2025**,
+mostly SMEs. This is not a market that needs convincing — it is one that already
+pays.
 
-What it does not have is a price anyone can check. Factoring cost is
-**interest + commission + 5% BSMV**, quoted per deal at a desk. There is no
-published rate and no reference to compare against.
+What it does not have is a price anyone can check. The cost is quoted per deal
+at a desk as interest plus commission plus local transaction tax (in Türkiye,
+5% BSMV). There is no published rate and no reference to compare against.
 
-But the binding constraint is not demand, it is supply. Factoring capital in
-Turkey is bank capital: a factor can advance only what its own balance sheet and
-its bank lines allow. A funder abroad who would happily take that risk at that
-price cannot reach it — not for regulatory reasons alone, but because the
-plumbing does not exist below a ticket size that makes correspondent banking,
-currency conversion and settlement worth the cost.
+But the binding constraint is not demand, it is supply. Factoring capital is
+bank capital: a factor can advance only what its own balance sheet and its bank
+lines allow, and those are bounded by the country it is licensed in. A funder
+abroad who would happily take that risk at that price cannot reach it — not for
+regulatory reasons alone, but because the plumbing does not exist below a ticket
+size that makes correspondent banking, currency conversion and settlement worth
+the cost.
 
 Two further problems follow from how the market works:
 
@@ -83,24 +93,26 @@ Two further problems follow from how the market works:
    what part of the rate is the cost of money, what part is currency risk, and
    what part is margin.
 2. **The same receivable can be sold twice.** The expensive fraud in factoring is
-   financing one invoice at two institutions. In Turkey a central registry exists
-   for licensed members; capital arriving from outside that perimeter cannot
-   query it.
+   financing one invoice at two institutions. Where a central registry exists it
+   covers licensed members only (Türkiye's does); capital arriving from outside
+   that perimeter cannot query it, and many corridors have no registry at all.
 
 ## What Payper does
 
 **It opens the pool.** An acknowledged receivable becomes an instrument anyone
-holding USDC can fund — in seconds, from fifty dollars, with no lira account and
-no Turkish banking relationship. That is the part a database cannot do, and it is
-the reason this is built on Stellar rather than on Postgres.
+holding USDC can fund — in seconds, from fifty dollars, with no local-currency
+account and no banking relationship in the supplier's country. That is the part
+a database cannot do, and it is the reason this is built on Stellar rather than
+on Postgres.
 
-**One ETTN, one financing.** The ETTN is the universally unique identifier on
-every Turkish e-invoice. Its hash is written to the contract at registration, and
-a second registration is refused before anything else happens — not by a database
-row, but by a contract invariant. This is hygiene rather than the headline: a
-licensed Turkish factor can already check a central registry. A funder in Berlin
-cannot, and the contract gives them the same guarantee without asking them to
-join anything.
+**One invoice identifier, one financing.** Every national e-invoice standard
+carries a unique document identifier; in the first corridor that is the ETTN,
+assigned per document on every Turkish e-invoice. Its hash is written to the
+contract at registration, and a second registration is refused before anything
+else happens — not by a database row, but by a contract invariant. This is
+hygiene rather than the headline: a licensed factor inside a country with a
+registry can already check it. A funder in Berlin cannot, and the contract gives
+them the same guarantee without asking them to join anything.
 
 **The price is computed, not quoted.** Four components, two of them read from
 chain on every call:
@@ -108,7 +120,7 @@ chain on every call:
 | Component | Source | On the live deployment |
 |---|---|---|
 | Funding yield | Treasury APY, scaled to tenor | fallback · 195 bps |
-| Currency risk | Observed move in the TRY/USD feed | **live** · 723 bps |
+| Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** · 723 bps |
 | Credit premium | Parameter | 120 bps |
 | Platform fee | Parameter | 50 bps |
 
@@ -119,14 +131,16 @@ reason worth stating plainly: the treasury is a DeFindex vault with no strategy
 attached, so it has no realised gain to measure, and the adapter refuses rather
 than substituting a number that would arrive wearing the live badge.
 
-**The money reaches a bank account.** The supplier's USDC is sold for lira
-through a SEP-6 anchor and the buyer settles in lira at maturity. Both
-directions run against a real anchor.
+**The money reaches a bank account.** The supplier's USDC is sold for local
+currency through a SEP-6 anchor and the buyer settles in the same currency at
+maturity. Both directions run against a real anchor — lira in the first
+corridor, any currency with a SEP-6 anchor after it.
 
 ## Who it is for
 
-Suppliers invoicing a single large corporate buyer — organised retail, automotive
-sub-industry, construction materials. Invoices of 50,000 to 500,000 TRY on 30 to
+Suppliers invoicing a single large corporate buyer — organised retail,
+automotive sub-industry, construction materials. Ticket sizes of roughly 1,500
+to 15,000 USD equivalent (50,000 to 500,000 TRY in the first corridor) on 30 to
 120 day terms.
 
 The buyer's acknowledgement is the lock: it is what makes the receivable real to
@@ -149,7 +163,8 @@ Roughly $553,000 across rounds 16 to 37. The category is validated; the question
 is what is different here.
 
 Payper binds financing to a **national e-invoice identifier**. The ETTN is issued
-by the Turkish Revenue Administration and is unique per document, so uniqueness
+by the tax authority (in the first corridor, the Turkish Revenue
+Administration) and is unique per document, so uniqueness
 is inherited from the tax system rather than maintained by the platform. The
 published descriptions of the projects above centre on tokenising and
 fractionalising receivables; none describes enforcing single-financing against a
@@ -196,7 +211,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | `contracts/invoice` | ETTN uniqueness, registration, acknowledgement, pricing, the quote lock, funding, transferable claims, settlement, default and recourse, whitelist, first-loss buffer |
 | `contracts/treasury_defindex` | Treasury backed by a DeFindex vault; holds the position in vault shares and reports the vault's realised rate |
 | `contracts/treasury_local` | The same adapter interface over plain USDC, so the product still runs if the vault is unreachable |
-| `contracts/fx_oracle` | SEP-40 shaped TRY/USD feed for testnet |
+| `contracts/fx_oracle` | SEP-40 shaped local-currency feed (TRY/USD) for testnet |
 | `src/lib/chirp.ts` | The audio payment frame: 16 tones, a 5-symbol preamble, CRC-8, and the SEP-7 URI the QR carries |
 | `src/lib/chirpDecoder.ts` | The receiving half: microphone, FFT, preamble lock, slot sampling, CRC |
 | `src/lib/bank.ts` | The payout destination, with the IBAN's own ISO 7064 checksum verified before anything is stored |
@@ -224,7 +239,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | **SEP-53** | Signed messages for wallet login |
 
 The anchor integration is load-bearing rather than decorative. Without it the
-supplier cannot be paid in lira and the buyer cannot settle, which is the
+supplier cannot be paid in their own currency and the buyer cannot settle, which is the
 product's entire proposition. Without the treasury, `fund()` cannot complete and
 the yield component of the price has no source.
 
@@ -575,7 +590,7 @@ not verified against the Revenue Administration's certificate chain; access take
 weeks. The full document hash goes on chain, so that verification can be
 completed later against a document proven unchanged.
 
-**The bank leg is simulated.** The anchor is a sandbox and the lira transfer is
+**The bank leg is simulated.** The anchor is a sandbox and the fiat transfer is
 triggered by us. The supplier's own IBAN is passed to the anchor as the SEP-6
 withdrawal destination and its checksum is verified before it is stored, but no
 money reaches a real bank. The Stellar leg is real testnet USDC.
@@ -596,11 +611,11 @@ a nominal amount.
 
 **Nobody bears the currency risk yet.** The funder's claim is fixed in USDC —
 `repay()` pulls `face_usdc` and distributes it — while the buyer owes a fixed
-number of lira. Over ninety days those two stop matching, and the contract does
-not say who absorbs the difference. The currency premium prices that risk into
-the discount; it does not assign it. Production has two honest answers: the buyer
-stays liable in lira and the platform hedges the gap, or the funder's claim is
-denominated in lira. We have not picked one, and pretending otherwise would be
+amount of local currency. Over ninety days those two stop matching, and the
+contract does not say who absorbs the difference. The currency premium prices
+that risk into the discount; it does not assign it. Production has two honest
+answers: the buyer stays liable in local currency and the platform hedges the
+gap, or the funder's claim is denominated in that currency. We have not picked one, and pretending otherwise would be
 the easiest thing on this page to get wrong.
 
 **The funder's claim has no legal wrapper.** The contract creates a pro-rata
@@ -658,7 +673,7 @@ The oracle needs seeding with price history before quotes report `live`; see
 
 1. **Stellar Community Fund.** The missing pieces are a passkey smart account
    that verifies secp256r1 on chain, so a passkey signs its own transactions, and
-   integration with a production TRY anchor. Both are scoped work.
+   integration with a production fiat anchor (TRY first). Both are scoped work.
 2. **InstaAwards.** The passkey smart account is a well-sized scope on its own.
 3. **Closed pilot.** One corporate buyer and the suppliers that invoice it. The
    buyer's acknowledgement is the product's lock, so the pilot starts there.
