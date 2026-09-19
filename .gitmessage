@@ -1,0 +1,3 @@
+
+# Yazar seçimi için: ./scripts/commit.sh <can|berk> "mesaj"
+# Sahiplik bileşene göre: kim tasarladıysa, gözden geçirdiyse ve karar verdiyse o.
