@@ -5,7 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { QrCode } from "@/components/QrCode";
 import {
   CHIRP_BASE,
+  CHIRP_GAP_MS,
+  CHIRP_MS,
   CHIRP_STEP,
+  SYMBOL_COUNT,
   ChirpPlayer,
   PREAMBLE,
   encodeChirp,
@@ -60,8 +63,8 @@ export function Pay({
   const memo = invoice ? 80_000 + invoice.id : 88_213;
 
   const frame = useMemo(
-    () => encodeChirp({ invoiceId: invoice?.id ?? 0, amountMinor: amount * 100, memo }),
-    [invoice?.id, amount, memo],
+    () => encodeChirp({ invoiceId: invoice?.id ?? 0, amountMinor: amount * 100 }),
+    [invoice?.id, amount],
   );
 
   const uri = useMemo(
@@ -244,6 +247,7 @@ export function Pay({
           >
             <Line k={d.payFrame} v={`${frame.symbols.length} symbols · ${frame.durationMs} ms`} />
             <Line k="invoice" v={`#${invoice?.id ?? "-"} · memo ${memo}`} />
+            <Line k="tones" v={`${CHIRP_BASE}–${CHIRP_BASE + CHIRP_STEP * 7} Hz · ${CHIRP_MS}+${CHIRP_GAP_MS} ms`} />
             <Line k="payload" v={frame.hex.replace(/(.{2})/g, "$1 ").trim()} />
             <Line k="crc-8" v={`0x${frame.crc.toString(16).padStart(2, "0")}`} />
           </div>
@@ -336,7 +340,7 @@ export function Pay({
             <div style={{ display: "grid", gap: 6 }}>
               <span style={{ fontFamily: FONT.mono, fontSize: 11, color: "rgba(255,255,255,.45)" }}>
                 {current === null
-                  ? `${CHIRP_BASE}–${CHIRP_BASE + CHIRP_STEP * 15} Hz · ${PREAMBLE.length}-symbol preamble`
+                  ? `${CHIRP_BASE}–${CHIRP_BASE + CHIRP_STEP * (SYMBOL_COUNT - 1)} Hz · ${PREAMBLE.length}-symbol preamble`
                   : `symbol ${current} · ${symbolFrequency(current)} Hz`}
               </span>
               <span
@@ -378,7 +382,6 @@ export function Pay({
               <div style={{ display: "grid", gap: 6, fontFamily: FONT.mono, fontSize: 12 }}>
                 <Line k="invoice" v={`#${heard.invoiceId}`} dark />
                 <Line k="amount" v={`${trNumber(heard.amountMinor / 100, 2)} ₺`} dark />
-                <Line k="memo" v={String(heard.memo)} dark />
                 <Line k="confidence" v={`${Math.round(heard.confidence * 100)}%`} dark />
               </div>
               <button
@@ -472,8 +475,16 @@ export function Pay({
 /** Sixteen bars, one per tone. The sounding one lights. */
 function Spectrum({ active }: { active: number | null }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(16,1fr)", gap: 4, height: 96, alignItems: "end" }}>
-      {Array.from({ length: 16 }, (_, i) => {
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${SYMBOL_COUNT},1fr)`,
+        gap: 6,
+        height: 96,
+        alignItems: "end",
+      }}
+    >
+      {Array.from({ length: SYMBOL_COUNT }, (_, i) => {
         const on = active === i;
         return (
           <div

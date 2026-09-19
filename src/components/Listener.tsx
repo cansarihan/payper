@@ -127,7 +127,6 @@ export function Listener({ lang }: { lang: Lang }) {
               }}
             >
               <Row k="invoice" v={`#${heard.invoiceId}`} />
-              <Row k="memo" v={String(heard.memo)} />
               <Row k="crc-8" v={`0x${heard.crc.toString(16).padStart(2, "0")} ✓`} />
               <Row k="confidence" v={`${Math.round(heard.confidence * 100)}%`} />
               {rate && <Row k="usdc" v={trNumber(heard.amountMinor / 100 / rate, 4)} />}

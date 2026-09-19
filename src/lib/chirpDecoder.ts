@@ -1,60 +1,59 @@
 "use client";
 
 import {
+  CHIRP_GAP_MS,
   CHIRP_MS,
-  CRC_SYMBOLS,
-  PAYLOAD_SYMBOLS,
+  CHIRP_SLOT_MS,
+  FRAME_SYMBOLS,
   PREAMBLE,
+  SYMBOL_COUNT,
   decodeChirpFrame,
   symbolFrequency,
   type ChirpRequest,
 } from "./chirp";
 
 /**
- * The receiving half: a microphone, an FFT and a symbol clock.
+ * The receiving half: a microphone, an FFT and burst detection.
  *
- * How it works, and why:
+ * The earlier version locked onto the preamble once and then read symbols at
+ * fixed offsets. That works on one machine and fails across two, because the
+ * two clocks drift and the error accumulates over the frame. Here every symbol
+ * announces itself: each tone is followed by silence, so the decoder finds the
+ * edges and reads each burst on its own terms. Nothing accumulates.
  *
- * 1. **Spectral reads.** An `AnalyserNode` gives a magnitude spectrum. For each
- *    read we take the loudest of the sixteen tone bins; tones are 150 Hz apart
- *    and a 4096-point FFT at 48 kHz has ~12 Hz bins, so they never collide.
+ * 1. **Spectral reads.** An `AnalyserNode` gives a magnitude spectrum every
+ *    ~14 ms. For each read we take the loudest of the eight tone bins and a
+ *    noise floor measured from the bins between them.
  *
- * 2. **Oversampling.** Reads happen roughly six times per symbol. A symbol is
- *    90 ms, so a single badly-timed read cannot decide it.
+ * 2. **Bursts.** Consecutive reads above the floor form a burst. One shorter
+ *    than half a tone is room noise; one longer than two tones is something
+ *    else sounding, and both are discarded.
  *
- * 3. **Preamble lock.** The frame opens with 3,11,3,11,11 — a pattern chosen to
- *    be unlikely inside a payload. We look for it with roughly correct timing,
- *    which also tells us where the symbol clock sits.
+ * 3. **Voting.** A burst's symbol is the weighted majority over its middle,
+ *    where the tone is steady and the fades are not.
  *
- * 4. **Slot sampling, not run collapsing.** Once locked, each following symbol
- *    is read at the centre of its 90 ms slot. Collapsing repeated reads would
- *    be simpler and wrong: a payload byte like 0x33 is genuinely two identical
- *    symbols in a row, and collapsing would eat one.
- *
- * 5. **CRC-8.** The last byte checks the rest. A frame that fails is dropped
- *    silently and the search restarts, because acting on a half-heard payment
- *    request is worse than missing it.
+ * 4. **Preamble and CRC.** The lead-in is found among the recent bursts, and
+ *    the CRC decides. A frame that fails is dropped in silence and the search
+ *    resumes, because acting on a half-heard payment request is worse than
+ *    missing it.
  */
 
-/** Sixteen tones, one per 4-bit symbol. */
-const SYMBOLS = Array.from({ length: 16 }, (_, i) => i);
-/** Reads per symbol. Six gives the lock enough timing resolution. */
-const READS_PER_SYMBOL = 6;
-const READ_INTERVAL_MS = CHIRP_MS / READS_PER_SYMBOL;
-/**
- * How far above the noise floor a tone has to sit, in dB.
- *
- * A fixed magnitude gate works on a laptop and fails on a phone, where the
- * input chain lifts the whole spectrum and a quiet-but-clear tone still reads
- * as loud. The floor is measured from the bins between the tones on every read,
- * so the gate follows whatever the device is doing.
- */
-const MIN_ABOVE_FLOOR = 6;
-/** A tone must also beat the runner-up tone by this much, in dB. */
-const MIN_CONTRAST_DB = 3;
+const SYMBOLS = Array.from({ length: SYMBOL_COUNT }, (_, i) => i);
+/** Roughly eight reads inside a tone. */
+const READ_INTERVAL_MS = Math.round(CHIRP_MS / 8);
+/** How far above the measured floor a tone must sit, in dB. */
+const MIN_ABOVE_FLOOR = 7;
+/** And how far above the runner-up tone, in dB. */
+const MIN_CONTRAST_DB = 4;
+/** A burst shorter than this is noise. */
+const MIN_BURST_MS = CHIRP_MS * 0.45;
+/** Longer than this is not one of our tones. */
+const MAX_BURST_MS = CHIRP_MS * 2;
+/** Bursts kept in the window: two frames' worth. */
+const HISTORY = (PREAMBLE.length + FRAME_SYMBOLS) * 2;
 
 export interface DecodedFrame extends ChirpRequest {
-  /** Fraction of slots that produced a confident read. */
+  /** Fraction of the frame's bursts that were read confidently. */
   confidence: number;
 }
 
@@ -63,23 +62,30 @@ export interface DecoderStatus {
   /** Symbol heard on the most recent read, or null for silence. */
   symbol: number | null;
   level: number;
-  /** Payload symbols captured so far, once locked. */
+  /** Bursts collected since the preamble was seen. */
   captured: number;
   message?: string;
-  /** What the audio chain is actually doing, so a silent failure is visible. */
   diag?: {
     sampleRate: number;
     contextState: string;
-    /** Loudest tone bin and the measured floor, in dB. */
     peakDb: number;
     floorDb: number;
+    bursts: number;
   };
+}
+
+interface Burst {
+  symbol: number;
+  startedAt: number;
+  endedAt: number;
+  /** Weighted agreement among the reads inside it, 0..1. */
+  quality: number;
 }
 
 interface Read {
   at: number;
   symbol: number | null;
-  level: number;
+  aboveFloor: number;
 }
 
 export class ChirpDecoder {
@@ -89,9 +95,10 @@ export class ChirpDecoder {
   private timer: ReturnType<typeof setInterval> | null = null;
   private spectrum: Float32Array<ArrayBuffer> | null = null;
 
-  private reads: Read[] = [];
-  private lockedAt: number | null = null;
   private bins: number[] = [];
+  private current: Read[] = [];
+  private bursts: Burst[] = [];
+  private lastDiag: DecoderStatus["diag"];
 
   constructor(
     private readonly onStatus: (s: DecoderStatus) => void,
@@ -99,21 +106,15 @@ export class ChirpDecoder {
   ) {}
 
   async start(): Promise<void> {
-    // The context is created and resumed here, before the first await: iOS
-    // grants audio on a user gesture and does not carry that grant across a
-    // promise, so a context built after getUserMedia stays suspended and every
-    // spectrum read comes back as silence.
+    // The context is created and resumed before the first await: iOS grants
+    // audio on a user gesture and does not carry that grant across a promise,
+    // so a context built after getUserMedia stays suspended and every spectrum
+    // read comes back as silence.
     const AC =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AC) {
-      this.onStatus({
-        state: "error",
-        symbol: null,
-        level: 0,
-        captured: 0,
-        message: "This browser has no Web Audio.",
-      });
+      this.fail("This browser has no Web Audio.");
       return;
     }
     const ctx = new AC();
@@ -121,54 +122,38 @@ export class ChirpDecoder {
     void ctx.resume();
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.onStatus({
-        state: "error",
-        symbol: null,
-        level: 0,
-        captured: 0,
-        message: "This browser cannot reach a microphone.",
-      });
+      this.fail("This browser cannot reach a microphone.");
       return;
     }
 
     try {
-      // Every one of these would normally be on: they are designed for speech
-      // and they would chew the tones apart.
+      // Every one of these would normally be on. They are tuned for speech and
+      // would chew the tones apart.
       this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
     } catch (e) {
-      this.onStatus({
-        state: "error",
-        symbol: null,
-        level: 0,
-        captured: 0,
-        message:
-          (e as Error).name === "NotAllowedError"
-            ? "Microphone permission was refused."
-            : `The microphone could not be opened: ${(e as Error).message}`,
-      });
+      this.fail(
+        (e as Error).name === "NotAllowedError"
+          ? "Microphone permission was refused."
+          : `The microphone could not be opened: ${(e as Error).message}`,
+      );
       return;
     }
 
-    // Resuming again after the grant: Safari can leave the context suspended
-    // while the permission sheet is up.
     if (ctx.state !== "running") {
       try {
         await ctx.resume();
       } catch {
-        /* reported through the diagnostics line rather than thrown */
+        /* surfaced through the diagnostics line rather than thrown */
       }
     }
 
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 4096;
-    // Little smoothing: averaging across frames would blur symbol boundaries.
-    analyser.smoothingTimeConstant = 0.1;
+    // Little smoothing: averaging across frames would blur the burst edges the
+    // whole design depends on.
+    analyser.smoothingTimeConstant = 0.04;
     analyser.minDecibels = -120;
     analyser.maxDecibels = 0;
     this.analyser = analyser;
@@ -180,8 +165,8 @@ export class ChirpDecoder {
     const binWidth = ctx.sampleRate / analyser.fftSize;
     this.bins = SYMBOLS.map((s) => Math.round(symbolFrequency(s) / binWidth));
 
-    this.reads = [];
-    this.lockedAt = null;
+    this.current = [];
+    this.bursts = [];
     this.onStatus({ state: "listening", symbol: null, level: 0, captured: 0 });
     this.timer = setInterval(() => this.tick(), READ_INTERVAL_MS);
   }
@@ -201,6 +186,10 @@ export class ChirpDecoder {
     this.onStatus({ state: "idle", symbol: null, level: 0, captured: 0 });
   }
 
+  private fail(message: string) {
+    this.onStatus({ state: "error", symbol: null, level: 0, captured: 0, message });
+  }
+
   private tick(): void {
     const analyser = this.analyser;
     const spectrum = this.spectrum;
@@ -208,14 +197,16 @@ export class ChirpDecoder {
 
     analyser.getFloatFrequencyData(spectrum);
 
-    // Pick the loudest tone bin, and note the runner-up: a tone we cannot
-    // separate from its neighbour is not a symbol, it is noise.
     let best = -1;
     let bestDb = -Infinity;
     let secondDb = -Infinity;
     for (const s of SYMBOLS) {
       const bin = this.bins[s];
-      const db = Math.max(spectrum[bin - 1] ?? -Infinity, spectrum[bin], spectrum[bin + 1] ?? -Infinity);
+      const db = Math.max(
+        spectrum[bin - 1] ?? -Infinity,
+        spectrum[bin],
+        spectrum[bin + 1] ?? -Infinity,
+      );
       if (db > bestDb) {
         secondDb = bestDb;
         bestDb = db;
@@ -225,79 +216,126 @@ export class ChirpDecoder {
       }
     }
 
-    // The floor is read from the gaps between the tones, which carry no signal
-    // by construction. Comparing against it rather than against a constant is
-    // what lets the same code work on a laptop and on a phone whose input
-    // chain lifts the whole spectrum.
     const floorDb = this.noiseFloor(spectrum);
     const aboveFloor = bestDb - floorDb;
-    const contrast = bestDb - secondDb;
-    const symbol =
-      Number.isFinite(bestDb) && aboveFloor >= MIN_ABOVE_FLOOR && contrast >= MIN_CONTRAST_DB
-        ? best
-        : null;
+    const sounding =
+      Number.isFinite(bestDb) && aboveFloor >= MIN_ABOVE_FLOOR && bestDb - secondDb >= MIN_CONTRAST_DB;
 
-    // A 0..100 reading for the meter, scaled to how far above the floor the
-    // loudest tone sits rather than to an absolute level.
-    const level = Math.max(0, Math.min(100, aboveFloor * 4));
-    const diag = {
+    const at = performance.now();
+    this.lastDiag = {
       sampleRate: Math.round(this.ctx?.sampleRate ?? 0),
       contextState: this.ctx?.state ?? "none",
       peakDb: Math.round(bestDb),
       floorDb: Math.round(floorDb),
+      bursts: this.bursts.length,
     };
 
-    const at = performance.now();
-    this.reads.push({ at, symbol, level });
-    // Keep a little over one frame's worth of history.
-    const horizon = at - (PREAMBLE.length + PAYLOAD_SYMBOLS + CRC_SYMBOLS + 4) * CHIRP_MS;
-    while (this.reads.length && this.reads[0].at < horizon) this.reads.shift();
+    if (sounding) {
+      this.current.push({ at, symbol: best, aboveFloor });
+    } else if (this.current.length > 0) {
+      this.closeBurst();
+    }
 
-    if (this.lockedAt === null) {
-      const lock = this.findPreamble();
-      if (lock !== null) {
-        this.lockedAt = lock;
-        this.onStatus({ state: "locked", symbol, level, captured: 0, diag });
-        return;
+    const level = Math.max(0, Math.min(100, aboveFloor * 4));
+    this.onStatus({
+      state: this.bursts.length > 0 ? "decoding" : "listening",
+      symbol: sounding ? best : null,
+      level,
+      captured: Math.max(0, this.bursts.length - PREAMBLE.length),
+      diag: this.lastDiag,
+    });
+  }
+
+  /** Turn the reads just gathered into one burst, then try to decode. */
+  private closeBurst(): void {
+    const reads = this.current;
+    this.current = [];
+    if (reads.length === 0) return;
+
+    const startedAt = reads[0].at;
+    const endedAt = reads[reads.length - 1].at + READ_INTERVAL_MS;
+    const span = endedAt - startedAt;
+    if (span < MIN_BURST_MS || span > MAX_BURST_MS) return;
+
+    // The middle of the burst, where the tone is steady and the fades are not.
+    const from = Math.floor(reads.length * 0.2);
+    const to = Math.ceil(reads.length * 0.8);
+    const middle = reads.slice(from, Math.max(from + 1, to));
+
+    const votes = new Map<number, number>();
+    for (const r of middle) {
+      if (r.symbol === null) continue;
+      votes.set(r.symbol, (votes.get(r.symbol) ?? 0) + r.aboveFloor);
+    }
+    let symbol = -1;
+    let bestScore = 0;
+    let total = 0;
+    for (const [s, score] of votes) {
+      total += score;
+      if (score > bestScore) {
+        bestScore = score;
+        symbol = s;
       }
-      this.onStatus({ state: "listening", symbol, level, captured: 0, diag });
-      return;
     }
+    if (symbol < 0 || total <= 0) return;
 
-    const needed = PAYLOAD_SYMBOLS + CRC_SYMBOLS;
-    const elapsed = at - this.lockedAt;
-    const captured = Math.min(needed, Math.floor(elapsed / CHIRP_MS));
+    this.bursts.push({ symbol, startedAt, endedAt, quality: bestScore / total });
+    if (this.bursts.length > HISTORY) this.bursts.shift();
 
-    if (captured < needed) {
-      this.onStatus({ state: "decoding", symbol, level, captured, diag });
-      return;
-    }
+    this.tryDecode();
+  }
 
-    const frame = this.readFrame(this.lockedAt);
-    this.lockedAt = null;
-    if (!frame) {
-      // CRC failed or too many slots were unreadable: go back to listening
-      // rather than surface a payment request we are not sure about.
+  /**
+   * Look for the preamble, then read the symbols that follow it.
+   *
+   * The bursts after the lead-in must arrive on the symbol clock; a gap wider
+   * than a slot and a half means something was missed and the candidate is
+   * abandoned rather than guessed at.
+   */
+  private tryDecode(): void {
+    const need = PREAMBLE.length + FRAME_SYMBOLS;
+    if (this.bursts.length < need) return;
+
+    for (let start = this.bursts.length - need; start >= 0; start--) {
+      const window = this.bursts.slice(start, start + need);
+
+      let leadIn = true;
+      for (let i = 0; i < PREAMBLE.length && leadIn; i++) {
+        if (window[i].symbol !== PREAMBLE[i]) leadIn = false;
+      }
+      if (!leadIn) continue;
+
+      let contiguous = true;
+      for (let i = 1; i < window.length && contiguous; i++) {
+        const step = window[i].startedAt - window[i - 1].startedAt;
+        if (step < CHIRP_SLOT_MS * 0.55 || step > CHIRP_SLOT_MS * 1.6) contiguous = false;
+      }
+      if (!contiguous) continue;
+
+      const data = window.slice(PREAMBLE.length);
+      const request = decodeChirpFrame(data.map((b) => b.symbol));
+      if (!request) continue;
+
+      const confidence = data.reduce((s, b) => s + b.quality, 0) / data.length;
+      this.bursts = [];
       this.onStatus({
-        state: "listening",
-        symbol,
-        level,
-        captured: 0,
-        message: "The frame did not verify — still listening",
-        diag,
+        state: "done",
+        symbol: null,
+        level: 100,
+        captured: FRAME_SYMBOLS,
+        diag: this.lastDiag,
       });
+      this.onFrame({ ...request, confidence });
       return;
     }
-    this.onStatus({ state: "done", symbol, level, captured: needed, diag });
-    this.onFrame(frame);
   }
 
   /**
    * The median of the bins that sit between the tones.
    *
-   * Tones are 150 Hz apart, so the midpoints carry nothing we transmit. The
-   * median rather than the mean, because a stray peak from the room should not
-   * drag the floor up and mute a real symbol.
+   * Those midpoints carry nothing we transmit, so they measure the room. The
+   * median rather than the mean, because one stray peak should not drag the
+   * floor up and mute a real symbol.
    */
   private noiseFloor(spectrum: Float32Array): number {
     const gaps: number[] = [];
@@ -310,72 +348,6 @@ export class ChirpDecoder {
     gaps.sort((a, b) => a - b);
     return gaps[Math.floor(gaps.length / 2)];
   }
-
-  /**
-   * Find the preamble and return the time its last symbol ends.
-   *
-   * Each expected symbol is checked against the reads inside its own slot,
-   * walking backwards from the newest, so the lock lands on the most recent
-   * frame rather than a stale one.
-   */
-  private findPreamble(): number | null {
-    const span = PREAMBLE.length * CHIRP_MS;
-    const newest = this.reads.at(-1);
-    if (!newest) return null;
-
-    for (let endOffset = 0; endOffset <= CHIRP_MS; endOffset += READ_INTERVAL_MS) {
-      const end = newest.at - endOffset;
-      const start = end - span;
-      if (this.reads.length === 0 || start < this.reads[0].at) break;
-
-      let matched = true;
-      for (let i = 0; i < PREAMBLE.length && matched; i++) {
-        const centre = start + i * CHIRP_MS + CHIRP_MS / 2;
-        if (this.symbolAt(centre) !== PREAMBLE[i]) matched = false;
-      }
-      if (matched) return end;
-    }
-    return null;
-  }
-
-  /** Read the payload and CRC from the slots following `lockEnd`. */
-  private readFrame(lockEnd: number): DecodedFrame | null {
-    const symbols: (number | null)[] = [];
-    for (let i = 0; i < PAYLOAD_SYMBOLS + CRC_SYMBOLS; i++) {
-      symbols.push(this.symbolAt(lockEnd + i * CHIRP_MS + CHIRP_MS / 2));
-    }
-
-    const confidence = symbols.filter((s) => s !== null).length / symbols.length;
-    const request = decodeChirpFrame(symbols);
-    if (!request) return null;
-    return { ...request, confidence };
-  }
-
-  /**
-   * The symbol sounding at `time`: a majority vote over the reads inside that
-   * slot, so one stray read cannot decide a symbol.
-   */
-  private symbolAt(time: number): number | null {
-    const half = CHIRP_MS / 2;
-    const votes = new Map<number, number>();
-    for (const r of this.reads) {
-      if (r.at < time - half || r.at > time + half) continue;
-      if (r.symbol === null) continue;
-      // Weight by how close the read is to the slot centre.
-      const weight = 1 - Math.abs(r.at - time) / half;
-      votes.set(r.symbol, (votes.get(r.symbol) ?? 0) + weight);
-    }
-    let winner: number | null = null;
-    let bestScore = 0;
-    for (const [symbol, score] of votes) {
-      if (score > bestScore) {
-        bestScore = score;
-        winner = symbol;
-      }
-    }
-    // Demand at least one whole read's worth of agreement.
-    return bestScore >= 1 ? winner : null;
-  }
 }
 
 /** True when this browser can actually be a receiver. */
@@ -384,3 +356,5 @@ export const canListen = () =>
   !!navigator.mediaDevices?.getUserMedia &&
   typeof window !== "undefined" &&
   !!(window.AudioContext ?? (window as unknown as { webkitAudioContext?: unknown }).webkitAudioContext);
+
+export { CHIRP_GAP_MS };
