@@ -117,9 +117,10 @@ export function Stack({ lang }: { lang: Lang }) {
                       )}
                       <text
                         x="420"
-                        y="303"
+                        y="228"
                         textAnchor="middle"
-                        transform="rotate(-26.6 420 298)"
+                        dominantBaseline="middle"
+                        transform="rotate(-26.565 420 228)"
                         fill={top ? C.ink : C.white}
                         fontFamily="Urbanist,sans-serif"
                         fontWeight="700"

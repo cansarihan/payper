@@ -1,8 +1,9 @@
 import { Hero, Marquee, TopNav } from "@/components/Hero";
+import { Flow } from "@/components/home/Flow";
 import { Podium } from "@/components/home/Podium";
 import { Stack } from "@/components/home/Stack";
 import { YieldSources } from "@/components/home/YieldSources";
-import { Closing, LedBy, ModernCta, Pillars, Steps, Ways } from "@/components/Sections";
+import { Closing, LedBy, ModernCta, Pillars, Track, Ways } from "@/components/Sections";
 import { C, FONT, shortKey, trNumber } from "@/lib/design";
 import { DEFAULT_LANG, isLang, t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState } from "@/lib/types";
@@ -44,7 +45,8 @@ export default async function Page({
       <Hero d={d} lang={lang} stats={stats} />
       <Marquee />
 
-      <Steps d={d} lang={lang} />
+      <Track d={d} />
+      <Flow lang={lang} />
       <Ways
         d={d}
         lang={lang}

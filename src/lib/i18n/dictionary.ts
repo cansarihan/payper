@@ -120,6 +120,9 @@ interface Copy {
   statsLabels: readonly [string, string, string, string];
 
   howTitle: string;
+  trackTitle: string;
+  trackLead: string;
+  track: readonly (readonly [string, string, string, string])[];
   howP: string;
   steps: readonly (readonly [string, string, string])[];
   waysTitle: string;
@@ -286,6 +289,29 @@ const en: Copy = {
   statsLabels: ["Financed to date", "Invoices in the book", "Treasury yield", "Defaults"],
 
   howTitle: "Five steps, each one a contract call or a SEP flow",
+  trackTitle: "What the Genesis track asks for, and where it is in the product",
+  trackLead:
+    "Three requirements. Each one is answered by something you can open and check, not by a claim on this page.",
+  track: [
+    [
+      "INTEGRATION",
+      "Built on an eligible Stellar protocol",
+      "Pricing reads a SEP-40 price feed through the Reflector oracle interface — lastprice, prices, decimals, ReflectorAsset. The oracle address is configuration, so the same contract points at Reflector's published feed with one set_config call. The treasury sits behind a four-function adapter on the same principle; a DeFindex vault satisfies it unchanged.",
+      "quote() → OracleClient::prices · Config.oracle · TreasuryClient",
+    ],
+    [
+      "FIAT RAIL",
+      "Real lira in and out through an anchor",
+      "SEP-6 runs in both directions. The supplier's payout leaves as USDC and lands as lira in a bank account; at maturity the buyer pays lira in and it comes back as USDC. Authentication is SEP-10, the customer record is SEP-12, the rate is locked with a SEP-38 firm quote, and every endpoint is discovered from the anchor's stellar.toml at run time.",
+      "SEP-1 · 10 · 12 · 38 · 6 · tr-mock-anchor.fly.dev",
+    ],
+    [
+      "CORE FEATURE",
+      "Remove either one and there is no product",
+      "Every state change is a contract call: an invoice exists because register() wrote its ETTN, it is fundable because acknowledge() confirmed it, and its price exists because quote() read the chain. The money only reaches a bank through the anchor. There is no off-chain ledger behind this and no path that skips the rail.",
+      "register · acknowledge · quote · accept_quote · fund · repay",
+    ],
+  ],
   howP:
     "No step in between decides off chain. The price is not a fixed number; it is computed live from treasury yield and the observed currency move.",
   steps: [
@@ -487,6 +513,29 @@ const tr: Copy = {
   statsLabels: ["Toplam finanse edilen", "Defterdeki fatura", "Hazine getirisi", "Temerrüt"],
 
   howTitle: "Beş adım, her biri bir kontrat çağrısı ya da SEP akışı",
+  trackTitle: "Genesis track'in istedikleri ve ürünün neresinde durdukları",
+  trackLead:
+    "Üç şart. Her birinin karşılığı, bu sayfadaki bir iddia değil, açıp kontrol edebileceğin bir şey.",
+  track: [
+    [
+      "ENTEGRASYON",
+      "Uygun bir Stellar protokolü üzerine kurulu",
+      "Fiyatlama, Reflector oracle arayüzü üzerinden bir SEP-40 beslemesi okur — lastprice, prices, decimals, ReflectorAsset. Oracle adresi yapılandırmadır; aynı kontrat tek bir set_config çağrısıyla Reflector'ün yayımlanmış beslemesine bakar. Hazine de aynı ilkeyle dört fonksiyonluk bir adaptörün arkasındadır; bir DeFindex vault'u bunu değiştirmeden karşılar.",
+      "quote() → OracleClient::prices · Config.oracle · TreasuryClient",
+    ],
+    [
+      "FİAT KANALI",
+      "Anchor üzerinden gerçek lira girişi ve çıkışı",
+      "SEP-6 çift yönlü çalışır. Tedarikçinin ödemesi USDC olarak çıkar, banka hesabına lira olarak iner; vadede alıcı lirayı yatırır ve USDC olarak geri gelir. Kimlik SEP-10, müşteri kaydı SEP-12, kur SEP-38 kesin teklifiyle kilitlenir ve tüm uç noktalar anchor'ın stellar.toml'undan çalışma anında keşfedilir.",
+      "SEP-1 · 10 · 12 · 38 · 6 · tr-mock-anchor.fly.dev",
+    ],
+    [
+      "ÇEKİRDEK ÖZELLİK",
+      "İkisinden birini çıkar, ürün kalmaz",
+      "Her durum değişikliği bir kontrat çağrısıdır: fatura vardır çünkü register() ETTN'ini yazdı, fonlanabilir çünkü acknowledge() onayladı, fiyatı vardır çünkü quote() zinciri okudu. Para bankaya yalnızca anchor üzerinden ulaşır. Arkada zincir dışı bir defter ve kanalı atlayan bir yol yoktur.",
+      "register · acknowledge · quote · accept_quote · fund · repay",
+    ],
+  ],
   howP:
     "Aradaki hiçbir adım zincir dışında karar vermez. Fiyat sabit bir sayı değil; hazine getirisinden ve gözlenen kur hareketinden canlı hesaplanır.",
   steps: [

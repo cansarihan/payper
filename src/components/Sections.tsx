@@ -4,155 +4,6 @@ import { home } from "@/lib/i18n/home";
 
 type Copy = ReturnType<typeof t>;
 
-/** How it works: five steps, each one a contract call or a SEP flow. */
-export function Steps({ d, lang }: { d: Copy; lang: Lang }) {
-  const q = lang === "en" ? "" : `?lang=${lang}`;
-  const fns = ["register", "acknowledge", "quote", "fund", "repay"];
-  const colours = [C.mint, C.blue, C.coral, C.lime, C.mint];
-
-  return (
-    <section
-      id="how"
-      style={{
-        background: C.black,
-        color: C.white,
-        padding: "130px 32px 80px",
-        scrollMarginTop: 80,
-      }}
-    >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <h2
-          className="reveal-lg"
-          style={{
-            fontSize: "clamp(36px,5.4vw,74px)",
-            fontWeight: 500,
-            letterSpacing: "-.04em",
-            lineHeight: 1.02,
-            margin: "0 0 20px",
-            textWrap: "balance",
-          }}
-        >
-          {d.howTitle}
-        </h2>
-        <p
-          className="reveal-2"
-          style={{
-            fontSize: 17,
-            lineHeight: 1.6,
-            color: "rgba(255,255,255,.7)",
-            maxWidth: 640,
-            margin: "0 0 56px",
-            fontWeight: 500,
-          }}
-        >
-          {d.howP}
-        </p>
-
-        <div style={{ display: "grid", gap: 14 }}>
-          {d.steps.map(([title, desc, tech], i) => (
-            <div
-              key={title}
-              className={["reveal", "reveal-2", "reveal-3"][i % 3]}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "56px minmax(0,1fr)",
-                gap: 22,
-                alignItems: "start",
-                padding: "26px 28px",
-                borderRadius: 16,
-                background: "rgba(255,255,255,.04)",
-                border: "1px solid rgba(255,255,255,.08)",
-              }}
-            >
-              <span
-                style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: "50%",
-                  background: colours[i],
-                  color: i === 1 || i === 2 ? C.white : C.ink,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 15,
-                  fontWeight: 800,
-                }}
-              >
-                0{i + 1}
-              </span>
-              <div style={{ display: "grid", gap: 8, minWidth: 0 }}>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 21, fontWeight: 600, letterSpacing: "-.02em" }}>
-                    {title}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: FONT.mono,
-                      fontSize: 11,
-                      color: colours[i],
-                      background: "rgba(255,255,255,.06)",
-                      padding: "3px 8px",
-                      borderRadius: 6,
-                    }}
-                  >
-                    {fns[i]}()
-                  </span>
-                </div>
-                <div style={{ fontSize: 14.5, lineHeight: 1.6, color: "rgba(255,255,255,.72)" }}>
-                  {desc}
-                </div>
-                <div
-                  style={{
-                    fontFamily: FONT.mono,
-                    fontSize: 11.5,
-                    lineHeight: 1.7,
-                    color: "rgba(255,255,255,.45)",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {tech}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 44 }}>
-          <a
-            href={`/app${q}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 12,
-              background: C.mint,
-              color: C.ink,
-              borderRadius: 999,
-              padding: "8px 8px 8px 22px",
-              fontSize: 15,
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            <span>{d.uploadCta}</span>
-            <span
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                background: C.ink,
-                color: C.mint,
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              →
-            </span>
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /**
  * Three ways in, as tall cards. Each one carries a figure read from chain, so
  * the audience and the number they would act on sit together.
@@ -693,6 +544,33 @@ export function Closing({
             )}
             <span>{d.footerNote}</span>
           </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 30,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 6,
+            }}
+          >
+            {/* eslint-disable @next/next/no-img-element */}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 9, opacity: 0.8 }}>
+              <img src="/brand/partners/stellar-on-dark.svg" alt="" height={24} style={{ height: 24 }} />
+              <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-.03em", color: C.white }}>
+                Stellar
+              </span>
+            </span>
+            <span style={{ width: 1, height: 22, background: "rgba(255,255,255,.18)" }} />
+            <img
+              src="/brand/partners/risein-on-dark.svg"
+              alt="Rise In"
+              height={26}
+              style={{ height: 26, width: 100, objectFit: "contain", opacity: 0.8 }}
+            />
+            {/* eslint-enable @next/next/no-img-element */}
+          </div>
         </div>
       )}
     </section>
@@ -724,3 +602,106 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
     {children}
   </h2>
 );
+
+/** The three track requirements, each answered by something that can be opened. */
+export function Track({ d }: { d: Copy }) {
+  const tone = [C.mint, C.blue, C.lime];
+  const toneFg = [C.ink, C.white, C.ink];
+  return (
+    <section
+      style={{
+        background: C.white,
+        color: C.ink,
+        padding: "104px 32px 96px",
+        scrollMarginTop: 80,
+      }}
+    >
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <h2
+          className="reveal-lg"
+          style={{
+            fontSize: "clamp(32px,4.6vw,62px)",
+            fontWeight: 500,
+            letterSpacing: "-.04em",
+            lineHeight: 1.02,
+            margin: "0 0 16px",
+            textWrap: "balance",
+            maxWidth: 900,
+          }}
+        >
+          {d.trackTitle}
+        </h2>
+        <p
+          className="reveal"
+          style={{
+            fontSize: 16.5,
+            lineHeight: 1.6,
+            color: "#5a5a5a",
+            maxWidth: 620,
+            margin: "0 0 48px",
+            fontWeight: 500,
+          }}
+        >
+          {d.trackLead}
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
+            gap: 16,
+          }}
+        >
+          {d.track.map(([tag, title, body, proof], i) => (
+            <div
+              key={tag}
+              className={["reveal", "reveal-2", "reveal-3"][i % 3]}
+              style={{
+                borderRadius: 20,
+                padding: "30px 28px 26px",
+                background: "linear-gradient(180deg,#fafafa,#f1f1f1)",
+                border: "1px solid rgba(10,10,10,.06)",
+                display: "grid",
+                gridTemplateRows: "auto auto 1fr auto",
+                gap: 14,
+              }}
+            >
+              <span
+                style={{
+                  justifySelf: "start",
+                  padding: "5px 11px",
+                  borderRadius: 999,
+                  background: tone[i % 3],
+                  color: toneFg[i % 3],
+                  fontFamily: FONT.mono,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: ".08em",
+                }}
+              >
+                {tag}
+              </span>
+              <div style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.025em", lineHeight: 1.15 }}>
+                {title}
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#5a5a5a" }}>{body}</p>
+              <div
+                style={{
+                  fontFamily: FONT.mono,
+                  fontSize: 11,
+                  lineHeight: 1.6,
+                  color: "#8A8A8A",
+                  borderTop: "1px solid rgba(10,10,10,.08)",
+                  paddingTop: 14,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {proof}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

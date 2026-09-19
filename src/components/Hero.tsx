@@ -8,18 +8,19 @@ type Copy = ReturnType<typeof t>;
 const RIBBON =
   "linear-gradient(90deg,transparent 0,rgba(255,255,255,.02) 30%,rgba(230,230,230,.9) 47%,#fff 50%,rgba(210,210,210,.85) 53%,rgba(255,255,255,.02) 70%,transparent)";
 
-const PARTNERS = [
-  "Stellar",
-  "Soroban",
-  "DeFindex",
-  "Reflector",
-  "SEP-6",
-  "SEP-38",
-  "SEP-10",
-  "SEP-53",
-  "USDC",
-  "UBL-TR",
-  "Rise In",
+/** Brands we run on carry their own mark; protocol names stay as text. */
+const PARTNERS: { name: string; logo?: string; width?: number }[] = [
+  { name: "Stellar", logo: "/brand/partners/stellar.svg", width: 30 },
+  { name: "Soroban" },
+  { name: "DeFindex" },
+  { name: "Reflector" },
+  { name: "SEP-6" },
+  { name: "SEP-38" },
+  { name: "SEP-10" },
+  { name: "SEP-53" },
+  { name: "USDC" },
+  { name: "UBL-TR" },
+  { name: "Rise In", logo: "/brand/partners/risein.svg", width: 118 },
 ];
 
 export function TopNav({ d, lang }: { d: Copy; lang: Lang }) {
@@ -343,20 +344,31 @@ export function Marquee() {
           alignItems: "center",
         }}
       >
-        {[...PARTNERS, ...PARTNERS].map((p, i) => (
-          <span
-            key={i}
-            style={{
-              fontSize: 22,
-              fontWeight: 800,
-              letterSpacing: "-.03em",
-              color: C.grey,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {p}
-          </span>
-        ))}
+        {[...PARTNERS, ...PARTNERS].map((p, i) =>
+          p.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={p.logo}
+              alt={p.name}
+              height={30}
+              style={{ height: 30, width: p.width, objectFit: "contain", opacity: 0.55 }}
+            />
+          ) : (
+            <span
+              key={i}
+              style={{
+                fontSize: 22,
+                fontWeight: 800,
+                letterSpacing: "-.03em",
+                color: C.grey,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {p.name}
+            </span>
+          ),
+        )}
       </div>
     </section>
   );
