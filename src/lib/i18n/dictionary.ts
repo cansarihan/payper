@@ -52,6 +52,8 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  anchorTopUp: string;
+  anchorTopUpNote: string;
   anchorNoInvoice: string;
   anchorSandbox: string;
   anchorSold: string;
@@ -311,6 +313,9 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  anchorTopUp: "Buy USDC for the supplier",
+  anchorTopUpNote:
+    "Runs the same SEP-6 on-ramp the buyer uses, crediting the supplier instead — so the withdrawal can be run again.",
   anchorNoInvoice: "No eligible invoice",
   anchorSandbox:
     "Sandbox · the bank and KYC legs are simulated; the Stellar leg is real testnet USDC. If a transfer exceeds the anchor's per-transaction limit the amount is split into tranches.",
@@ -667,6 +672,9 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  anchorTopUp: "Tedarikçiye USDC al",
+  anchorTopUpNote:
+    "Alıcının kullandığı SEP-6 on-ramp'ini bu kez tedarikçiye işleterek çalıştırır — böylece çekim yeniden denenebilir.",
   anchorNoInvoice: "Uygun fatura yok",
   anchorSandbox:
     "Sandbox · banka ve KYC bacağı simüle; Stellar bacağı gerçek testnet USDC. Transfer anchor'ın işlem başına limitini aşarsa tutar tranşlara bölünür.",

@@ -49,8 +49,8 @@ export function Anchor({
   const done = ran ? steps.length : 0;
   const status = busy ? "pending_user_transfer_start" : ran ? "completed" : "incomplete";
 
-  async function run() {
-    if (!invoice) return;
+  async function run(mode: "off" | "on" | "topup" = tab) {
+    if (mode !== "topup" && !invoice) return;
     setBusy(true);
     setError(null);
     setResult(null);
@@ -58,7 +58,7 @@ export function Anchor({
       const res = await fetch("/api/anchor", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ flow: tab, invoiceId: invoice.id }),
+        body: JSON.stringify({ flow: mode, invoiceId: invoice?.id ?? 0 }),
       });
       const json = (await res.json()) as AnchorRunResult;
       if (!json.ok) throw new Error(json.error ?? d.anchorFailed);
@@ -251,7 +251,7 @@ export function Anchor({
             )}
 
             <button
-              onClick={() => void run()}
+              onClick={() => void run(tab)}
               disabled={busy || !invoice}
               style={{
                 width: "100%",
@@ -273,6 +273,29 @@ export function Anchor({
                     ? d.anchorRun[0]
                     : d.anchorRun[1]}
             </button>
+
+            {tab === "off" && error && (
+              <div style={{ display: "grid", gap: 6, marginTop: 4 }}>
+                <button
+                  onClick={() => void run("topup")}
+                  disabled={busy}
+                  style={{
+                    border: `1px solid ${C.ink}`,
+                    borderRadius: 999,
+                    padding: "13px 24px",
+                    background: "transparent",
+                    color: C.ink,
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
+                  {busy ? `${d.loading}…` : d.anchorTopUp}
+                </button>
+                <span style={{ fontSize: 11.5, color: C.grey, lineHeight: 1.5 }}>
+                  {d.anchorTopUpNote}
+                </span>
+              </div>
+            )}
           </div>
 
           <div

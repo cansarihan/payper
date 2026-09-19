@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
   try {
     rateLimit(clientKey(req, "anchor"), 20, 60_000);
     await requireSession();
-    const { flow, invoiceId } = (await req.json()) as { flow: "off" | "on"; invoiceId: number };
+    const { flow, invoiceId } = (await req.json()) as {
+      flow: "off" | "on" | "topup";
+      invoiceId: number;
+    };
 
     const anchor = await AnchorClient.create({ log: (e) => log.push(e) });
     const usdc = new Asset(anchor.config.assetCode, anchor.config.assetIssuer);
@@ -39,6 +42,33 @@ export async function POST(req: NextRequest) {
       process.env.PUBLIC_HORIZON_URL ?? "https://horizon-testnet.stellar.org",
     );
     const limits = await fetchLimits(anchor);
+
+    // Buying USDC for the supplier through the same on-ramp the buyer uses.
+    // A withdrawal drains the account by design, so without this the screen
+    // works once and then refuses — and what it refuses to do is the thing the
+    // reader came to see.
+    if (flow === "topup") {
+      const seller = keypair("seller");
+      await ensureTrustline(horizon, seller, usdc);
+      const jwt = await anchor.authenticate(seller);
+      await anchor.ensureCustomer(jwt, seller.publicKey());
+      const legs = await depositFromBank({
+        anchor,
+        signer: seller,
+        jwt,
+        account: seller.publicKey(),
+        amountFiat: Math.min(limits.maxFiat, 2000),
+        limits,
+      });
+      return ok({
+        flow,
+        log,
+        legs,
+        fiatIn: Math.min(limits.maxFiat, 2000).toFixed(2),
+        usdcOut: totalOut(legs).toFixed(7),
+      });
+    }
+
     const invoice = await getInvoice(invoiceId);
 
     if (flow === "off") {
@@ -48,7 +78,7 @@ export async function POST(req: NextRequest) {
       if (available <= 0) {
         return fail(
           new Error(
-            `The supplier holds no withdrawable USDC (${available.toFixed(7)}). Fund an invoice first.`,
+            "The supplier's USDC balance is zero — a withdrawal moves the whole payout to the bank, so a previous run will have emptied it. Top up through the anchor, or fund an invoice to create a new payout.",
           ),
           409,
         );
