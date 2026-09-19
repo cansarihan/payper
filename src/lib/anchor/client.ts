@@ -239,7 +239,13 @@ export class AnchorClient {
       if (status === "error" || status === "refunded") {
         throw new Error(`the anchor transaction is in status ${status}: ${id}`);
       }
-      if (Date.now() > deadline) throw new Error(`the anchor never reached ${want.join("/")}: ${id}`);
+      if (Date.now() > deadline) {
+        throw new Error(
+          `The anchor accepted the request and left it at "${status}" — it never settled. ` +
+            `This is the anchor's side, not the contract's: nothing was signed and no funds moved. ` +
+            `Reference ${id}.`,
+        );
+      }
       await new Promise((r) => setTimeout(r, 2000));
     }
   }

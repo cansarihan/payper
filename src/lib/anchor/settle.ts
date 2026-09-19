@@ -130,7 +130,11 @@ export async function depositFromBank(opts: {
       quoteId: quote.id,
     });
     await anchor.simulateBankTransfer(jwt, dep.id, amount);
-    const tx = await anchor.waitForStatus(jwt, dep.id, ["completed"]);
+    // The on-ramp is the leg that strands a caller when the anchor accepts a
+    // deposit and then sits on it. Twenty seconds is long enough for a healthy
+    // sandbox and short enough that a failure reads as a failure rather than as
+    // a frozen screen.
+    const tx = await anchor.waitForStatus(jwt, dep.id, ["completed"], 20_000);
     legs.push({
       id: dep.id,
       amountIn: amount,
