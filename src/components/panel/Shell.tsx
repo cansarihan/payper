@@ -7,7 +7,7 @@ import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
 
-export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market";
+export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "pay", "board", "settle"];
 
 const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.green, C.mint, C.lime];
@@ -19,6 +19,7 @@ export function PanelShell({
   state,
   session,
   onSignOut,
+  onTour,
   children,
 }: {
   lang: Lang;
@@ -27,6 +28,7 @@ export function PanelShell({
   state: AppState | null;
   session: Session | null;
   onSignOut: () => void;
+  onTour: () => void;
   children: React.ReactNode;
 }) {
   const d = t(lang);
@@ -109,6 +111,34 @@ export function PanelShell({
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={onTour}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+                border: 0,
+                borderRadius: 999,
+                padding: "9px 15px",
+                background: C.ink,
+                color: C.white,
+                fontSize: 12.5,
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: C.mint,
+                  animation: "pulse 2s infinite",
+                }}
+              />
+              {d.tour}
+            </button>
             <LangPills lang={lang} />
             <LedgerCounter />
             <AccountMenu
@@ -128,9 +158,29 @@ export function PanelShell({
 }
 
 /** Shared heading for every screen. */
-export function ScreenHead({ step, title, lead }: { step: string; title: string; lead?: string }) {
+export function ScreenHead({
+  step,
+  title,
+  lead,
+  right,
+}: {
+  step: string;
+  title: string;
+  lead?: string;
+  right?: React.ReactNode;
+}) {
   return (
-    <div style={{ marginBottom: 22 }}>
+    <div
+      style={{
+        marginBottom: 22,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "start",
+        gap: 20,
+        flexWrap: "wrap",
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
       <div
         style={{
           fontSize: 12,
@@ -153,11 +203,13 @@ export function ScreenHead({ step, title, lead }: { step: string; title: string;
       >
         {title}
       </h1>
-      {lead && (
-        <p style={{ opacity: 0.7, margin: 0, maxWidth: 680, lineHeight: 1.55, fontWeight: 500 }}>
-          {lead}
-        </p>
-      )}
+        {lead && (
+          <p style={{ opacity: 0.7, margin: 0, maxWidth: 680, lineHeight: 1.55, fontWeight: 500 }}>
+            {lead}
+          </p>
+        )}
+      </div>
+      {right}
     </div>
   );
 }
@@ -294,6 +346,7 @@ function AccountMenu({
       icon: "#",
       bg: C.paper,
       fg: C.ink,
+      go: "invoices",
     },
     {
       label: d.marketLabel,

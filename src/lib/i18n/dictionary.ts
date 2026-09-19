@@ -52,6 +52,21 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  account: string;
+  invoicesTitle: string;
+  invoicesLead: string;
+  recordsLabel: string;
+  totalFace: string;
+  financedLabel: string;
+  faceUsdcLabel: string;
+  lockedPayout: string;
+  raisedLabel: string;
+  registeredAt: string;
+  sellerVkn: string;
+  buyerVkn: string;
+  openContract: string;
+  nextStep: readonly [string, string, string, string, string];
+  tour: string;
   marketLabel: string;
   marketTitle: string;
   marketLead: string;
@@ -249,6 +264,22 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  account: "Account",
+  invoicesTitle: "My invoices",
+  invoicesLead:
+    "Every registered invoice with its status, its ETTN, the document hash and how much of it is funded. Open a row to reach the step it is waiting on.",
+  recordsLabel: "Records",
+  totalFace: "Total",
+  financedLabel: "Financed",
+  faceUsdcLabel: "Face in USDC",
+  lockedPayout: "Locked payout",
+  raisedLabel: "Raised",
+  registeredAt: "Registered",
+  sellerVkn: "Supplier tax no",
+  buyerVkn: "Buyer tax no",
+  openContract: "open the contract ↗",
+  nextStep: ["Acknowledge", "Price it", "Settle", "Funding board", "Settle"],
+  tour: "Start tour",
   marketLabel: "MARKET",
   marketTitle: "Who pays, how much, and against what",
   marketLead:
@@ -518,6 +549,22 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  account: "Hesap",
+  invoicesTitle: "Faturalarım",
+  invoicesLead:
+    "Kayıtlı her faturanın durumu, ETTN'i, belge hash'i ve ne kadarının fonlandığı. Bir satırı aç, beklediği adıma git.",
+  recordsLabel: "Kayıt",
+  totalFace: "Toplam",
+  financedLabel: "Finanse",
+  faceUsdcLabel: "USDC nominal",
+  lockedPayout: "Kilitli ödeme",
+  raisedLabel: "Toplanan",
+  registeredAt: "Kayıt",
+  sellerVkn: "Satıcı VKN",
+  buyerVkn: "Alıcı VKN",
+  openContract: "kontratı aç ↗",
+  nextStep: ["Onayla", "Fiyatla", "Kapat", "Fonlama panosu", "Kapat"],
+  tour: "Turu başlat",
   marketLabel: "PAZAR",
   marketTitle: "Kim ödüyor, ne kadar, neye karşı",
   marketLead:

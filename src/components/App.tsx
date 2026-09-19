@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Connect } from "@/components/Connect";
 import { Anchor } from "@/components/panel/Anchor";
 import { Board } from "@/components/panel/Board";
+import { Invoices } from "@/components/panel/Invoices";
 import { Market } from "@/components/panel/Market";
 import { Overview } from "@/components/panel/Overview";
 import { Buyer } from "@/components/panel/Buyer";
@@ -12,6 +13,7 @@ import { PanelShell, type Screen } from "@/components/panel/Shell";
 import { Pay } from "@/components/panel/Pay";
 import { Quote } from "@/components/panel/Quote";
 import { Settle } from "@/components/panel/Settle";
+import { Tour } from "@/components/panel/Tour";
 import { Upload } from "@/components/panel/Upload";
 import { C } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
@@ -21,6 +23,7 @@ import type { AppState, Session } from "@/lib/types";
 export function App({ lang }: { lang: Lang }) {
   const d = t(lang);
   const [screen, setScreen] = useState<Screen>("overview");
+  const [tour, setTour] = useState(false);
   const [state, setState] = useState<AppState | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionKnown, setSessionKnown] = useState(false);
@@ -81,6 +84,7 @@ export function App({ lang }: { lang: Lang }) {
       state={state}
       session={session}
       onSignOut={() => void signOut()}
+      onTour={() => setTour(true)}
     >
       {error && (
         <div
@@ -122,6 +126,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "invoices" ? (
+            <Invoices lang={lang} state={state} onGo={setScreen} />
           ) : screen === "market" ? (
             <Market lang={lang} state={state} onGo={setScreen} />
           ) : screen === "pay" ? (
@@ -132,6 +138,9 @@ export function App({ lang }: { lang: Lang }) {
             <Anchor state={state} onDone={refresh} />
           )}
         </div>
+      )}
+      {tour && (
+        <Tour lang={lang} state={state} onGo={setScreen} onClose={() => setTour(false)} />
       )}
     </PanelShell>
   );

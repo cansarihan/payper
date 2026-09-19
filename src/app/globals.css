@@ -162,3 +162,9 @@ button:not(:disabled) { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .hero-word { animation: none !important; opacity: 1; filter: none; transform: none; }
 }
+
+.inv-card-row:hover { background: rgba(10, 10, 10, .02) !important; }
+@media (max-width: 900px) {
+  .inv-card-row { grid-template-columns: 60px minmax(0, 1fr) 110px 40px !important; }
+  .inv-card-row > :nth-child(3), .inv-card-row > :nth-child(4) { display: none; }
+}
