@@ -57,16 +57,17 @@ export function PanelShell({
     <main
       style={{
         minHeight: "100vh",
-        background: tone.wash,
+        background: C.mint,
         color: C.ink,
         display: "flex",
         flexDirection: "column",
         animation: "fadeIn .4s both",
-        transition: "background .45s cubic-bezier(.2,.8,.2,1)",
       }}
     >
       {/* The party acting is the one fact every screen depends on, so it gets
-          a marker that no layout can push off the page. */}
+          a marker that no layout can push off the page. The canvas stays mint:
+          it is the brand, and three washes would have cost more than the
+          recognition they bought. */}
       <div
         aria-hidden
         style={{
