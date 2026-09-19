@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test:contracts": "cargo test",
     "oracle:seed": "tsx scripts/oracle-seed.ts",
-    "smoke": "tsx scripts/quote-smoke.ts"
+    "smoke": "tsx scripts/quote-smoke.ts",
+    "test:ubl": "tsx scripts/ubl-test.ts",
+    "test:tranche": "tsx scripts/tranche-test.ts"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.6.0",
