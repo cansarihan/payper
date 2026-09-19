@@ -5,3 +5,5 @@ node_modules/
 *.tsbuildinfo
 payper-logo/
 .data/
+demo/
+public/payper-demo.mp4

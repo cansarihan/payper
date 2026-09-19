@@ -23,7 +23,8 @@ instance of a general rule, marked where it appears.
 
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
-**Live:** [payper.live](https://payper.live) · **Contract:**
+**Live:** [payper.live](https://payper.live) · **Demo:**
+[80-second walkthrough](https://payper.live/payper-demo.mp4) · **Contract:**
 [`CB2EUFAF…3NBA`](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA)
 
 ---
@@ -186,32 +187,48 @@ inputs and labels the provenance of each component, rather than setting a rate.
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    doc["UBL-TR e-invoice<br/>XAdES signed"] --> app
+
+    subgraph app["Next.js — route handlers hold the keys"]
+        api["/api/* · the client holds no chain logic"]
+    end
+
+    app --> soroban
+    app --> sep
+
+    subgraph soroban["Soroban · testnet"]
+        invoice["invoice<br/>ETTN registry · pricing · settlement"]
+        treasury["treasury_defindex<br/>vault position · yield"]
+        oracle["fx_oracle<br/>SEP-40 feed"]
+        invoice --> treasury
+        invoice --> oracle
+    end
+
+    treasury --> defindex["DeFindex vault"]
+    treasury -. "reads a rate" .-> blend["Blend v2 pool"]
+
+    subgraph sep["SEP client · discovered at run time from stellar.toml"]
+        seps["SEP-1 · 10 · 12 · 38 · 6"]
+    end
+
+    sep --> anchor["Anchor"]
+    anchor --> bank["Bank account · IBAN"]
+
+    classDef chain fill:#0A0A0A,stroke:#3DE29C,color:#fff
+    classDef ext fill:#F4F5F3,stroke:#1E7CFF,color:#0A0A0A
+    class invoice,treasury,oracle chain
+    class defindex,blend,anchor,bank ext
 ```
-                    ┌─────────────────────────────────────┐
-  UBL-TR e-invoice  │  Next.js — route handlers hold the  │
-  ────────────────► │  keys; the client holds no chain    │
-                    │  logic and renders /api/state       │
-                    └──────────┬──────────────┬───────────┘
-                               │              │
-                  ┌────────────▼───┐   ┌──────▼──────────────┐
-                  │  Soroban       │   │  SEP client         │
-                  │                │   │  1 · 10 · 12 · 38   │
-                  │  invoice ──────┼──►│  · 6                │
-                  │   │            │   │                     │
-                  │   ├─ treasury  │   │  discovery at run   │
-                  │   └─ fx_oracle │   │  time from          │
-                  └────────────────┘   │  stellar.toml       │
-                                       └──────┬──────────────┘
-                                              │
-                                       ┌──────▼──────┐
-                                       │  Anchor     │
-                                       │  TRY ⇄ USDC │
-                                       └──────┬──────┘
-                                              │
-                                       ┌──────▼──────┐
-                                       │  Bank, IBAN │
-                                       └─────────────┘
-```
+
+The flow, end to end: a supplier uploads a signed e-invoice, the contract writes its ETTN and
+refuses a second registration of the same one. The buyer acknowledges on chain. `quote()` reads
+the treasury's yield and the currency feed and returns a discount with each component's
+provenance. Funders contribute USDC, buying it through the anchor if they hold none. Once the
+invoice fills, the treasury releases the payout and the supplier sells it for local currency through
+the same anchor. At maturity the buyer repays and the contract distributes pro rata to whoever
+holds the claim at that moment — which is not necessarily whoever funded it.
 
 ### Components
 
