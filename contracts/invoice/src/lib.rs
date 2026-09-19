@@ -20,7 +20,9 @@ use soroban_sdk::{
     IntoVal, Symbol, Vec,
 };
 
-use events::{Acknowledged, Defaulted, Funded, Quoted, Registered, Settled, WhitelistChanged};
+use events::{
+    Acknowledged, ClaimMoved, Defaulted, Funded, Quoted, Registered, Settled, WhitelistChanged,
+};
 pub use types::*;
 
 const DAY: u64 = 86_400;
@@ -291,6 +293,92 @@ impl InvoiceContract {
 
     pub fn funder_count(env: Env, invoice_id: u32) -> u32 {
         funders_of(&env, invoice_id).len()
+    }
+
+    /// What `holder` is owed against this invoice, in payout units.
+    pub fn claim_of(env: Env, invoice_id: u32, holder: Address) -> i128 {
+        funders_of(&env, invoice_id)
+            .iter()
+            .filter(|f| f.funder == holder)
+            .map(|f| f.amount)
+            .sum()
+    }
+
+    /// Move part or all of a claim to another address.
+    ///
+    /// This is what makes the receivable an instrument rather than a record: a
+    /// funder who needs the money back before maturity sells their share to
+    /// someone who does not, and `repay()` pays whoever holds it at the end. No
+    /// permission is asked of us — the contract moves it because the holder
+    /// signed, and our books have no say.
+    ///
+    /// Only while the invoice is outstanding. Once it has been repaid or gone
+    /// into default the claim has already been settled, and moving it then
+    /// would promise a payment that has been made.
+    pub fn transfer_claim(env: Env, invoice_id: u32, from: Address, to: Address, amount: i128) {
+        from.require_auth();
+
+        if amount <= 0 {
+            panic_with_error!(&env, Error::InvalidAmount);
+        }
+        if from == to {
+            panic_with_error!(&env, Error::NoClaimToTransfer);
+        }
+
+        let invoice = load_invoice(&env, invoice_id);
+        if invoice.status != Status::Acknowledged && invoice.status != Status::Funded {
+            panic_with_error!(&env, Error::ClaimNotTransferable);
+        }
+
+        let ledger = funders_of(&env, invoice_id);
+        let held: i128 = ledger
+            .iter()
+            .filter(|f| f.funder == from)
+            .map(|f| f.amount)
+            .sum();
+        if held < amount {
+            panic_with_error!(&env, Error::NoClaimToTransfer);
+        }
+
+        // Walk the ledger taking from the sender's entries oldest first, and
+        // write the result back as a whole. Rebuilding rather than mutating in
+        // place keeps the invariant obvious: what leaves one side arrives on
+        // the other, and the sum over the ledger never changes.
+        let mut next: Vec<Funding> = vec![&env];
+        let mut remaining = amount;
+        for entry in ledger.iter() {
+            if entry.funder != from || remaining == 0 {
+                next.push_back(entry);
+                continue;
+            }
+            if entry.amount <= remaining {
+                remaining -= entry.amount;
+            } else {
+                next.push_back(Funding {
+                    funder: from.clone(),
+                    amount: entry.amount - remaining,
+                    at: entry.at,
+                });
+                remaining = 0;
+            }
+        }
+        next.push_back(Funding {
+            funder: to.clone(),
+            amount,
+            at: env.ledger().timestamp(),
+        });
+
+        env.storage()
+            .persistent()
+            .set(&DataKey::Funders(invoice_id), &next);
+
+        ClaimMoved {
+            invoice_id,
+            from,
+            to,
+            amount,
+        }
+        .publish(&env);
     }
 
     // ── Settlement ──────────────────────────────────────────────────────────

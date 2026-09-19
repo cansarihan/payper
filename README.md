@@ -13,7 +13,7 @@ bank.
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
 **Live:** [payper.live](https://payper.live) · **Contract:**
-[`CCKQOROL…OYCNB`](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB)
+[`CC76VPEQ…EJ4R`](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R)
 
 ---
 
@@ -23,7 +23,7 @@ Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 npm install
 npm run build && npm start        # http://localhost:3000
 npm run smoke                     # the whole flow against testnet
-npm run test:contracts            # 22 contract tests
+npm run test:contracts            # 29 contract tests
 npm run test:ubl                  # document validator
 npm run test:tranche              # anchor transfer splitter
 npm run test:sep53                # signed messages, against the spec's vectors
@@ -44,7 +44,7 @@ What to look for, in order:
 | 1 | `npm run smoke`, final step | The same ETTN is refused. This is the product's one invariant |
 | 2 | `npm run smoke`, step 3 | Both pricing components report `live` — read from chain, not configured |
 | 3 | Dashboard → Anchor | The SEP trace, request by request, with the status the anchor returned |
-| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB) | The transactions the run just wrote |
+| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R) | The transactions the run just wrote |
 
 Known limitations are in [Honest limitations](#honest-limitations), not buried.
 
@@ -188,7 +188,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 
 | Component | Responsibility |
 |---|---|
-| `contracts/invoice` | ETTN uniqueness, registration, acknowledgement, pricing, the quote lock, funding, settlement, default and recourse, whitelist, first-loss buffer |
+| `contracts/invoice` | ETTN uniqueness, registration, acknowledgement, pricing, the quote lock, funding, transferable claims, settlement, default and recourse, whitelist, first-loss buffer |
 | `contracts/treasury_defindex` | Treasury backed by a DeFindex vault; holds the position in vault shares and reports the vault's realised rate |
 | `contracts/treasury_local` | The same adapter interface over plain USDC, so the product still runs if the vault is unreachable |
 | `contracts/fx_oracle` | SEP-40 shaped TRY/USD feed for testnet |
@@ -386,7 +386,7 @@ stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5R
 
 ```bash
 # And what the invoice contract sees when it prices a quote
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- treasury_assets
+stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- treasury_assets
 ```
 
 A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
@@ -469,31 +469,58 @@ recorded per address.
 
 ```bash
 # The invoice as the contract holds it
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- get_invoice --invoice_id 4
+stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- get_invoice --invoice_id 4
 ```
 
 ```bash
 # Who funded it, and for how much
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- funders_of --invoice_id 4
+stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- funders_of --invoice_id 4
 ```
 
 ```bash
 # How many invoices the contract holds
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- invoice_count
+stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- invoice_count
 ```
 
-**We do not mint a token per invoice.** There is no SEP-41 contract and no NFT
-standing for a receivable. What exists is a registry with divisible claims —
-functionally what a per-invoice token would deliver at this stage, without a
-second asset to manage. The claims are not transferable between addresses
-either: `repay()` pays the funders the contract recorded, and nobody can sell
-their share on. Making them transferable is the step that would turn this into
-tokenisation in the sense the word usually carries, and it is a deliberate
-omission rather than an oversight.
+**The claims transfer.** A funder who needs the money back before maturity sells
+their share to someone who does not, and `repay()` pays whoever holds it at the
+end. No permission is asked of us, and the buyer is never consulted — the
+contract moves the claim because the holder signed.
 
-The one thing that *is* tokenised is the treasury position, and it is DeFindex's
-token rather than ours: pooled capital becomes vault shares, and the shares are
-the claim.
+```bash
+# What an address is owed against an invoice
+stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- claim_of --invoice_id 2 --holder <G...>
+```
+
+```bash
+# Sell half of it. Signed by the holder, refused for anyone else.
+stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-funder --network testnet --send=yes -- transfer_claim --invoice_id 2 --from <G...> --to <G...> --amount 133680000
+```
+
+A transfer that actually ran, on invoice 2:
+
+| | funder A | funder B | total |
+|---|---|---|---|
+| before | 26.7360 | 26.7360 | 53.4720 |
+| after | 13.3680 | 40.1040 | 53.4720 |
+
+[`2ad7750d…e86a`](https://stellar.expert/explorer/testnet/tx/2ad7750d2129bc5f0bcc0b62e6538d5685f9c90bc9fa915de7fce912ec40e86a)
+
+The total over the ledger is what the contract pays out at maturity, so it has
+to survive every move — `transferring_never_changes_the_total` is the test that
+pins it, and `repayment_follows_the_claim` proves the new holder is the one who
+gets paid.
+
+**What we still do not mint is a token per invoice.** There is no SEP-41
+contract and no NFT standing for a receivable; the claim lives in the invoice
+contract's own storage rather than in a separate asset. That is a deliberate
+choice — a second asset per invoice is a second thing to keep correct, and the
+properties that matter here are divisibility, transferability and settlement to
+the holder, all of which are now in place.
+
+The other thing that *is* tokenised is the treasury position, and it is
+DeFindex's token rather than ours: pooled capital becomes vault shares, and the
+shares are the claim.
 
 ---
 
@@ -558,7 +585,7 @@ Stellar testnet, protocol 28.
 
 | | Address |
 |---|---|
-| Invoice contract | [`CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB`](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB) |
+| Invoice contract | [`CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R`](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R) |
 | Treasury adapter | [`CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF`](https://stellar.expert/explorer/testnet/contract/CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF) |
 | DeFindex vault | [`CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP`](https://stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP) |
 | Treasury, local fallback | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |

@@ -178,10 +178,11 @@ cred-xyz GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE</span></div>
 <h2 class="page">4 · E-faturanın zincir üstündeki hâli</h2>
 
 <div class="box">
-  <h4>Jüri "tokenize ettiniz mi" derse — dürüst cevap</h4>
-  "<b>Fatura başına token basmıyoruz.</b> SEP-41 kontratı ya da alacağı temsil eden bir NFT yok.
-  Olan şey, bölünebilir talep haklarıyla çalışan zincir üstü bir sicil. Tokenize olan tek şey hazine
-  pozisyonu, o da bizim değil DeFindex'in token'ı: havuzdaki sermaye vault payına dönüşüyor."
+  <h4>Jüri "tokenize ettiniz mi" derse</h4>
+  "Alacak zincir üstünde <b>bölünebilir, devredilebilir ve hamiline ödenen</b> bir hak olarak duruyor.
+  Fonlayıcı payını vadeden önce başkasına satabiliyor, <code>repay()</code> vadede o an kimin
+  elindeyse ona ödüyor. Ayrı bir token kontratı basmadık — hak, fatura kontratının kendi
+  depolamasında; ama tokenizasyonun verdiği özelliklerin hepsi burada."
 </div>
 
 <h3>Gerçekten olan</h3>
@@ -191,25 +192,40 @@ cred-xyz GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE</span></div>
   <td><code>is_ettn_available --ettn_hash …</code> → ikinci finansmanı imkânsız kılan anahtar</td></tr>
   <tr><td>Belgenin SHA-256'sı</td><td><code>get_invoice --invoice_id 4</code> → belge sonradan
   değişmediği kanıtlanabilir</td></tr>
-  <tr><td>Fonlayıcı başına bölünebilir talep</td><td><code>funders_of --invoice_id 4</code> → adres ve
+  <tr><td>Fonlayıcı başına bölünebilir talep</td><td><code>funders_of --invoice_id 2</code> → adres ve
   tutar</td></tr>
+  <tr><td>Devredilebilirlik</td><td><code>transfer_claim</code> → sahibi imzalar, hak yer değiştirir,
+  toplam değişmez</td></tr>
   <tr><td>Vadede oransal dağıtım</td><td><code>repay()</code> defteri gezip her fonlayıcıya payını
   gönderiyor</td></tr>
 </table>
 
-<h3>Eksik olan ve neden</h3>
-<p>Talep hakları <b>adresler arası devredilemiyor</b>. <code>repay()</code> kontratın kaydettiği
-fonlayıcılara ödüyor; kimse payını başkasına satamıyor. Devredilebilir hâle getirmek, kelimenin
-alışıldık anlamıyla tokenizasyon olurdu — bu bilinçli bir eksiklik, gözden kaçmış bir şey değil.
-Maliyeti: fatura kontratına bir <code>transfer</code> fonksiyonu, testleri ve <b>yeni bir kontrat
-adresi</b>. Yarışma gününde demo defterini yeniden kurmak anlamına geldiği için yapmadık.</p>
+<h3>Talep hakları devredilebiliyor</h3>
+<p>Vadeyi bekleyemeyen bir fonlayıcı payını bekleyebilecek birine satıyor ve <code>repay()</code>
+vadede <b>o an kimin elindeyse ona</b> ödüyor. Bizden izin istenmiyor, alıcıya sorulmuyor — kontrat
+payı taşıyor çünkü sahibi imzaladı.</p>
+<div class="cmd">stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- claim_of --invoice_id 2 --holder &lt;G…&gt;</div>
+<div class="cmd">stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-funder --network testnet --send=yes -- transfer_claim --invoice_id 2 --from &lt;G…&gt; --to &lt;G…&gt; --amount 133680000</div>
+
+<p>Gerçekten çalışmış bir devir, 2 numaralı faturada:</p>
+<table>
+  <tr><th style="width:30mm"></th><th>fonlayıcı A</th><th>fonlayıcı B</th><th>toplam</th></tr>
+  <tr><td>öncesi</td><td>26,7360</td><td>26,7360</td><td>53,4720</td></tr>
+  <tr><td>sonrası</td><td>13,3680</td><td>40,1040</td><td><b>53,4720</b></td></tr>
+</table>
+<p class="mono" style="font-size:8pt">tx 2ad7750d2129bc5f0bcc0b62e6538d5685f9c90bc9fa915de7fce912ec40e86a</p>
+
+<p>Defterdeki toplam, kontratın vadede ödeyeceği tutardır; o yüzden her devirde sabit kalmak
+zorunda. <code>transferring_never_changes_the_total</code> bunu sabitleyen test,
+<code>repayment_follows_the_claim</code> ise ödemeyi devralanın aldığını kanıtlıyor. 29 kontrat
+testinin yedisi bu özellik için.</p>
 
 <div class="box">
-  <h4>Bu soruyu güce çeviren cümle</h4>
-  "Tokenizasyon bir amaç değil araç. Amacımız alacağın <b>bölünebilir ve doğrulanabilir</b> olması —
-  ikisi de bugün çalışıyor. Devredilebilirlik bir sonraki adım ve nasıl yapılacağı belli: kontrata
-  bir transfer fonksiyonu. Bunu yarışma günü yapıp çalışan bir demoyu riske atmaktansa, eksik
-  olduğunu söylemeyi tercih ettik."
+  <h4>Yine de basmadığımız şey</h4>
+  <b>Fatura başına ayrı bir token basmıyoruz.</b> SEP-41 kontratı ya da NFT yok; talep hakkı ayrı bir
+  varlıkta değil, fatura kontratının kendi depolamasında duruyor. Bu bilinçli: fatura başına ikinci
+  bir varlık, doğru tutulması gereken ikinci bir şey demek. Önemli olan üç özellik —
+  <b>bölünebilirlik, devredilebilirlik ve hamiline ödeme</b> — üçü de artık yerinde.
 </div>
 
 <h2 class="page">Sana sorulacak dört zor soru</h2>

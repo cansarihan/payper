@@ -702,3 +702,115 @@ fn build(env: &Env, admin: &Address, oracle: Option<Address>) -> Fixture {
         treasury,
     }
 }
+
+// ── transferable claims ─────────────────────────────────────────────────────
+
+/// What turns a record into an instrument: a funder who needs the money back
+/// before maturity can sell their share, and the buyer is never consulted.
+#[test]
+fn a_claim_can_change_hands() {
+    let f = setup();
+    let id = accept_and_fund(&f, 31);
+
+    let held = f.client.claim_of(&id, &f.funder_a);
+    assert!(held > 0, "the funder should hold what they put in");
+    assert_eq!(f.client.claim_of(&id, &f.funder_b), 0);
+
+    let part = held / 4;
+    f.client.transfer_claim(&id, &f.funder_a, &f.funder_b, &part);
+
+    assert_eq!(f.client.claim_of(&id, &f.funder_a), held - part);
+    assert_eq!(f.client.claim_of(&id, &f.funder_b), part);
+}
+
+/// Nothing is created or destroyed by a transfer. The ledger's sum is what the
+/// contract pays out at maturity, so it has to survive every move.
+#[test]
+fn transferring_never_changes_the_total() {
+    let f = setup();
+    let id = accept_and_fund(&f, 32);
+
+    let total = |f: &Fixture| -> i128 {
+        f.client.funders_of(&id).iter().map(|x| x.amount).sum()
+    };
+    let before = total(&f);
+
+    let held = f.client.claim_of(&id, &f.funder_a);
+    f.client.transfer_claim(&id, &f.funder_a, &f.funder_b, &(held / 3));
+    f.client.transfer_claim(&id, &f.funder_b, &f.admin, &(held / 9));
+    f.client.transfer_claim(&id, &f.funder_a, &f.admin, &1);
+
+    assert_eq!(total(&f), before, "the sum over the ledger must not move");
+    assert_eq!(
+        f.client.claim_of(&id, &f.funder_a)
+            + f.client.claim_of(&id, &f.funder_b)
+            + f.client.claim_of(&id, &f.admin),
+        before,
+    );
+}
+
+/// The whole holding can go, leaving nothing behind.
+#[test]
+fn a_whole_claim_can_be_sold() {
+    let f = setup();
+    let id = accept_and_fund(&f, 33);
+    let held = f.client.claim_of(&id, &f.funder_a);
+
+    f.client.transfer_claim(&id, &f.funder_a, &f.funder_b, &held);
+
+    assert_eq!(f.client.claim_of(&id, &f.funder_a), 0);
+    assert_eq!(f.client.claim_of(&id, &f.funder_b), held);
+}
+
+/// Whoever holds the claim at maturity is who gets paid. This is the point of
+/// the whole feature: the contract pays the holder, not the original funder.
+#[test]
+fn repayment_follows_the_claim() {
+    let f = setup();
+    let id = accept_and_fund(&f, 34);
+    let held = f.client.claim_of(&id, &f.funder_a);
+    f.client.transfer_claim(&id, &f.funder_a, &f.funder_b, &held);
+
+    let face = f.client.get_invoice(&id).face_usdc;
+    let before = f.token.balance(&f.funder_b);
+
+    f.env.ledger().set_timestamp(f.env.ledger().timestamp() + 91 * DAY);
+    f.client.repay(&id, &f.buyer);
+
+    assert_eq!(
+        f.token.balance(&f.funder_b) - before,
+        face,
+        "the new holder receives the whole face value",
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #15)")]
+fn cannot_transfer_more_than_held() {
+    let f = setup();
+    let id = accept_and_fund(&f, 35);
+    let held = f.client.claim_of(&id, &f.funder_a);
+    f.client.transfer_claim(&id, &f.funder_a, &f.funder_b, &(held + 1));
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #15)")]
+fn cannot_transfer_without_a_claim() {
+    let f = setup();
+    let id = accept_and_fund(&f, 36);
+    f.client.transfer_claim(&id, &f.funder_b, &f.funder_a, &1);
+}
+
+/// Once the invoice is settled the claim has been paid, and moving it then
+/// would promise a payment that has already been made.
+#[test]
+#[should_panic(expected = "Error(Contract, #16)")]
+fn a_settled_claim_cannot_move() {
+    let f = setup();
+    let id = accept_and_fund(&f, 37);
+    f.env.ledger().set_timestamp(f.env.ledger().timestamp() + 91 * DAY);
+    f.client.repay(&id, &f.buyer);
+
+    f.client
+        .transfer_claim(&id, &f.funder_a, &f.funder_b, &1);
+}

@@ -45,3 +45,12 @@ pub struct WhitelistChanged {
     pub funder: Address,
     pub allowed: bool,
 }
+
+/// A funder's claim changed hands before maturity.
+#[contractevent]
+pub struct ClaimMoved {
+    pub invoice_id: u32,
+    pub from: Address,
+    pub to: Address,
+    pub amount: i128,
+}

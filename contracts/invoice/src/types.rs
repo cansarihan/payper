@@ -157,6 +157,10 @@ pub enum Error {
     NotYetDue = 12,
     NoQuoteAccepted = 13,
     QuoteExpired = 14,
+    /// The address holds no claim on this invoice, or not enough of one.
+    NoClaimToTransfer = 15,
+    /// A claim can only move while the invoice is still outstanding.
+    ClaimNotTransferable = 16,
 }
 
 /// Treasury interface. The invoice contract knows nothing beyond this, so the
