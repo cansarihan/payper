@@ -24,7 +24,7 @@ instance of a general rule, marked where it appears.
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
 **Live:** [payper.live](https://payper.live) · **Contract:**
-[`CB5U7ZMO…VBKJ`](https://stellar.expert/explorer/testnet/contract/CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ)
+[`CB2EUFAF…3NBA`](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA)
 
 ---
 
@@ -55,7 +55,7 @@ What to look for, in order:
 | 1 | `npm run smoke`, final step | The same ETTN is refused. This is the product's one invariant |
 | 2 | `npm run smoke`, step 3 | Currency risk reports `live` — read from the feed, not configured. The yield component reports `fallback` and says why, which is the point: provenance is labelled, never assumed |
 | 3 | Dashboard → Anchor | The SEP trace, request by request, with the status the anchor returned |
-| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ) | The transactions the run just wrote |
+| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA) | The transactions the run just wrote |
 
 Known limitations are in [Honest limitations](#honest-limitations), not buried.
 
@@ -412,12 +412,12 @@ stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5R
 
 ```bash
 # Our position, in vault shares
-stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ
 ```
 
 ```bash
 # And what the invoice contract sees when it prices a quote
-stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- treasury_assets
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- treasury_assets
 ```
 
 A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
@@ -512,17 +512,17 @@ recorded per address.
 
 ```bash
 # The invoice as the contract holds it
-stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- get_invoice --invoice_id 4
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- get_invoice --invoice_id 4
 ```
 
 ```bash
 # Who funded it, and for how much
-stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- funders_of --invoice_id 4
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- funders_of --invoice_id 4
 ```
 
 ```bash
 # How many invoices the contract holds
-stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- invoice_count
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- invoice_count
 ```
 
 **The claims transfer.** A funder who needs the money back before maturity sells
@@ -532,12 +532,12 @@ contract moves the claim because the holder signed.
 
 ```bash
 # What an address is owed against an invoice
-stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- claim_of --invoice_id 2 --holder <G...>
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- claim_of --invoice_id 2 --holder <G...>
 ```
 
 ```bash
 # Sell half of it. Signed by the holder, refused for anyone else.
-stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-funder --network testnet --send=yes -- transfer_claim --invoice_id 2 --from <G...> --to <G...> --amount 133680000
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-funder --network testnet --send=yes -- transfer_claim --invoice_id 2 --from <G...> --to <G...> --amount 133680000
 ```
 
 A transfer that actually ran, on invoice 2:
@@ -683,8 +683,8 @@ Stellar testnet, protocol 28.
 
 | | Address |
 |---|---|
-| Invoice contract | [`CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ`](https://stellar.expert/explorer/testnet/contract/CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ) |
-| Treasury adapter | [`CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH`](https://stellar.expert/explorer/testnet/contract/CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH) |
+| Invoice contract | [`CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA`](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA) |
+| Treasury adapter | [`CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ`](https://stellar.expert/explorer/testnet/contract/CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ) |
 | DeFindex vault | [`CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP`](https://stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP) |
 | Treasury, local fallback | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |
 | TRY/USD feed | [`CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC`](https://stellar.expert/explorer/testnet/contract/CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC) |
@@ -692,13 +692,36 @@ Stellar testnet, protocol 28.
 | USDC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` |
 | Anchor | `tr-mock-anchor.fly.dev` |
 
-The contract Wasm carries a SEP-46 `source_repo` pointing at this repository, and
-`.github/workflows/release.yml` runs stellar.expert's reproducible build on a tag, so the deployed
-hash can be checked against a build of this source:
+### The deployed contract is a reproducible build of this source
+
+`.github/workflows/release.yml` runs stellar.expert's build workflow on a tag. It compiles the
+contract in a clean runner, publishes the Wasm, and has GitHub sign a build attestation for its
+hash. What is deployed on testnet is that artifact, not a local build — the hashes are identical,
+which is checkable in three commands that do not trust us:
 
 ```bash
-stellar contract info meta --network testnet --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ | grep source_repo
+gh release download v1.0.1_contracts_invoice_payper-invoice_pkg0.1.0_cli27.0.0 -R cansarihan/payper
+shasum -a 256 payper-invoice_v0.1.0.wasm
+curl -s https://api.stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA | grep -o '"wasm":"[a-f0-9]*"'
 ```
+
+Both print `94dc49bef260c30989615cebf545596cb4370f02a4e19b3a8ea6350250c68af6`. GitHub's signed
+attestation ties that hash to this repository at tag `v1.0.1`:
+
+```bash
+gh api repos/cansarihan/payper/attestations/sha256:94dc49bef260c30989615cebf545596cb4370f02a4e19b3a8ea6350250c68af6
+```
+
+The Wasm also carries SEP-46 metadata, readable straight off the ledger:
+
+```bash
+stellar contract info meta --network testnet --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA
+# source_repo: github:cansarihan/payper
+# home_domain: payper.live
+```
+
+stellar.expert's own "verified" badge is not showing yet — their indexer picks build attestations up
+on its own schedule. The hash comparison above does not depend on it.
 
 ## Running it yourself
 
