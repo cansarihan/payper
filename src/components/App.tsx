@@ -75,13 +75,14 @@ export function App({ lang }: { lang: Lang }) {
       lang={lang}
       screen={screen}
       setScreen={setScreen}
+      state={state}
       session={session}
       onSignOut={() => void signOut()}
     >
       {error && (
         <div
           style={{
-            marginBottom: 16,
+            margin: "16px 30px 0",
             padding: "13px 15px",
             borderRadius: 16,
             background: "rgba(255,95,87,.12)",
@@ -99,27 +100,29 @@ export function App({ lang }: { lang: Lang }) {
         <div style={{ padding: 80, textAlign: "center", fontWeight: 600, opacity: 0.6 }}>
           {d.loading}…
         </div>
-      ) : screen === "upload" ? (
-        <Upload
-          lang={lang}
-          network={state.network}
-          onRegistered={() => {
-            void refresh();
-            setScreen("buyer");
-          }}
-        />
       ) : screen === "overview" ? (
         <Overview lang={lang} state={state} onGo={setScreen} />
-      ) : screen === "buyer" ? (
-        <Buyer lang={lang} state={state} onDone={refresh} />
-      ) : screen === "board" ? (
-        <Board lang={lang} state={state} onDone={refresh} />
-      ) : screen === "quote" ? (
-        <Quote lang={lang} state={state} onDone={refresh} />
-      ) : screen === "anchor" ? (
-        <Anchor state={state} onDone={refresh} />
       ) : (
-        <Overview lang={lang} state={state} onGo={setScreen} />
+        <div className="panel-screen" style={{ padding: "24px 30px 40px", flex: 1 }}>
+          {screen === "upload" ? (
+            <Upload
+              lang={lang}
+              network={state.network}
+              onRegistered={() => {
+                void refresh();
+                setScreen("buyer");
+              }}
+            />
+          ) : screen === "buyer" ? (
+            <Buyer lang={lang} state={state} onDone={refresh} />
+          ) : screen === "board" ? (
+            <Board lang={lang} state={state} onDone={refresh} />
+          ) : screen === "quote" ? (
+            <Quote lang={lang} state={state} onDone={refresh} />
+          ) : (
+            <Anchor state={state} onDone={refresh} />
+          )}
+        </div>
       )}
     </PanelShell>
   );

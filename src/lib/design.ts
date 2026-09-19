@@ -4,10 +4,10 @@ export const C = {
   black: "#050505",
   panel: "#1C1C1E",
   white: "#FFFFFF",
-  paper: "#F2F2ED",
+  paper: "#F2F2F0",
   mint: "#3DE29C",
   lime: "#B9F03A",
-  blue: "#7CA8FF",
+  blue: "#1E7CFF",
   coral: "#FF5F57",
   amber: "#F5A524",
   green: "#1A8F63",
@@ -15,7 +15,7 @@ export const C = {
 } as const;
 
 export const FONT = {
-  sans: "'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif",
+  sans: "'Urbanist', system-ui, -apple-system, sans-serif",
   mono: "'JetBrains Mono',ui-monospace,Menlo,monospace",
 } as const;
 

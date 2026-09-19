@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
-import type { Session } from "@/lib/types";
+import type { AppState, Session } from "@/lib/types";
 
 export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "board"];
@@ -13,6 +15,7 @@ export function PanelShell({
   lang,
   screen,
   setScreen,
+  state,
   session,
   onSignOut,
   children,
@@ -20,12 +23,12 @@ export function PanelShell({
   lang: Lang;
   screen: Screen;
   setScreen: (s: Screen) => void;
+  state: AppState | null;
   session: Session | null;
   onSignOut: () => void;
   children: React.ReactNode;
 }) {
   const d = t(lang);
-  const name = session?.name ?? session?.role ?? "—";
 
   return (
     <main
@@ -59,10 +62,8 @@ export function PanelShell({
             padding: "22px 30px 0",
           }}
         >
-          <a href="/" style={{ textDecoration: "none", color: C.ink }}>
-            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.04em" }}>
-              [ payper ]
-            </span>
+          <a href="/" style={{ textDecoration: "none", color: C.ink, display: "flex" }}>
+            <Mark />
           </a>
 
           <nav className="panel-nav" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -107,59 +108,18 @@ export function PanelShell({
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                background: C.white,
-                borderRadius: 999,
-                padding: "7px 14px 7px 8px",
-                fontSize: 12.5,
-                fontWeight: 700,
-              }}
-            >
-              <span
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: "50%",
-                  background: C.ink,
-                  color: C.mint,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 10,
-                  fontWeight: 800,
-                }}
-              >
-                {name.slice(0, 2).toUpperCase()}
-              </span>
-              {name}
-              {session && (
-                <span style={{ fontFamily: FONT.mono, fontSize: 10, opacity: 0.5 }}>
-                  {shortKey(session.address, 4, 4)}
-                </span>
-              )}
-            </span>
-            <button
-              onClick={onSignOut}
-              style={{
-                border: 0,
-                borderRadius: 999,
-                padding: "9px 15px",
-                background: "rgba(255,255,255,.55)",
-                fontSize: 12.5,
-                fontWeight: 700,
-              }}
-            >
-              {d.signOut}
-            </button>
+            <LangPills lang={lang} />
+            <LedgerCounter />
+            <AccountMenu
+              lang={lang}
+              state={state}
+              session={session}
+              onSignOut={onSignOut}
+            />
           </div>
         </header>
 
-        <div className="panel-screen" style={{ padding: "24px 30px 40px", flex: 1 }}>
-          {children}
-        </div>
+        {children}
       </div>
     </main>
   );
@@ -195,6 +155,293 @@ export function ScreenHead({ step, title, lead }: { step: string; title: string;
         <p style={{ opacity: 0.7, margin: 0, maxWidth: 680, lineHeight: 1.55, fontWeight: 500 }}>
           {lead}
         </p>
+      )}
+    </div>
+  );
+}
+
+/** The bracket mark. The wordmark belongs to the public site. */
+export function Mark({ colour = C.ink, scale = 1 }: { colour?: string; scale?: number }) {
+  const w = 26 * scale;
+  const h = 20 * scale;
+  const b = 5 * scale;
+  const r = 4 * scale;
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 4 * scale }}>
+      <span
+        style={{
+          width: w,
+          height: h,
+          border: `${b}px solid ${colour}`,
+          borderRight: 0,
+          borderRadius: `${r}px 0 0 ${r}px`,
+        }}
+      />
+      <span style={{ width: 12 * scale, height: h, background: colour, borderRadius: 2 * scale }} />
+      <span
+        style={{
+          width: w,
+          height: h,
+          border: `${b}px solid ${colour}`,
+          borderLeft: 0,
+          borderRadius: `0 ${r}px ${r}px 0`,
+        }}
+      />
+    </span>
+  );
+}
+
+/** Language is a query parameter, so the panel link carries it like the site does. */
+function LangPills({ lang }: { lang: Lang }) {
+  return (
+    <div style={{ display: "flex", padding: 3, borderRadius: 999, background: "rgba(255,255,255,.4)" }}>
+      {(["tr", "en"] as const).map((l) => (
+        <a
+          key={l}
+          href={l === "en" ? "/app" : `/app?lang=${l}`}
+          style={{
+            borderRadius: 999,
+            padding: "6px 12px",
+            fontSize: 12,
+            fontWeight: 700,
+            textDecoration: "none",
+            color: lang === l ? C.white : C.ink,
+            background: lang === l ? C.ink : "transparent",
+          }}
+        >
+          {l.toUpperCase()}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+/** The network's latest ledger, polled. A live number, not an animated one. */
+function LedgerCounter() {
+  const [ledger, setLedger] = useState<number | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const read = async () => {
+      try {
+        const res = await fetch("/api/ledger", { cache: "no-store" });
+        const json = (await res.json()) as { ok: boolean; sequence?: number };
+        if (alive && json.ok && json.sequence) setLedger(json.sequence);
+      } catch {
+        /* a missed tick leaves the previous number on screen */
+      }
+    };
+    void read();
+    const iv = setInterval(read, 6000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, []);
+
+  return (
+    <span
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 12,
+        fontWeight: 700,
+        padding: "8px 14px",
+        borderRadius: 999,
+        background: C.white,
+      }}
+    >
+      <span
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: "50%",
+          background: C.mint,
+          animation: "pulse 2s infinite",
+        }}
+      />
+      <span style={{ fontFamily: FONT.mono }}>
+        #{ledger === null ? "……" : ledger.toLocaleString("en-US")}
+      </span>
+    </span>
+  );
+}
+
+function AccountMenu({
+  lang,
+  state,
+  session,
+  onSignOut,
+}: {
+  lang: Lang;
+  state: AppState | null;
+  session: Session | null;
+  onSignOut: () => void;
+}) {
+  const d = t(lang);
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", away);
+    return () => document.removeEventListener("mousedown", away);
+  }, [open]);
+
+  const name = session?.name ?? session?.role ?? "—";
+  const initials =
+    (name.match(/\p{L}+/gu) ?? [name])
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "P";
+
+  const rows: { label: string; meta: string; icon: string; bg: string; fg: string }[] = [
+    {
+      label: d.acct[0][0],
+      meta: session ? shortKey(session.address, 4, 4) : d.walletNone,
+      icon: "◎",
+      bg: session ? C.mint : "rgba(245,165,36,.25)",
+      fg: C.ink,
+    },
+    { label: d.acct[1][0], meta: d.acct[1][1], icon: "₺", bg: C.blue, fg: C.white },
+    {
+      label: d.acct[2][0],
+      meta: `${state?.invoices.length ?? 0} ${d.acct[2][1]}`,
+      icon: "#",
+      bg: C.paper,
+      fg: C.ink,
+    },
+    { label: d.acct[4][0], meta: state?.treasury.mode ?? "—", icon: "◉", bg: C.ink, fg: C.mint },
+  ];
+
+  return (
+    <div style={{ position: "relative" }} ref={box}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          background: C.white,
+          border: 0,
+          borderRadius: 999,
+          padding: "5px 5px 5px 6px",
+          fontSize: 13,
+          fontWeight: 600,
+        }}
+      >
+        <span
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg,#F5F3EE,#CFCBC2)",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 12,
+            fontWeight: 800,
+          }}
+        >
+          {initials}
+        </span>
+        {name}
+        <span
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            background: C.paper,
+            display: "grid",
+            placeItems: "center",
+            fontSize: 11,
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform .2s",
+          }}
+        >
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 10px)",
+            width: 290,
+            background: C.white,
+            borderRadius: 22,
+            padding: 10,
+            boxShadow: "0 30px 70px rgba(0,0,0,.28)",
+            zIndex: 40,
+            display: "grid",
+            gap: 4,
+          }}
+        >
+          {rows.map((r) => (
+            <div
+              key={r.label}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 11,
+                padding: "9px 10px",
+                borderRadius: 14,
+              }}
+            >
+              <span
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  background: r.bg,
+                  color: r.fg,
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  flex: "none",
+                }}
+              >
+                {r.icon}
+              </span>
+              <span style={{ display: "grid", minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{r.label}</span>
+                <span
+                  style={{
+                    fontFamily: FONT.mono,
+                    fontSize: 10.5,
+                    color: C.grey,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {r.meta}
+                </span>
+              </span>
+            </div>
+          ))}
+          <button
+            onClick={onSignOut}
+            style={{
+              marginTop: 4,
+              border: 0,
+              borderRadius: 14,
+              padding: "12px 10px",
+              background: C.ink,
+              color: C.white,
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            {d.signOut}
+          </button>
+        </div>
       )}
     </div>
   );

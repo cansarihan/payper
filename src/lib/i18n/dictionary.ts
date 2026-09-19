@@ -31,6 +31,26 @@ interface Copy {
   annual: string;
 
   nav: readonly string[];
+  acct: readonly (readonly [string, string])[];
+  ledgerLabel: string;
+  walletNone: string;
+  kpiSettled: string;
+  kpiPending: string;
+  cashflow: string;
+  last12: string;
+  vault: string;
+  deployed: string;
+  idle: string;
+  firstLossLabel: string;
+  treasuryMode: string;
+  invoicesLabel: string;
+  all: string;
+  noOffers: string;
+  cardMenu: readonly [string, string];
+  statuses: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
+  statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
+  cardTitles: readonly [string, string, string, string, string, string];
+  scoreCaption: string;
   step: string;
   signOut: string;
   openPanel: string;
@@ -145,7 +165,52 @@ const en: Copy = {
 
   days: "days",
   annual: "annual",
-  nav: ["Overview", "Upload", "Acknowledge", "Discount", "Anchor", "Board"],
+  nav: ["Overview", "Upload invoice", "Buyer approval", "Quote", "Anchor", "Funding board"],
+  acct: [
+    ["Wallet", "signing key"],
+    ["Bank account", "payout destination"],
+    ["Invoices", "records"],
+    ["Language", "EN · TR"],
+    ["Treasury", "mode"],
+  ],
+  ledgerLabel: "ledger",
+  walletNone: "not linked",
+  kpiSettled: "Settled to bank today",
+  kpiPending: "Pending at maturity",
+  cashflow: "Cash flow",
+  last12: "last 12 months",
+  vault: "Vault",
+  deployed: "Deployed",
+  idle: "Idle",
+  firstLossLabel: "First loss",
+  treasuryMode: "mode",
+  invoicesLabel: "Invoices",
+  all: "All",
+  noOffers: "Nothing awaiting a decision.",
+  cardMenu: ["Open screen", "Download CSV"],
+  statuses: {
+    registered: "Registered",
+    acknowledged: "Acknowledged",
+    funded: "Funded",
+    repaid: "Repaid",
+    defaulted: "Defaulted",
+  },
+  statusShort: {
+    registered: "REGISTERED",
+    acknowledged: "ACKNOWLEDGED",
+    funded: "FUNDED",
+    repaid: "REPAID",
+    defaulted: "DEFAULTED",
+  },
+  cardTitles: [
+    "Financed",
+    "Average discount",
+    "Active invoices",
+    "Funder wallets",
+    "Defaults",
+    "ETTN blocked",
+  ],
+  scoreCaption: "Payper Score · on-chain",
   step: "STEP",
   signOut: "Sign out",
   openPanel: "Open dashboard",
@@ -281,7 +346,52 @@ const tr: Copy = {
 
   days: "gün",
   annual: "yıllık",
-  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama"],
+  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama panosu"],
+  acct: [
+    ["Cüzdan", "imza anahtarı"],
+    ["Banka hesabı", "ödeme adresi"],
+    ["Faturalar", "kayıt"],
+    ["Dil", "TR · EN"],
+    ["Hazine", "mod"],
+  ],
+  ledgerLabel: "defter",
+  walletNone: "bağlı değil",
+  kpiSettled: "Bugün bankaya geçen",
+  kpiPending: "Vadede bekleyen",
+  cashflow: "Nakit akışı",
+  last12: "son 12 ay",
+  vault: "Kasa",
+  deployed: "Kullanımda",
+  idle: "Atıl",
+  firstLossLabel: "İlk zarar",
+  treasuryMode: "mod",
+  invoicesLabel: "Faturalar",
+  all: "Tümü",
+  noOffers: "Karar bekleyen yok.",
+  cardMenu: ["Ekranı aç", "CSV indir"],
+  statuses: {
+    registered: "Kayıtlı",
+    acknowledged: "Onaylandı",
+    funded: "Fonlandı",
+    repaid: "Ödendi",
+    defaulted: "Temerrüt",
+  },
+  statusShort: {
+    registered: "KAYITLI",
+    acknowledged: "ONAYLANDI",
+    funded: "FONLANDI",
+    repaid: "ÖDENDİ",
+    defaulted: "TEMERRÜT",
+  },
+  cardTitles: [
+    "Finanse edilen",
+    "Ortalama iskonto",
+    "Aktif fatura",
+    "Fonlayıcı cüzdan",
+    "Temerrüt",
+    "ETTN engeli",
+  ],
+  scoreCaption: "Payper Score · zincir üstü",
   step: "ADIM",
   signOut: "Çıkış yap",
   openPanel: "Paneli aç",
