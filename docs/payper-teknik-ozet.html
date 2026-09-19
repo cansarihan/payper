@@ -126,7 +126,7 @@ büyüklüğünün altında altyapı hiç yok.</p>
 <table>
   <tr><th style="width:38mm">Kontrat</th><th>Adres</th></tr>
   <tr><td>Fatura kontratı</td><td class="mono">CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA</td></tr>
-  <tr><td>Hazine adaptörü</td><td class="mono">CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ</td></tr>
+  <tr><td>Hazine adaptörü</td><td class="mono">CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4</td></tr>
   <tr><td>DeFindex vault</td><td class="mono">CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP</td></tr>
   <tr><td>Hazine, yerel yedek</td><td class="mono">CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI</td></tr>
   <tr><td>TRY/USD beslemesi</td><td class="mono">CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC</td></tr>
@@ -371,6 +371,14 @@ USDC'lerine bağlı, bizse anchor'ın bastığı Circle testnet USDC'sini tutuyo
 ölçülecek bir şey yok. Adaptör bu durumda bir <b>Blend v2</b> havuzunu okuyor: havuzun
 bToken/underlying indeksi <code>b_rate</code>, referans kurulurken bir kez örnekleniyor ve o
 örnekten bu yana büyüme yıllıklandırılıyor.</p>
+<div class="box">
+  <h4>Ölçülen değer</h4>
+  <code>blend_apy_bps</code> → <b>127 bps</b>. Fatura kontratının gördüğü hâli
+  <code>treasury_apy_bps</code> → <b>[127, 0]</b>; sıfır <code>Source::Live</code>, yani çağrı
+  sırasında zincirden okundu, yapılandırmadan değil. Böylece fiyatın dört bileşeninden ikisi canlı:
+  kur riski ve getiri.
+</div>
+
 <div class="box">
   <h4>Neden bu sayı doğru sayı</h4>
   Getiri bileşeninin temsil ettiği şey fonlayıcının fırsat maliyeti: parası Stellar'da başka nerede

@@ -119,7 +119,7 @@ chain on every call:
 
 | Component | Source | On the live deployment |
 |---|---|---|
-| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** · ~130 bps |
+| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** · 127 bps |
 | Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** · 723 bps |
 | Credit premium | Parameter | 120 bps |
 | Platform fee | Parameter | 50 bps |
@@ -442,12 +442,44 @@ A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
 our adapter, the adapter deposits into the vault and receives shares, and a
 payout burns the shares it is worth. The position is the shares.
 
-**What it does not do yet:** the vault has no strategy attached, because none
-exists for this asset on testnet, so it holds funds without earning. The adapter
-refuses to report a rate it cannot measure and the quote is labelled `fallback`
-rather than wearing a number with no position behind it. That refusal is in
-`contracts/treasury_defindex/src/lib.rs`, and it is the honest half of this
-integration.
+**Where the rate comes from, and where it does not.** The vault has no strategy
+attached — DeFindex's own testnet strategies are bound to their test USDC, while
+this system holds Circle's testnet USDC because that is what the anchor issues.
+So the vault holds funds without earning, and the adapter refuses to report a
+rate it cannot measure rather than substituting one.
+
+It then reads a Blend v2 pool instead. `b_rate` is the pool's bToken-to-underlying
+index; the adapter samples it once when the reference is set and annualises the
+growth since that sample, timing the window itself. That is what USDC earns
+lending on Stellar, which is the cost of money the discount is meant to carry.
+
+```bash
+# What the reference pool has paid suppliers, annualised, read from chain
+stellar contract invoke --id CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4 --source payper-admin --network testnet -- blend_apy_bps
+```
+```
+127
+```
+
+```bash
+# The same number as the invoice contract sees it, with its provenance
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- treasury_apy_bps
+```
+```
+[127,0]        # 0 is Source::Live — read from chain during the call, not configured
+```
+
+The refusal path is still there and still matters: with no reference configured
+and no realised gain, `apy_bps` panics rather than returning a number, and the
+quote is labelled `fallback`. Both halves are in
+`contracts/treasury_defindex/src/lib.rs`.
+
+The arithmetic is worth one line of warning. An hour of lending accrues far less
+than a basis point, so dividing to bps before scaling to a year truncates the
+whole measurement to zero — which is exactly what the first version of this did,
+silently, reporting nothing at all. `annualise_bps` multiplies first, and four
+tests hold it against two real readings of the pool taken eighty-five minutes
+apart.
 
 ### The anchor is a standard, discovered at run time
 
