@@ -86,6 +86,20 @@ $ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testn
   <tr><td class="mono">invoice -- treasury_assets</td><td>Fatura kontratının fiyatlarken gördüğü tutar, adaptör üzerinden vault'tan okunuyor</td></tr>
 </table>
 
+<h3>Hazine pozisyonu bir SEP-41 token'ı</h3>
+<p>Havuzdaki sermaye bizim tuttuğumuz bir bakiyede durmuyor; vault payına dönüşüyor ve o paylar
+<b>SEP-41 token'ı</b>. Üstelik bizim değil, parayı tutan protokolün ihraç ettiği bir token — yani
+pozisyonumuzu temsil eden varlık bize hiçbir şey sormadan okunabiliyor.</p>
+<div class="cmd">stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- symbol
+<span class="out">"PPRT"</span>   <span class="hint">· decimals 7 · total_supply 264.980.712</span></div>
+<p>Tam SEP-41 yüzeyi orada — <code>transfer</code>, <code>transfer_from</code>, <code>approve</code>,
+<code>allowance</code>, <code>balance</code>, <code>burn</code>, <code>burn_from</code>,
+<code>name</code>, <code>symbol</code>, <code>decimals</code>, <code>total_supply</code> — ve
+<code>-- --help</code> ile kendin listeleyebilirsin.</p>
+<p><b>İki standart, iki iş:</b> alacağın talep hakkı bizim kontratımızda, çünkü ETTN değişmezi ve
+kapanış şelalesi oraya erişebilmeli. Hazinenin pozisyonu ise SEP-41 token'ı, çünkü orada inşa
+etmediğimiz bir birleşebilirlik kazandırıyor.</p>
+
 <h3>Mekanizma — "DeFindex'e gönderiyoruz" değil</h3>
 <p><code>fund()</code> adaptörü çağırıyor, adaptör vault'a <code>deposit</code> yapıp <b>pay</b> alıyor,
 ödeme de karşılık gelen payı yakıyor. Pozisyon payların kendisi. Test ettik:</p>
@@ -140,9 +154,10 @@ $ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testn
 
 <div class="box">
   <h4>Jüri sorarsa ilk cümlen</h4>
-  "Passkey <b>kimin sorduğunu</b> kanıtlar. Soroban XDR'ı tek başına imzalayamaz — WebAuthn kendi
-  doğrulayıcı verisini kendi anahtar tipiyle imzalar. İkisini doğru köprülemek, secp256r1 imzalarını
-  zincirde doğrulayan bir Soroban akıllı hesabı demek; o yol haritasında, bu derlemede değil."
+  "Bursa'daki bir üreticinin seed phrase'in ne olduğunu öğrenmesi gerekmiyor. Face ID, Touch ID ya da
+  cihaz PIN'i — ve hesap var. <b>Passkey ile giriş yapmak cüzdanı oluşturuyor;</b> sonradan
+  bağlanacak bir şey yok. Kimlik bilgisi ve sunucu sırrı bir Stellar anahtarı türetiyor, aynı passkey
+  hep aynı adrese varıyor."
 </div>
 
 <h3>Elimizde olan</h3>
@@ -154,8 +169,10 @@ $ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testn
   bir assertion tekrar oynatılamıyor</td></tr>
   <tr><td>Sayaç kontrolü</td><td>Yükselen imza sayacı — klonlanmış bir doğrulayıcı böyle yakalanır</td></tr>
   <tr><td>Adres türetimi</td><td>Kimlik bilgisi + sunucu sırrı → SHA-256 → Ed25519 anahtarı</td></tr>
-  <tr><td>Cüzdan bağlama</td><td>Passkey ile girip sonradan tarayıcı cüzdanı kanıtlama; kanıt girişle aynı
-  challenge ve imza</td></tr>
+  <tr><td>Cüzdan bağlama</td><td><b>İsteğe bağlı.</b> Adres zaten var; bu yalnızca kendi anahtarıyla
+  imzalamak isteyenler için. Kanıt girişle aynı challenge ve imza</td></tr>
+  <tr><td>RP ID</td><td><code>payper.live</code> — <code>PUBLIC_SITE_URL</code>, yoksa
+  <code>x-forwarded-host</code> üzerinden çözülüyor</td></tr>
 </table>
 
 <h3>Çalıştıracağın komut</h3>
@@ -166,7 +183,19 @@ $ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testn
 cred-abc GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL
 cred-xyz GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE</span></div>
 
-<p>Aynı passkey hep aynı adrese varıyor, seed phrase yok, kullanıcının saklaması gereken hiçbir şey yok.</p>
+<p>Aynı passkey hep aynı adrese varıyor, seed phrase yok, kullanıcının saklaması gereken hiçbir şey yok.
+Tarayıcı cüzdanı bağlamak <b>isteğe bağlı</b> — zaten elinde bir anahtar olan kullanıcılar için.</p>
+
+<div class="box warn">
+  <h4>Yaşadığımız ve düzelttiğimiz hata — anlatmaya değer</h4>
+  WebAuthn kimlik bilgisini bir alan adına bağlar ve RP ID adres çubuğundakiyle <b>birebir</b>
+  eşleşmek zorundadır. Cloudflare Tunnel isteği 127.0.0.1'e yönlendirdiği için Next
+  <code>localhost</code> görüyordu; tarayıcı da <i>"The RP ID localhost is invalid for this
+  domain"</i> diyerek reddediyordu. Artık gerçek alan adı <code>PUBLIC_SITE_URL</code>'den, yoksa
+  <code>x-forwarded-host</code>'tan çözülüyor. İkinci bir sessiz hata daha vardı:
+  <code>PASSKEY_WALLET_SECRET</code> tanımsızken sır her süreçte yeniden üretiliyordu, yani her
+  yeniden başlatmada aynı passkey <b>farklı bir adrese</b> düşüyordu. İkisi de kapandı.
+</div>
 
 <div class="box warn">
   <h4>Sormadan önce sen söyle</h4>

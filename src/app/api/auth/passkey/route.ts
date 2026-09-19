@@ -15,6 +15,7 @@ import {
   allPasskeys,
   findPasskey,
   keypairForCredential,
+  publicHost,
   relyingParty,
   rememberPasskey,
 } from "@/lib/auth/passkey";
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       nonce?: string;
       response?: RegistrationResponseJSON | AuthenticationResponseJSON;
     };
-    const { rpID, rpName, origin } = relyingParty(req.nextUrl.host);
+    const { rpID, rpName, origin } = relyingParty(publicHost(req.headers, req.nextUrl.host));
 
     if (body.step === "register-options") {
       // The challenge doubles as the ceremony nonce. The address field is

@@ -290,8 +290,8 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
             }}
           >
             {lang === "tr"
-              ? "Face ID, Touch ID ya da cihaz PIN'i. Seed phrase yok; cüzdanı sonradan bağlayabilirsin."
-              : "Face ID, Touch ID or a device PIN. No seed phrase — link a wallet afterwards."}
+              ? "Face ID, Touch ID ya da cihaz PIN'i. Seed phrase yok, kurulacak eklenti yok — adresin giriş anında oluşuyor."
+              : "Face ID, Touch ID or a device PIN. No seed phrase, nothing to install — the address is created as you sign in."}
           </span>
 
           {demoAllowed && (

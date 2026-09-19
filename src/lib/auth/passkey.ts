@@ -40,6 +40,29 @@ declare global {
  */
 const store: Map<string, PasskeyRecord> = (globalThis.__payperPasskeys ??= new Map());
 
+/**
+ * The relying party, as the browser sees it.
+ *
+ * WebAuthn binds a credential to a domain, and the RP ID has to match what is
+ * in the address bar exactly. Behind a tunnel the application is reached on
+ * 127.0.0.1, so the request's own host is `localhost` and a credential created
+ * against it is rejected on the real domain. `PUBLIC_SITE_URL` is the truth
+ * when it is set; the forwarded host is the next best thing.
+ */
+export function publicHost(headers: Headers, fallback: string): string {
+  const configured = process.env.PUBLIC_SITE_URL;
+  if (configured) {
+    try {
+      return new URL(configured).host;
+    } catch {
+      /* a malformed value should not take passkeys down with it */
+    }
+  }
+  const forwarded = headers.get("x-forwarded-host");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return headers.get("host") ?? fallback;
+}
+
 export const relyingParty = (host: string) => {
   const local = host.startsWith("localhost") || host.startsWith("127.");
   return {

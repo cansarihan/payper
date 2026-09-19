@@ -1,4 +1,7 @@
-# Payper
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/lockup-white-1040.png">
+  <img src="public/brand/lockup-ink-1040.png" alt="payper" height="56">
+</picture>
 
 **Turkish working capital, funded from anywhere.** A supplier in Bursa waits
 ninety days to be paid. The capital that could bridge that gap sits inside
@@ -214,6 +217,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | **SEP-38** | Firm quotes, so the payout shown is the payout paid |
 | **SEP-7** | Payment URI in the QR, so any SEP-7 wallet can scan the same request the tones carry |
 | **SEP-40** | Oracle interface implemented by `fx_oracle` |
+| **SEP-41** | The treasury position is a SEP-41 token — the DeFindex vault share. Full interface: `transfer`, `transfer_from`, `approve`, `allowance`, `balance`, `burn`, `burn_from`, `name`, `symbol`, `decimals`, `total_supply` |
 | **SEP-53** | Signed messages for wallet login |
 
 The anchor integration is load-bearing rather than decorative. Without it the
@@ -427,17 +431,29 @@ match on. We were sending `MEMO_TEXT` where it asked for `MEMO_ID`, the payment
 arrived at the treasury, and the transfer sat at `pending_user_transfer_start`
 for ever. A simulated rail would not have cared.
 
-### Passkeys, and exactly how far they go
+### Passkeys: a wallet without a wallet
 
-A passkey proves who is asking. It cannot sign Soroban XDR — WebAuthn signs over
-its own authenticator data with its own key type. Bridging the two properly
-means a Soroban smart account verifying secp256r1 signatures on chain, which is
-on the roadmap and not in this build.
+The point of a passkey here is that a supplier in Bursa should not have to learn
+what a seed phrase is. Face ID, Touch ID or a device PIN, and there is an
+account — no extension to install, no twelve words to write down and lose.
 
-What is here: the full WebAuthn ceremony, both halves, against the same
-single-use challenge store the wallet flow uses, so an assertion cannot be
-replayed. Each credential is bound to one Stellar address derived from the
-credential id and a server secret:
+**Signing in with a passkey creates the wallet.** There is nothing to connect
+afterwards. The credential id and a server secret derive a Stellar keypair, so
+the account exists the moment the passkey does, and the same passkey always
+reaches the same address. Linking a browser wallet is offered for people who
+want to sign with a key they already hold — it is an option, not a step.
+
+What that buys, and what it costs: a passkey proves *who is asking*. It cannot
+sign Soroban XDR on its own, because WebAuthn signs over its own authenticator
+data with its own key type. Bridging the two properly means a Soroban smart
+account that verifies secp256r1 signatures on chain, which is on the roadmap and
+not in this build — so today the derived key lives on the server, and the wallet
+screen says so in as many words rather than letting the point slide.
+
+The ceremony is complete in both halves, against the same single-use challenge
+store the wallet flow uses, so an assertion cannot be replayed. A rising
+signature counter is checked on every login, which is how a cloned authenticator
+is caught.
 
 ```bash
 curl -s https://payper.live/api/auth/passkey
@@ -518,9 +534,32 @@ choice — a second asset per invoice is a second thing to keep correct, and the
 properties that matter here are divisibility, transferability and settlement to
 the holder, all of which are now in place.
 
-The other thing that *is* tokenised is the treasury position, and it is
-DeFindex's token rather than ours: pooled capital becomes vault shares, and the
-shares are the claim.
+### The treasury position is a SEP-41 token
+
+Pooled capital does not sit in a balance we keep. It becomes vault shares, and
+those shares are a **SEP-41 token** — DeFindex's, not ours, which is rather the
+point: the asset standing for our position is issued by the protocol holding the
+money, so it can be read and checked without asking us anything.
+
+```bash
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- symbol
+```
+```
+"PPRT"
+```
+
+The full SEP-41 surface is there — `transfer`, `transfer_from`, `approve`,
+`allowance`, `balance`, `burn`, `burn_from`, `name`, `symbol`, `decimals`,
+`total_supply` — which you can list for yourself:
+
+```bash
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- --help
+```
+
+So there are two standards doing two jobs. The receivable's claim lives in our
+own contract, where the ETTN invariant and the settlement waterfall can reach
+it. The treasury's position is a SEP-41 token, because there it buys
+composability we did not have to build.
 
 ---
 

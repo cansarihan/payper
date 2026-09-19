@@ -378,10 +378,10 @@ const en: Copy = {
   sessionAddress: "Session address",
   roleLabel: "Role",
   passkeyNote:
-    "A passkey proves who is asking; it cannot sign Soroban XDR on its own. The address above is derived from the credential and its key lives on the server. Linking a browser wallet gives this session a key you hold.",
+    "Signing in with the passkey created this address — there is nothing you need to connect. A passkey proves who is asking; it cannot sign Soroban XDR on its own, so the key it derives lives on the server until a Soroban smart account can verify secp256r1 on chain. Linking a browser wallet below is optional, for signing with a key you already hold.",
   linkedWallet: "Linked wallet",
   linkLead:
-    "The proof is the same challenge and signature as signing in, so a wallet cannot be attached by claiming an address.",
+    "Optional. You already have a working address; this is for signing with a key you hold yourself. The proof is the same challenge and signature as signing in, so a wallet cannot be attached by claiming an address.",
   linkCta: "Link a wallet",
   unlinkCta: "Detach",
   walletName: "Wallet",
@@ -744,10 +744,10 @@ const tr: Copy = {
   sessionAddress: "Oturum adresi",
   roleLabel: "Rol",
   passkeyNote:
-    "Passkey kimin sorduğunu kanıtlar; Soroban XDR'ı tek başına imzalayamaz. Yukarıdaki adres kimlik bilgisinden türetiliyor ve anahtarı sunucuda duruyor. Tarayıcı cüzdanı bağlamak bu oturuma senin tuttuğun bir anahtar kazandırır.",
+    "Bu adres passkey ile giriş yaptığın anda oluştu — bağlaman gereken bir şey yok. Passkey kimin sorduğunu kanıtlar; Soroban XDR'ı tek başına imzalayamaz, o yüzden türettiği anahtar, secp256r1'i zincirde doğrulayan bir Soroban akıllı hesabı gelene kadar sunucuda duruyor. Aşağıdaki cüzdan bağlama isteğe bağlı — zaten elinde olan bir anahtarla imzalamak istersen.",
   linkedWallet: "Bağlı cüzdan",
   linkLead:
-    "Kanıt, girişteki ile aynı challenge ve imza. Yani bir cüzdan, adresi beyan ederek bağlanamıyor.",
+    "İsteğe bağlı. Çalışan bir adresin zaten var; bu, kendi tuttuğun bir anahtarla imzalamak istersen. Kanıt girişteki ile aynı challenge ve imza, yani bir cüzdan adresi beyan ederek bağlanamıyor.",
   linkCta: "Cüzdan bağla",
   unlinkCta: "Bağlantıyı kes",
   walletName: "Cüzdan",
