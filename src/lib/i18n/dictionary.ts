@@ -52,6 +52,16 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  statsLabel: string;
+  statsTitle: string;
+  statsLead: string;
+  statsVolume: string;
+  statsActive: string;
+  statsAvgDiscount: string;
+  statsSettled: string;
+  statsDaily: string;
+  statsBuyers: string;
+  statsMix: string;
   account: string;
   invoicesTitle: string;
   invoicesLead: string;
@@ -81,6 +91,7 @@ interface Copy {
   payStop: string;
   payListen: string;
   payHeard: string;
+  payScanToListen: string;
   payConfirm: string;
   payAmount: string;
   payFrame: string;
@@ -264,6 +275,17 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  statsLabel: "STATISTICS",
+  statsTitle: "The book, measured",
+  statsLead:
+    "Counted from the invoices the contract holds, over the window you pick. Nothing is aggregated anywhere else — if a figure is here, it came off the ledger on this request.",
+  statsVolume: "Volume",
+  statsActive: "Open",
+  statsAvgDiscount: "Average discount",
+  statsSettled: "Settled",
+  statsDaily: "Registered per day",
+  statsBuyers: "Concentration by buyer",
+  statsMix: "Status mix",
   account: "Account",
   invoicesTitle: "My invoices",
   invoicesLead:
@@ -303,6 +325,7 @@ const en: Copy = {
   payStop: "Stop",
   payListen: "Listen for a request",
   payHeard: "Heard and verified",
+  payScanToListen: "Scan with a phone to open the listener",
   payConfirm: "Fund it",
   payAmount: "Amount",
   payFrame: "Frame",
@@ -549,6 +572,17 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  statsLabel: "İSTATİSTİK",
+  statsTitle: "Defterin ölçümü",
+  statsLead:
+    "Seçtiğin pencerede, kontratın tuttuğu faturalardan sayıldı. Başka hiçbir yerde toplanmıyor — buradaki bir sayı varsa, bu istekte defterden geldi.",
+  statsVolume: "Hacim",
+  statsActive: "Açık",
+  statsAvgDiscount: "Ortalama iskonto",
+  statsSettled: "Kapanan",
+  statsDaily: "Günlük kayıt",
+  statsBuyers: "Alıcıya göre yoğunlaşma",
+  statsMix: "Durum dağılımı",
   account: "Hesap",
   invoicesTitle: "Faturalarım",
   invoicesLead:
@@ -588,6 +622,7 @@ const tr: Copy = {
   payStop: "Durdur",
   payListen: "İstek dinle",
   payHeard: "Duyuldu ve doğrulandı",
+  payScanToListen: "Dinleyiciyi açmak için telefonla okut",
   payConfirm: "Fonla",
   payAmount: "Tutar",
   payFrame: "Çerçeve",

@@ -47,6 +47,7 @@ export function Pay({
   const [hash, setHash] = useState<string | null>(null);
   const [status, setStatus] = useState<DecoderStatus | null>(null);
   const [heard, setHeard] = useState<DecodedFrame | null>(null);
+  const [origin, setOrigin] = useState("");
 
   const player = useRef<ChirpPlayer | null>(null);
   const decoder = useRef<ChirpDecoder | null>(null);
@@ -78,13 +79,13 @@ export function Pay({
     [state.contracts.invoice, state.anchor, amount, rate, memo, invoice?.id],
   );
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    setOrigin(window.location.origin);
+    return () => {
       player.current?.stop();
       decoder.current?.stop();
-    },
-    [],
-  );
+    };
+  }, []);
 
   // Changing the request invalidates whatever is already in the air.
   useEffect(() => {
@@ -246,6 +247,24 @@ export function Pay({
             <Line k="payload" v={frame.hex.replace(/(.{2})/g, "$1 ").trim()} />
             <Line k="crc-8" v={`0x${frame.crc.toString(16).padStart(2, "0")}`} />
           </div>
+
+          {mode === "play" && origin && (
+            <div
+              style={{
+                display: "grid",
+                justifyItems: "center",
+                gap: 10,
+                padding: 16,
+                borderRadius: 20,
+                background: C.paper,
+              }}
+            >
+              <QrCode value={`${origin}/listen${lang === "en" ? "" : `?lang=${lang}`}`} size={148} />
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: C.grey, textAlign: "center" }}>
+                {d.payScanToListen}
+              </span>
+            </div>
+          )}
 
           {mode === "play" && (
             <button

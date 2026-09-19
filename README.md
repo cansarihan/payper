@@ -65,21 +65,37 @@ What it does not have is a price anyone can check. Factoring cost is
 **interest + commission + 5% BSMV**, quoted per deal at a desk. There is no
 published rate and no reference to compare against.
 
-Two structural problems follow:
+But the binding constraint is not demand, it is supply. Factoring capital in
+Turkey is bank capital: a factor can advance only what its own balance sheet and
+its bank lines allow. A funder abroad who would happily take that risk at that
+price cannot reach it — not for regulatory reasons alone, but because the
+plumbing does not exist below a ticket size that makes correspondent banking,
+currency conversion and settlement worth the cost.
 
-1. **The same receivable can be sold twice.** The expensive fraud in factoring
-   is financing one invoice at two institutions. Preventing it depends on each
-   factor's own records.
-2. **The discount is asserted, not derived.** The customer has no way to tell
+Two further problems follow from how the market works:
+
+1. **The discount is asserted, not derived.** The customer has no way to tell
    what part of the rate is the cost of money, what part is currency risk, and
    what part is margin.
+2. **The same receivable can be sold twice.** The expensive fraud in factoring is
+   financing one invoice at two institutions. In Turkey a central registry exists
+   for licensed members; capital arriving from outside that perimeter cannot
+   query it.
 
 ## What Payper does
 
+**It opens the pool.** An acknowledged receivable becomes an instrument anyone
+holding USDC can fund — in seconds, from fifty dollars, with no lira account and
+no Turkish banking relationship. That is the part a database cannot do, and it is
+the reason this is built on Stellar rather than on Postgres.
+
 **One ETTN, one financing.** The ETTN is the universally unique identifier on
-every Turkish e-invoice. Its hash is written to the contract at registration,
-and a second registration is refused before anything else happens — not by a
-database row, but by a contract invariant.
+every Turkish e-invoice. Its hash is written to the contract at registration, and
+a second registration is refused before anything else happens — not by a database
+row, but by a contract invariant. This is hygiene rather than the headline: a
+licensed Turkish factor can already check a central registry. A funder in Berlin
+cannot, and the contract gives them the same guarantee without asking them to
+join anything.
 
 **The price is computed, not quoted.** Four components, two of them read from
 chain on every call:
@@ -344,6 +360,33 @@ one, where an indexer would serve it.
 **The first-loss buffer is thin.** The mechanism is implemented and tested, but a
 production pool would size the buffer against portfolio exposure rather than hold
 a nominal amount.
+
+**Nobody bears the currency risk yet.** The funder's claim is fixed in USDC —
+`repay()` pulls `face_usdc` and distributes it — while the buyer owes a fixed
+number of lira. Over ninety days those two stop matching, and the contract does
+not say who absorbs the difference. The currency premium prices that risk into
+the discount; it does not assign it. Production has two honest answers: the buyer
+stays liable in lira and the platform hedges the gap, or the funder's claim is
+denominated in lira. We have not picked one, and pretending otherwise would be
+the easiest thing on this page to get wrong.
+
+**The funder's claim has no legal wrapper.** The contract creates a pro-rata
+economic interest in a payout, not an assignment of the receivable — which is a
+softer structure than a `temlik` and a better fit for many small funders. What it
+is under securities law in the funder's own jurisdiction is an open question, and
+the answer differs by country. A production deployment needs counsel before it
+takes money from a retail funder abroad.
+
+**A fabricated invoice would pass our checks.** We verify structure, not
+existence: nothing here asks the Revenue Administration whether the invoice is
+real. The gate is `acknowledge()` — the address written on the invoice has to
+sign, so a fake invoice against a real company is never funded. What that does
+not stop is collusion: one person with two wallets, supplying and acknowledging.
+Today the friction against that is the anchor's SEP-12 KYC on the fiat leg, the
+recourse claim against the supplier and the whitelist threshold — all economic
+and legal, none cryptographic. The fixes are tax-authority verification of the
+document and a binding between a tax number and an address, and both are
+roadmap, not code.
 
 ---
 

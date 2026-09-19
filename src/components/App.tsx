@@ -13,6 +13,7 @@ import { PanelShell, type Screen } from "@/components/panel/Shell";
 import { Pay } from "@/components/panel/Pay";
 import { Quote } from "@/components/panel/Quote";
 import { Settle } from "@/components/panel/Settle";
+import { Stats } from "@/components/panel/Stats";
 import { Tour } from "@/components/panel/Tour";
 import { Upload } from "@/components/panel/Upload";
 import { C } from "@/lib/design";
@@ -126,6 +127,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "stats" ? (
+            <Stats lang={lang} state={state} onGo={setScreen} />
           ) : screen === "invoices" ? (
             <Invoices lang={lang} state={state} onGo={setScreen} />
           ) : screen === "market" ? (
