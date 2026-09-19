@@ -17,10 +17,18 @@
  * CRC is there to reject a frame the room corrupted, not an attacker.
  */
 
-/** Lowest tone. Above the worst of room rumble, below a phone mic's roll-off. */
-export const CHIRP_BASE = 1500;
+/**
+ * The band, chosen for the narrowest receiver we have to survive: a phone.
+ *
+ * A handset's audio chain is tuned for speech and rolls off above roughly
+ * 3.4 kHz. The earlier plan put its highest tone at 3600 Hz — and that tone was
+ * in the preamble, so the one part of the frame a decoder must recognise sat
+ * exactly where a phone hears worst. Everything now lives inside the band a
+ * telephone preserves.
+ */
+export const CHIRP_BASE = 1100;
 /** Wide enough to survive reverb and a phone's spectral tilt. */
-export const CHIRP_STEP = 300;
+export const CHIRP_STEP = 280;
 /** Tone length. */
 export const CHIRP_MS = 110;
 /** Silence after each tone, so the reverb tail dies before the next one. */
@@ -181,6 +189,14 @@ export class ChirpPlayer {
 
   /** Silent slots between repeats, so a listener can find the preamble again. */
   private static readonly REST = 4;
+  /**
+   * How many times the frame is played before stopping.
+   *
+   * Not a loop: a request that sounds for ever is a request nobody can tell
+   * has been heard. Three passes is the compromise — a listener that missed
+   * the first preamble gets two more chances, and the sound still ends.
+   */
+  private static readonly PASSES = 3;
 
   start() {
     this.stop();
@@ -194,7 +210,7 @@ export class ChirpPlayer {
     void ctx.resume();
 
     const out = ctx.createGain();
-    out.gain.value = 0.28;
+    out.gain.value = 0.45;
     out.connect(ctx.destination);
 
     const tone = CHIRP_MS / 1000;
@@ -224,10 +240,17 @@ export class ChirpPlayer {
 
     const period = (this.frame.symbols.length + ChirpPlayer.REST) * slot;
     let next = ctx.currentTime + 0.25;
+    let played = 1;
     schedule(next);
     this.scheduler = setInterval(() => {
+      if (played >= ChirpPlayer.PASSES) {
+        this.stop();
+        this.onFrameEnd?.();
+        return;
+      }
       next += period;
       schedule(next);
+      played += 1;
     }, period * 1000);
 
     let index = 0;

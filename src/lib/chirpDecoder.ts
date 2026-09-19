@@ -41,14 +41,20 @@ import {
 const SYMBOLS = Array.from({ length: SYMBOL_COUNT }, (_, i) => i);
 /** Roughly eight reads inside a tone. */
 const READ_INTERVAL_MS = Math.round(CHIRP_MS / 8);
-/** How far above the measured floor a tone must sit, in dB. */
-const MIN_ABOVE_FLOOR = 7;
+/**
+ * How far above the measured floor a tone must sit, in dB.
+ *
+ * Loose on purpose. A phone across a desk hears a weak, tilted version of what
+ * the laptop played, and the CRC is what protects us from a wrong read — not
+ * the gate. A gate tight enough to be safe on its own would simply never open.
+ */
+const MIN_ABOVE_FLOOR = 4.5;
 /** And how far above the runner-up tone, in dB. */
-const MIN_CONTRAST_DB = 4;
+const MIN_CONTRAST_DB = 2;
 /** A burst shorter than this is noise. */
-const MIN_BURST_MS = CHIRP_MS * 0.45;
+const MIN_BURST_MS = CHIRP_MS * 0.3;
 /** Longer than this is not one of our tones. */
-const MAX_BURST_MS = CHIRP_MS * 2;
+const MAX_BURST_MS = CHIRP_MS * 2.6;
 /** Bursts kept in the window: two frames' worth. */
 const HISTORY = (PREAMBLE.length + FRAME_SYMBOLS) * 2;
 
@@ -71,6 +77,8 @@ export interface DecoderStatus {
     peakDb: number;
     floorDb: number;
     bursts: number;
+    /** The tail of what was actually heard, so a failure can be read. */
+    heard: number[];
   };
 }
 
@@ -228,6 +236,7 @@ export class ChirpDecoder {
       peakDb: Math.round(bestDb),
       floorDb: Math.round(floorDb),
       bursts: this.bursts.length,
+      heard: this.bursts.slice(-14).map((b) => b.symbol),
     };
 
     if (sounding) {
@@ -308,7 +317,7 @@ export class ChirpDecoder {
       let contiguous = true;
       for (let i = 1; i < window.length && contiguous; i++) {
         const step = window[i].startedAt - window[i - 1].startedAt;
-        if (step < CHIRP_SLOT_MS * 0.55 || step > CHIRP_SLOT_MS * 1.6) contiguous = false;
+        if (step < CHIRP_SLOT_MS * 0.5 || step > CHIRP_SLOT_MS * 1.9) contiguous = false;
       }
       if (!contiguous) continue;
 

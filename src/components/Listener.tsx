@@ -173,9 +173,35 @@ export function Listener({ lang }: { lang: Lang }) {
             {status.diag.sampleRate} Hz · {status.diag.contextState} · peak{" "}
             {status.diag.peakDb} dB · floor {status.diag.floorDb} dB
             <br />
-            {status.state}
-            {status.symbol !== null ? ` · symbol ${status.symbol}` : ""}
+            {status.state} · {status.diag.bursts} {lang === "tr" ? "patlama" : "bursts"}
+            {status.symbol !== null ? ` · ${status.symbol}` : ""}
           </span>
+        )}
+
+        {/* What the microphone actually resolved. Without this a failure is
+            just silence, and silence cannot be debugged. */}
+        {status?.diag && status.diag.heard.length > 0 && !heard && (
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", maxWidth: 320 }}>
+            {status.diag.heard.map((sym, i) => (
+              <span
+                key={i}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  display: "grid",
+                  placeItems: "center",
+                  fontFamily: FONT.mono,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  background: "rgba(61,226,156,.14)",
+                  color: C.mint,
+                }}
+              >
+                {sym}
+              </span>
+            ))}
+          </div>
         )}
       </div>
 
