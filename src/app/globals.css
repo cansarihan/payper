@@ -1,0 +1,39 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background: #050505;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes blurIn {
+  from { opacity: 0; filter: blur(22px); transform: translateY(30px) scale(.98); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes blurInA {
+  from { opacity: 0; filter: blur(16px); transform: translateY(18px); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+
+/* Scroll-driven where supported; a plain reveal where not. */
+.reveal { animation: blurInA 1s cubic-bezier(.2,.8,.2,1) both; animation-timeline: view(); animation-range: entry 0% entry 45%; }
+.reveal-2 { animation: blurInA 1s cubic-bezier(.2,.8,.2,1) both; animation-timeline: view(); animation-range: entry 10% entry 55%; }
+.reveal-lg { animation: blurIn 1s cubic-bezier(.2,.8,.2,1) both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+
+:focus-visible { outline: 3px solid #3DE29C; outline-offset: 2px; border-radius: 6px; }
+button:not(:disabled) { cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .reveal, .reveal-2, .reveal-lg { animation: none !important; opacity: 1; filter: none; transform: none; }
+}
