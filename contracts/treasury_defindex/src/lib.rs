@@ -12,6 +12,7 @@
 //! against this contract on withdrawal: asking for one share too many leaves
 //! dust behind, asking for one too few leaves the payout short.
 
+mod blend;
 mod vault;
 
 use soroban_sdk::{
@@ -20,6 +21,7 @@ use soroban_sdk::{
     vec, Address, Env, IntoVal,
 };
 
+use crate::blend::BlendPoolClient;
 use crate::vault::VaultClient;
 
 #[contracttype]
@@ -31,6 +33,13 @@ pub enum DataKey {
     Token,
     /// Only this address may draw funds out.
     Controller,
+    /// Blend v2 pool read for a reference lending rate, and the asset to read.
+    BlendPool,
+    BlendAsset,
+    /// `b_rate` and the ledger time it was sampled at, written once at init.
+    /// The rate is measured against this, so nothing about the pool's history
+    /// has to be taken on trust.
+    BlendMark,
 }
 
 #[contracterror]
@@ -46,6 +55,13 @@ pub enum Error {
     /// The vault has not earned anything measurable yet.
     NoYieldYet = 6,
 }
+
+/// Blend states `b_rate` with twelve decimals, starting at one.
+const BLEND_RATE_ONE: i128 = 1_000_000_000_000;
+
+/// Shortest window that yields a meaningful annualised figure. Under this the
+/// reading is refused rather than extrapolated from a few minutes of accrual.
+const MIN_BLEND_WINDOW: u64 = 3_600;
 
 /// One year in seconds, for annualising a realised gain.
 const YEAR: u64 = 31_536_000;
@@ -65,6 +81,49 @@ impl DefindexTreasury {
         env.storage().instance().set(&DataKey::Vault, &vault);
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Controller, &admin);
+    }
+
+    /// Point at a Blend v2 pool to read a lending rate from, and take the
+    /// sample the rate will be measured against.
+    ///
+    /// The sample is taken here rather than assumed, so the figure this
+    /// contract later reports is growth it observed itself over a window it
+    /// timed itself. Nothing about the pool before this call is relied on.
+    pub fn set_blend_reference(env: Env, pool: Address, asset: Address) {
+        admin(&env).require_auth();
+        let reserve = BlendPoolClient::new(&env, &pool).get_reserve(&asset);
+        env.storage().instance().set(&DataKey::BlendPool, &pool);
+        env.storage().instance().set(&DataKey::BlendAsset, &asset);
+        env.storage().instance().set(
+            &DataKey::BlendMark,
+            &(reserve.data.b_rate, env.ledger().timestamp()),
+        );
+    }
+
+    /// What the reference pool has paid suppliers since the sample, annualised.
+    ///
+    /// `None` while the window is too short to annualise, or when no pool is
+    /// configured — both are reasons to keep quiet rather than guess.
+    pub fn blend_apy_bps(env: Env) -> Option<u32> {
+        let pool: Address = env.storage().instance().get(&DataKey::BlendPool)?;
+        let asset: Address = env.storage().instance().get(&DataKey::BlendAsset)?;
+        let (marked, at): (i128, u64) = env.storage().instance().get(&DataKey::BlendMark)?;
+
+        let elapsed = env.ledger().timestamp().saturating_sub(at);
+        if elapsed < MIN_BLEND_WINDOW || marked <= 0 {
+            return None;
+        }
+
+        let now = BlendPoolClient::new(&env, &pool).get_reserve(&asset).data.b_rate;
+        if now <= marked {
+            return None;
+        }
+        let growth_bps = ((now - marked) * BPS) / marked;
+        let annual = (growth_bps * YEAR as i128) / elapsed as i128;
+        if annual <= 0 {
+            return None;
+        }
+        Some(annual.min(u32::MAX as i128) as u32)
     }
 
     /// Hand withdrawal rights to the invoice contract.
@@ -107,8 +166,15 @@ impl DefindexTreasury {
             base += report.prev_balance;
             gains += report.gains_or_losses;
         }
+        // Nothing realised in the vault itself. The reference pool is the next
+        // honest reading: it is what this capital earns lending on Stellar,
+        // which is the cost of money the discount is meant to carry. It is read
+        // from chain like the vault's own figure, not substituted from config.
         if base <= 0 || gains <= 0 {
-            panic_with_error!(&env, Error::NoYieldYet);
+            return match Self::blend_apy_bps(env.clone()) {
+                Some(bps) => bps,
+                None => panic_with_error!(&env, Error::NoYieldYet),
+            };
         }
 
         // The report carries no timestamp, so the rate is measured from this
@@ -122,7 +188,10 @@ impl DefindexTreasury {
             (period_bps * YEAR as i128) / elapsed as i128
         };
         if annual <= 0 {
-            panic_with_error!(&env, Error::NoYieldYet);
+            return match Self::blend_apy_bps(env.clone()) {
+                Some(bps) => bps,
+                None => panic_with_error!(&env, Error::NoYieldYet),
+            };
         }
         annual.min(u32::MAX as i128) as u32
     }
