@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Connect } from "@/components/Connect";
 import { Anchor } from "@/components/panel/Anchor";
 import { Board } from "@/components/panel/Board";
+import { Market } from "@/components/panel/Market";
 import { Overview } from "@/components/panel/Overview";
 import { Buyer } from "@/components/panel/Buyer";
 import { PanelShell, type Screen } from "@/components/panel/Shell";
@@ -121,6 +122,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "market" ? (
+            <Market lang={lang} state={state} onGo={setScreen} />
           ) : screen === "pay" ? (
             <Pay lang={lang} state={state} onDone={refresh} />
           ) : screen === "settle" ? (

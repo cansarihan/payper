@@ -153,3 +153,12 @@ button:not(:disabled) { cursor: pointer; }
 
 .pay-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
 @media (max-width: 1000px) { .pay-split { grid-template-columns: minmax(0, 1fr); } }
+
+@keyframes wordIn {
+  from { opacity: 0; transform: translateY(0.34em) rotate(1.4deg); filter: blur(12px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.hero-word { display: inline-block; animation: wordIn .9s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-word { animation: none !important; opacity: 1; filter: none; transform: none; }
+}

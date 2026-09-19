@@ -52,6 +52,13 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  marketLabel: string;
+  marketTitle: string;
+  marketLead: string;
+  segmentTitle: string;
+  segmentRows: readonly (readonly [string, string])[];
+  unitEconomics: string;
+  vsFactoring: string;
   payTitle: string;
   payLead: string;
   payModes: readonly [string, string, string];
@@ -165,7 +172,7 @@ interface Copy {
 const en: Copy = {
   tagline: ["Turkish working capital,", "funded from anywhere."],
   lead:
-    "A supplier in Bursa waits ninety days to be paid. The capital that could bridge that gap is trapped inside Turkish bank balance sheets, and a funder abroad has no way to reach it — no lira account, no correspondent bank, no ticket small enough to bother with. Payper opens that door: an acknowledged e-invoice becomes something anyone holding USDC can fund, in seconds, from fifty dollars up.",
+    "A supplier in Bursa waits ninety days to be paid. The capital that could close that gap is locked inside Turkish bank balance sheets. Payper opens that door to anyone holding USDC — in seconds, from fifty dollars up.",
   leadEmphasis: "The supplier is paid the same day in lira. The funder never touches a Turkish bank.",
   liveNow: "Stellar testnet · live",
 
@@ -242,6 +249,21 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  marketLabel: "MARKET",
+  marketTitle: "Who pays, how much, and against what",
+  marketLead:
+    "Two questions decide whether this is a business: is the capital pool real, and is the price better than what the supplier pays today. The second one is arithmetic, so it runs live on the quote below — and every assumption about the incumbent is a slider you can move.",
+  segmentTitle: "The segment, not the population",
+  segmentRows: [
+    ["Who", "Suppliers invoicing one large corporate buyer — retail, automotive tier-2, construction materials"],
+    ["Invoice", "50,000 – 500,000 ₺ · 30 to 120 day terms"],
+    ["Pain", "Cannot wait for maturity; needs cash now and goes to a factor"],
+    ["Lock", "The buyer's on-chain acknowledgement — the one condition the product needs"],
+    ["Capital", "USDC held anywhere. Not a Turkish bank balance sheet"],
+    ["Distribution", "One buyer brings hundreds of suppliers; the sale happens once"],
+  ],
+  unitEconomics: "Platform economics",
+  vsFactoring: "Against a factor, on this invoice",
   payTitle: "Pay by sound, or by QR",
   payLead:
     "The request is encoded as sixteen tones and played out loud. Any phone in the room hears it, checks the CRC and acts on it — no camera, no pairing, no data connection. The QR beside it carries the same request as a SEP-7 URI, so a wallet can scan it instead. Both end in the same fund() call.",
@@ -419,7 +441,7 @@ const en: Copy = {
 const tr: Copy = {
   tagline: ["Türkiye'nin işletme sermayesi,", "her yerden fonlanabilir."],
   lead:
-    "Bursa'daki bir üretici parasını doksan gün bekliyor. O açığı kapatacak sermaye Türk bankalarının bilançosunda kilitli; yurt dışındaki bir fonlayıcının oraya ulaşma yolu yok — TL hesabı yok, muhabir banka yok, uğraşmaya değecek kadar küçük bir bilet yok. Payper o kapıyı açıyor: alıcısı onaylamış bir e-fatura, USDC tutan herkesin saniyeler içinde, elli dolardan başlayarak fonlayabildiği bir enstrümana dönüşüyor.",
+    "Bursa'daki üretici parasını doksan gün bekliyor. O açığı kapatacak sermaye Türk bankalarının bilançosunda kilitli. Payper o kapıyı USDC tutan herkese açıyor — saniyeler içinde, elli dolardan başlayarak.",
   leadEmphasis: "Tedarikçiye aynı gün TL geçiyor. Fonlayıcı hiçbir Türk bankasına dokunmuyor.",
   liveNow: "Stellar testnet · canlı",
 
@@ -496,6 +518,21 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  marketLabel: "PAZAR",
+  marketTitle: "Kim ödüyor, ne kadar, neye karşı",
+  marketLead:
+    "Bunun bir iş olup olmadığına iki soru karar verir: sermaye havuzu gerçek mi, ve fiyat tedarikçinin bugün ödediğinden iyi mi. İkincisi aritmetik, o yüzden aşağıdaki teklif üzerinden canlı çalışıyor — ve mevcut oyuncuya dair her varsayım oynatabileceğin bir kaydırıcı.",
+  segmentTitle: "Nüfus değil, segment",
+  segmentRows: [
+    ["Kim", "Tek bir büyük kurumsal alıcıya fatura kesen tedarikçiler — perakende, otomotiv yan sanayi, inşaat malzemesi"],
+    ["Fatura", "50.000 – 500.000 ₺ · 30–120 gün vade"],
+    ["Acı", "Vadeyi bekleyemiyor; bugün nakit lazım, faktoringe gidiyor"],
+    ["Kilit", "Alıcının zincir üstündeki onayı — ürünün çalışması için tek şart"],
+    ["Sermaye", "Her yerde tutulan USDC. Türk bankasının bilançosu değil"],
+    ["Dağıtım", "Bir alıcı yüzlerce tedarikçi getirir; satış tek kapıdan"],
+  ],
+  unitEconomics: "Platform ekonomisi",
+  vsFactoring: "Bu faturada, faktoringe karşı",
   payTitle: "Sesle öde, ya da QR ile",
   payLead:
     "İstek on altı tona kodlanıp yüksek sesle çalınıyor. Odadaki herhangi bir telefon duyuyor, CRC'sini doğruluyor ve işleme koyuyor — kamera yok, eşleşme yok, veri bağlantısı yok. Yanındaki QR aynı isteği SEP-7 URI olarak taşıyor; cüzdan onu okuyabiliyor. İkisi de aynı fund() çağrısında bitiyor.",

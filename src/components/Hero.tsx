@@ -219,26 +219,26 @@ export function Hero({
 
           <h1
             style={{
-              fontSize: "clamp(44px,7.4vw,108px)",
-              lineHeight: 0.98,
+              fontSize: "clamp(36px,5.6vw,82px)",
+              lineHeight: 1.02,
               fontWeight: 500,
               letterSpacing: "-.04em",
-              margin: "0 0 28px",
+              margin: "0 0 26px",
               textWrap: "balance",
-              animation: "blurIn 1.4s cubic-bezier(.2,.8,.2,1) .15s both",
+              maxWidth: 940,
             }}
           >
-            {d.tagline[0]}
+            <Words text={d.tagline[0]} from={0.15} />
             <br />
-            <span style={{ color: C.mint }}>{d.tagline[1]}</span>
+            <Words text={d.tagline[1]} from={0.15 + d.tagline[0].split(" ").length * 0.07} mint />
           </h1>
 
           <p
             style={{
-              fontSize: 17,
-              lineHeight: 1.6,
+              fontSize: 16.5,
+              lineHeight: 1.62,
               color: "rgba(255,255,255,.72)",
-              maxWidth: 640,
+              maxWidth: 720,
               margin: "0 auto 36px",
               fontWeight: 500,
               animation: "blurIn 1.2s cubic-bezier(.2,.8,.2,1) .5s both",
@@ -371,6 +371,27 @@ export function Marquee() {
         )}
       </div>
     </section>
+  );
+}
+
+/** The headline, one word at a time, so the first thing on screen is motion. */
+function Words({ text, from, mint }: { text: string; from: number; mint?: boolean }) {
+  return (
+    <>
+      {text.split(" ").map((word, i) => (
+        <span
+          key={`${word}-${i}`}
+          className="hero-word"
+          style={{
+            color: mint ? C.mint : undefined,
+            animationDelay: `${(from + i * 0.07).toFixed(2)}s`,
+            marginRight: "0.26em",
+          }}
+        >
+          {word}
+        </span>
+      ))}
+    </>
   );
 }
 

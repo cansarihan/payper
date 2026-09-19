@@ -7,7 +7,7 @@ import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
 
-export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle";
+export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "pay", "board", "settle"];
 
 const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.green, C.mint, C.lime];
@@ -116,6 +116,7 @@ export function PanelShell({
               state={state}
               session={session}
               onSignOut={onSignOut}
+              setScreen={setScreen}
             />
           </div>
         </header>
@@ -243,11 +244,13 @@ function AccountMenu({
   state,
   session,
   onSignOut,
+  setScreen,
 }: {
   lang: Lang;
   state: AppState | null;
   session: Session | null;
   onSignOut: () => void;
+  setScreen: (s: Screen) => void;
 }) {
   const d = t(lang);
   const [open, setOpen] = useState(false);
@@ -269,7 +272,14 @@ function AccountMenu({
       .map((w) => w[0]?.toUpperCase() ?? "")
       .join("") || "P";
 
-  const rows: { label: string; meta: string; icon: string; bg: string; fg: string }[] = [
+  const rows: {
+    label: string;
+    meta: string;
+    icon: string;
+    bg: string;
+    fg: string;
+    go?: Screen;
+  }[] = [
     {
       label: d.acct[0][0],
       meta: session ? shortKey(session.address, 4, 4) : d.walletNone,
@@ -284,6 +294,14 @@ function AccountMenu({
       icon: "#",
       bg: C.paper,
       fg: C.ink,
+    },
+    {
+      label: d.marketLabel,
+      meta: lang === "tr" ? "rakamlar ve karşılaştırma" : "figures and the comparison",
+      icon: "◈",
+      bg: C.coral,
+      fg: C.white,
+      go: "market",
     },
     { label: d.acct[4][0], meta: state?.treasury.mode ?? "—", icon: "◉", bg: C.ink, fg: C.mint },
   ];
@@ -353,14 +371,27 @@ function AccountMenu({
           }}
         >
           {rows.map((r) => (
-            <div
+            <button
               key={r.label}
+              onClick={() => {
+                if (!r.go) return;
+                setScreen(r.go);
+                setOpen(false);
+                window.scrollTo(0, 0);
+              }}
+              disabled={!r.go}
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 11,
                 padding: "9px 10px",
                 borderRadius: 14,
+                border: 0,
+                background: "transparent",
+                textAlign: "left",
+                width: "100%",
+                opacity: 1,
+                cursor: r.go ? "pointer" : "default",
               }}
             >
               <span
@@ -394,7 +425,8 @@ function AccountMenu({
                   {r.meta}
                 </span>
               </span>
-            </div>
+              {r.go && <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>↗</span>}
+            </button>
           ))}
           <button
             onClick={onSignOut}
