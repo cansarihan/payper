@@ -28,9 +28,9 @@ export async function POST(req: NextRequest) {
       return fail(new Error("address, nonce ve signature gerekli"), 422);
     }
     const challenge = consumeChallenge(body.nonce);
-    if (!challenge) return fail(new Error("Challenge geçersiz ya da süresi dolmuş"), 401);
+    if (!challenge) return fail(new Error("The challenge is invalid or has expired"), 401);
     if (challenge.address !== body.address) {
-      return fail(new Error("Challenge başka bir adres için verilmiş"), 401);
+      return fail(new Error("The challenge was issued for a different address"), 401);
     }
 
     const result = verifyLoginSignature({

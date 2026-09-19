@@ -79,14 +79,17 @@ chain on every call:
 
 | Component | Source | On the live deployment |
 |---|---|---|
-| Funding yield | Treasury strategy APY, scaled to tenor | **live** · 195 bps |
+| Funding yield | Treasury APY, scaled to tenor | fallback · 195 bps |
 | Currency risk | Observed move in the TRY/USD feed | **live** · 723 bps |
 | Credit premium | Parameter | 120 bps |
 | Platform fee | Parameter | 50 bps |
 
 That is 10.88% over 89 days, about 44.6% annualised. Each component carries its
 provenance, so a number that fell back to a parameter cannot be presented as
-live — the interface labels it.
+live — the interface labels it. The yield component reads `fallback` today for a
+reason worth stating plainly: the treasury is a DeFindex vault with no strategy
+attached, so it has no realised gain to measure, and the adapter refuses rather
+than substituting a number that would arrive wearing the live badge.
 
 **The money reaches a bank account.** The supplier's USDC is sold for lira
 through a SEP-6 anchor and the buyer settles in lira at maturity. Both
@@ -163,7 +166,8 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | Component | Responsibility |
 |---|---|
 | `contracts/invoice` | ETTN uniqueness, registration, acknowledgement, pricing, the quote lock, funding, settlement, default and recourse, whitelist, first-loss buffer |
-| `contracts/treasury_local` | Treasury behind an adapter interface; holds pooled capital and releases the payout |
+| `contracts/treasury_defindex` | Treasury backed by a DeFindex vault; holds the position in vault shares and reports the vault's realised rate |
+| `contracts/treasury_local` | The same adapter interface over plain USDC, so the product still runs if the vault is unreachable |
 | `contracts/fx_oracle` | SEP-40 shaped TRY/USD feed for testnet |
 | `src/lib/ubl` | UBL-TR parsing, XAdES structural check, document hash |
 | `src/lib/anchor` | SEP-1 discovery, SEP-10 auth, SEP-38 quotes, SEP-6 transfers, transfer splitting |
@@ -177,6 +181,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | | Where it is used |
 |---|---|
 | **Soroban** SDK 27.0.6, protocol 28 | Four contracts, `wasm32v1-none` |
+| **DeFindex** | The treasury is a vault created through the DeFindex factory; contributions become vault shares and a payout burns them |
 | **SEP-1** | Anchor discovery. Every endpoint is read at run time |
 | **SEP-6** | Programmatic deposit and withdrawal, both directions |
 | **SEP-10** | Challenge authentication, validated before signing |
@@ -202,10 +207,22 @@ to drive.
 
 **The treasury sits behind an adapter.** The invoice contract knows four
 functions — `apy_bps`, `deposit`, `withdraw`, `total_assets` — and nothing about
-what implements them. A vault can be swapped in, or fail, without the flow
-changing shape; the yield component falls back to a parameter and the interface
-labels it. The trade-off is one layer of indirection and an extra cross-contract
-call per quote.
+what implements them. Two implementations exist: a DeFindex vault, which the
+running deployment uses, and plain USDC as a fallback. Either can be swapped in
+with one `set_config` call, and either can fail without the flow changing shape.
+The trade-off is one layer of indirection and an extra cross-contract call per
+quote.
+
+**A vault with our own asset rather than a yielding one.** DeFindex's published
+testnet vault is denominated in a different USDC to the one our anchor issues,
+and the two are not interchangeable. Rather than re-denominate the product
+around the vault — which would have left the anchor holding an asset it cannot
+issue — we created our own vault through their factory against our USDC. The
+integration is real in both directions: deposits become vault shares and a
+payout burns them. What it does not have is a strategy, because none exists for
+this asset, so the vault holds funds without earning. That is a deliberate
+trade: a real integration reporting nothing, rather than a number with no
+position behind it.
 
 **Accepted quotes expire, and the ledger does it.** `accept_quote` fixes the
 discount because funders subscribe against a fixed payout. The lock is written to
@@ -327,7 +344,9 @@ Stellar testnet, protocol 28.
 | | Address |
 |---|---|
 | Invoice contract | [`CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB`](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB) |
-| Treasury | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |
+| Treasury adapter | [`CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF`](https://stellar.expert/explorer/testnet/contract/CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF) |
+| DeFindex vault | [`CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP`](https://stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP) |
+| Treasury, local fallback | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |
 | TRY/USD feed | [`CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC`](https://stellar.expert/explorer/testnet/contract/CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC) |
 | USDC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` |
 | Anchor | `tr-mock-anchor.fly.dev` |

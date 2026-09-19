@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const address = new URL(req.url).searchParams.get("address");
     if (!address || !/^G[A-Z2-7]{55}$/.test(address)) {
-      return fail(new Error("Geçerli bir adres gerekiyor"), 422);
+      return fail(new Error("A valid address is required"), 422);
     }
     const anchor = await AnchorClient.create({ log: () => {} });
     const horizon = new Horizon.Server(

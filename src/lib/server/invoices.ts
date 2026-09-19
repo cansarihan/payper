@@ -13,7 +13,7 @@ import { keypair, type Actor } from "./actors";
 
 const CONTRACT = () => {
   const id = process.env.PUBLIC_INVOICE_CONTRACT_ID;
-  if (!id) throw new Error("PUBLIC_INVOICE_CONTRACT_ID tanımlı değil — ./scripts/deploy.sh çalıştır");
+  if (!id) throw new Error("PUBLIC_INVOICE_CONTRACT_ID is not set — run ./scripts/deploy.sh");
   return id;
 };
 

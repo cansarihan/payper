@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     // Inspection writes nothing; only registration spends a key.
     if (!inspectOnly) await requireRole("seller");
 
-    if (!(file instanceof File)) return fail(new Error("Dosya gönderilmedi"), 422);
-    if (file.size > 5 * 1024 * 1024) return fail(new Error("Dosya 5 MB'tan büyük"), 413);
+    if (!(file instanceof File)) return fail(new Error("No file was sent"), 422);
+    if (file.size > 5 * 1024 * 1024) return fail(new Error("The file is larger than 5 MB"), 413);
 
     const bytes = Buffer.from(await file.arrayBuffer());
 
@@ -43,19 +43,19 @@ export async function POST(req: NextRequest) {
 
     const available = await isEttnAvailable(parsed.ettnHash);
     const checks = [
-      { key: "ubl", label: "UBL-TR yapısı", pass: true, detail: parsed.profileId ?? "UBL 2.1" },
+      { key: "ubl", label: "UBL-TR structure", pass: true, detail: parsed.profileId ?? "UBL 2.1" },
       {
         key: "signature",
-        label: "XAdES imza bloğu",
+        label: "XAdES signature block",
         pass: parsed.signature.structurallyValid,
         detail: parsed.signature.notes.join(" · "),
       },
       { key: "hash", label: "Belge SHA-256", pass: true, detail: `${parsed.docHash.slice(0, 16)}…` },
       {
         key: "ettn",
-        label: "ETTN tekilliği",
+        label: "ETTN uniqueness",
         pass: available,
-        detail: available ? `${parsed.ettn} · daha önce kullanılmamış` : "Bu ETTN kullanılmış",
+        detail: available ? `${parsed.ettn} · daha önce kullanılmamış` : "ETTN already used",
       },
     ];
 
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           document: parsed,
           checks,
           heldBy: await invoiceByEttn(parsed.ettnHash),
-          error: "Bu ETTN daha önce finanse edilmiş. Aynı alacak ikinci kez satılamaz.",
+          error: "This ETTN has already been financed. The same receivable cannot be sold twice.",
         },
         { status: 409 },
       );

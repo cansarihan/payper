@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   try {
     rateLimit(clientKey(req, "demo-login"), 20, 60_000);
     if (process.env.DEMO_LOGIN === "off") {
-      return fail(new Error("Demo girişi kapalı"), 403);
+      return fail(new Error("Demo sign-in is disabled"), 403);
     }
     const { role, name } = (await req.json()) as { role?: SessionRole; name?: string };
     const chosen: SessionRole =

@@ -20,7 +20,7 @@ export class AuthError extends Error {
 
 export async function requireSession(): Promise<Session> {
   const session = await readSession();
-  if (!session) throw new AuthError("Bu işlem için giriş yapmalısın", 401);
+  if (!session) throw new AuthError("Sign in to perform this action", 401);
   return session;
 }
 
@@ -47,13 +47,13 @@ export function requireOperator(req: Request): void {
   const expected = process.env.PAYPER_OPERATOR_TOKEN;
   if (!expected) {
     if (process.env.NODE_ENV === "production") {
-      throw new AuthError("PAYPER_OPERATOR_TOKEN tanımlı değil — platform işlemleri kapalı", 503);
+      throw new AuthError("PAYPER_OPERATOR_TOKEN is not set — platform operations are disabled", 503);
     }
     return; // local development only
   }
   const got = req.headers.get("x-payper-operator") ?? "";
   if (got.length !== expected.length || !timingEqual(got, expected)) {
-    throw new AuthError("Platform yetkisi gerekli", 403);
+    throw new AuthError("Platform authorisation is required", 403);
   }
 }
 

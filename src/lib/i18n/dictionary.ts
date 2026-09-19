@@ -52,6 +52,21 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  settleTitle: string;
+  settleLead: string;
+  repayCta: string;
+  repaid: string;
+  bufferTitle: string;
+  bufferLead: string;
+  bufferTopUp: string;
+  defaultTitle: string;
+  defaultLead: string;
+  defaultCta: string;
+  graceLeft: string;
+  absorbed: string;
+  recourseOwed: string;
+  nothingAtRisk: string;
+  operatorOnly: string;
   step: string;
   signOut: string;
   openPanel: string;
@@ -171,7 +186,7 @@ const en: Copy = {
   days: "days",
   annual: "annual",
   roles: { seller: "Supplier", buyer: "Buyer", funder: "Funder" },
-  nav: ["Overview", "Upload invoice", "Buyer approval", "Quote", "Anchor", "Funding board"],
+  nav: ["Overview", "Upload invoice", "Buyer approval", "Quote", "Anchor", "Funding board", "Settle"],
   acct: [
     ["Wallet", "signing key"],
     ["Bank account", "payout destination"],
@@ -217,6 +232,24 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  settleTitle: "Settlement, and what happens when it does not come",
+  settleLead:
+    "At maturity the buyer pays the face value in and the contract repays funders pro rata. When the buyer does not pay, the same contract runs the recourse waterfall instead.",
+  repayCta: "Pay at maturity",
+  repaid: "Repaid",
+  bufferTitle: "First-loss buffer",
+  bufferLead:
+    "Platform capital that absorbs a shortfall before it reaches the supplier. An empty buffer passes the whole loss on, which is why the number is on screen.",
+  bufferTopUp: "Top up",
+  defaultTitle: "Declare a default",
+  defaultLead:
+    "The contract refuses until the due date plus the grace period has passed. The refusal is the proof that the window is enforced on chain and not in this interface.",
+  defaultCta: "Declare default",
+  graceLeft: "left before this can be declared",
+  absorbed: "Absorbed by the buffer",
+  recourseOwed: "Claimed from the supplier",
+  nothingAtRisk: "No funded invoice is outstanding.",
+  operatorOnly: "Platform operation. It needs the operator token.",
   step: "STEP",
   signOut: "Sign out",
   openPanel: "Open dashboard",
@@ -298,8 +331,8 @@ const en: Copy = {
     [
       "INTEGRATION",
       "Built on an eligible Stellar protocol",
-      "Pricing reads a SEP-40 price feed through the Reflector oracle interface — lastprice, prices, decimals, ReflectorAsset. The oracle address is configuration, so the same contract points at Reflector's published feed with one set_config call. The treasury sits behind a four-function adapter on the same principle; a DeFindex vault satisfies it unchanged.",
-      "quote() → OracleClient::prices · Config.oracle · TreasuryClient",
+      "The treasury is a DeFindex vault, created through their factory on testnet. A contribution is deposited for vault shares and a payout burns the shares it is worth, so the pooled capital genuinely sits inside DeFindex rather than beside it. Pricing reads its rate the same way, and a second integration runs alongside: the currency feed is read over Reflector's SEP-40 oracle interface at a configurable address.",
+      "DeFindex vault CBXHELM6…ODCP · adapter CD4ZFOAZ…SDNF · SEP-40 OracleClient",
     ],
     [
       "FIAT RAIL",
@@ -396,7 +429,7 @@ const tr: Copy = {
   days: "gün",
   annual: "yıllık",
   roles: { seller: "KOBİ", buyer: "Alıcı", funder: "Fonlayıcı" },
-  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama panosu"],
+  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama panosu", "Kapanış"],
   acct: [
     ["Cüzdan", "imza anahtarı"],
     ["Banka hesabı", "ödeme adresi"],
@@ -442,6 +475,24 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  settleTitle: "Kapanış ve gelmediğinde ne olduğu",
+  settleLead:
+    "Vadede alıcı fatura tutarını yatırır ve kontrat fonlayıcılara oransal öder. Alıcı ödemediğinde aynı kontrat bu kez rücu şelalesini çalıştırır.",
+  repayCta: "Vadede öde",
+  repaid: "Ödendi",
+  bufferTitle: "İlk zarar tamponu",
+  bufferLead:
+    "Açığı tedarikçiye ulaşmadan önce soğuran platform sermayesi. Boş bir tampon zararın tamamını devreder; sayının ekranda durmasının sebebi bu.",
+  bufferTopUp: "Tampona ekle",
+  defaultTitle: "Temerrüt ilan et",
+  defaultLead:
+    "Kontrat, vade artı ek süre dolmadan reddeder. Bu ret, sürenin bu arayüzde değil zincir üstünde uygulandığının kanıtıdır.",
+  defaultCta: "Temerrüdü ilan et",
+  graceLeft: "sonra ilan edilebilir",
+  absorbed: "Tamponun soğurduğu",
+  recourseOwed: "Tedarikçiden istenen",
+  nothingAtRisk: "Açıkta fonlanmış fatura yok.",
+  operatorOnly: "Platform işlemi. Operatör anahtarı gerekiyor.",
   step: "ADIM",
   signOut: "Çıkış yap",
   openPanel: "Paneli aç",
@@ -523,8 +574,8 @@ const tr: Copy = {
     [
       "ENTEGRASYON",
       "Uygun bir Stellar protokolü üzerine kurulu",
-      "Fiyatlama, Reflector oracle arayüzü üzerinden bir SEP-40 beslemesi okur — lastprice, prices, decimals, ReflectorAsset. Oracle adresi yapılandırmadır; aynı kontrat tek bir set_config çağrısıyla Reflector'ün yayımlanmış beslemesine bakar. Hazine de aynı ilkeyle dört fonksiyonluk bir adaptörün arkasındadır; bir DeFindex vault'u bunu değiştirmeden karşılar.",
-      "quote() → OracleClient::prices · Config.oracle · TreasuryClient",
+      "Hazine, testnet'te kendi factory'leri üzerinden açılmış bir DeFindex vault'udur. Katkı vault payına dönüşür, ödeme de karşılık gelen payı yakar; yani havuzdaki sermaye DeFindex'in yanında değil, içindedir. Fiyatlama oranını aynı yerden okur ve yanında ikinci bir entegrasyon çalışır: kur beslemesi, yapılandırılabilir bir adresten Reflector'ün SEP-40 oracle arayüzüyle okunur.",
+      "DeFindex vault CBXHELM6…ODCP · adaptör CD4ZFOAZ…SDNF · SEP-40 OracleClient",
     ],
     [
       "FİAT KANALI",

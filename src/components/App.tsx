@@ -9,6 +9,7 @@ import { Overview } from "@/components/panel/Overview";
 import { Buyer } from "@/components/panel/Buyer";
 import { PanelShell, type Screen } from "@/components/panel/Shell";
 import { Quote } from "@/components/panel/Quote";
+import { Settle } from "@/components/panel/Settle";
 import { Upload } from "@/components/panel/Upload";
 import { C } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
@@ -119,6 +120,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "settle" ? (
+            <Settle lang={lang} state={state} onDone={refresh} />
           ) : (
             <Anchor state={state} onDone={refresh} />
           )}

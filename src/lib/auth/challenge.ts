@@ -24,14 +24,14 @@ const TTL = 5 * 60_000;
 /** Shown verbatim by the wallet, so it states plainly that nothing moves. */
 export function challengeMessage(address: string, nonce: string): string {
   return [
-    "Payper giriş doğrulaması",
+    "Payper sign-in verification",
     "",
     `Adres: ${address}`,
     `Tek kullanımlık kod: ${nonce}`,
     `Zaman: ${new Date().toISOString()}`,
     "",
-    "Bu imza yalnızca cüzdanın sahibi olduğunu kanıtlar.",
-    "Hiçbir varlık transfer edilmez, hiçbir işlem yetkilendirilmez.",
+    "This signature only proves that you own the wallet.",
+    "No asset is transferred and no transaction is authorised.",
   ].join("\n");
 }
 

@@ -28,7 +28,7 @@ export const SPECS: InvoiceSpec[] = [
     buyerTaxId: "3250456789",
     amount: "2940.00",
     tenorDays: 90,
-    note: "90 gün vade · mutlu yol",
+    note: "90-day term · the happy path",
   },
   {
     key: "secondary",
@@ -38,7 +38,7 @@ export const SPECS: InvoiceSpec[] = [
     buyerTaxId: "4410987654",
     amount: "1850.00",
     tenorDays: 60,
-    note: "60 gün vade · ikinci alıcı",
+    note: "60-day term · a second buyer",
   },
   {
     key: "duplicate",

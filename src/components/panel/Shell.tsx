@@ -7,10 +7,10 @@ import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
 
-export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board";
-export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "board"];
+export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "settle";
+export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "board", "settle"];
 
-const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.mint];
+const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.mint, C.lime];
 
 export function PanelShell({
   lang,

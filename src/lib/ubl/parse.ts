@@ -100,28 +100,28 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
   }
 
   const invoice = first(doc.Invoice ?? doc.invoice);
-  if (!invoice) throw new UblParseError("Kök <Invoice> elemanı bulunamadı");
+  if (!invoice) throw new UblParseError("No root <Invoice> element");
 
   const ettn = text(invoice.UUID);
-  if (!ettn) throw new UblParseError("ETTN (cbc:UUID) bulunamadı", "ettn");
+  if (!ettn) throw new UblParseError("ETTN (cbc:UUID) not found", "ettn");
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ettn)) {
     throw new UblParseError(`ETTN bir UUID olmalı: "${ettn}"`, "ettn");
   }
 
   const invoiceNumber = text(invoice.ID);
-  if (!invoiceNumber) throw new UblParseError("Fatura numarası (cbc:ID) bulunamadı", "invoiceNumber");
+  if (!invoiceNumber) throw new UblParseError("Invoice number (cbc:ID) not found", "invoiceNumber");
 
   const issueDate = text(invoice.IssueDate);
-  if (!issueDate) throw new UblParseError("Düzenleme tarihi (cbc:IssueDate) bulunamadı", "issueDate");
+  if (!issueDate) throw new UblParseError("Issue date (cbc:IssueDate) not found", "issueDate");
 
   // Integrators fill either cbc:DueDate or PaymentMeans/PaymentDueDate.
   const means = first(invoice.PaymentMeans);
   const dueDate = text(invoice.DueDate) ?? text(means?.PaymentDueDate);
   if (!dueDate) {
-    throw new UblParseError("Vade tarihi bulunamadı (cbc:DueDate ya da PaymentMeans)", "dueDate");
+    throw new UblParseError("No due date (cbc:DueDate or PaymentMeans)", "dueDate");
   }
   if (Date.parse(dueDate) <= Date.parse(issueDate)) {
-    throw new UblParseError("Vade tarihi düzenleme tarihinden sonra olmalı", "dueDate");
+    throw new UblParseError("The due date must fall after the issue date", "dueDate");
   }
 
   const currency = text(invoice.DocumentCurrencyCode) ?? "TRY";
@@ -129,7 +129,7 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
   const totals = first(invoice.LegalMonetaryTotal);
   const payable = text(totals?.PayableAmount);
   if (!payable) {
-    throw new UblParseError("Ödenecek tutar (cbc:PayableAmount) okunamadı", "amount");
+    throw new UblParseError("Payable amount (cbc:PayableAmount) could not be read", "amount");
   }
 
   const party = (node: unknown, role: string) => {
@@ -158,8 +158,8 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
     dueDate,
     currency,
     amountMinor: toMinorUnits(payable),
-    seller: party(invoice.AccountingSupplierParty, "Satıcı"),
-    buyer: party(invoice.AccountingCustomerParty, "Alıcı"),
+    seller: party(invoice.AccountingSupplierParty, "Supplier"),
+    buyer: party(invoice.AccountingCustomerParty, "Buyer"),
     profileId: text(invoice.ProfileID) ?? null,
     customizationId: text(invoice.CustomizationID) ?? null,
     signature: checkSignature(raw),
@@ -189,7 +189,7 @@ export function checkSignature(raw: string): SignatureCheck {
       hasCertificate: false,
       hasQualifyingProperties: false,
       structurallyValid: false,
-      notes: ["İmza bloğu yok"],
+      notes: ["No signature block"],
     };
   }
 
@@ -205,16 +205,16 @@ export function checkSignature(raw: string): SignatureCheck {
     cleaned.length > 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(cleaned) && cleaned.length % 4 === 0;
 
   if (!hasSignedInfo) notes.push("ds:SignedInfo yok");
-  if (!hasSignatureValue) notes.push("ds:SignatureValue geçerli base64 değil");
+  if (!hasSignatureValue) notes.push("ds:SignatureValue is not valid base64");
   if (!hasCertificate) notes.push("ds:X509Certificate yok");
   if (!hasQualifyingProperties) notes.push("xades:QualifyingProperties yok");
-  if (!method) notes.push("SignatureMethod algoritması belirtilmemiş");
+  if (!method) notes.push("No SignatureMethod algorithm is declared");
 
   const structurallyValid =
     hasSignedInfo && hasSignatureValue && hasCertificate && hasQualifyingProperties && !!method;
 
   if (structurallyValid) {
-    notes.push("Yapısal kontrol geçti · GİB sertifika zinciri doğrulanmadı");
+    notes.push("Structural check passed · the tax authority certificate chain was not verified");
   }
 
   return {

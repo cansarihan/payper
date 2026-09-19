@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const invoice = await getInvoice(body.invoiceId);
 
     const remaining = BigInt(invoice.lockedPayoutUsdc) - BigInt(invoice.fundedAmount);
-    if (remaining <= 0n) return fail(new Error("Fatura tamamen fonlanmış"), 409);
+    if (remaining <= 0n) return fail(new Error("The invoice is fully funded"), 409);
 
     const requested =
       body.amountUsdc !== undefined ? BigInt(Math.round(body.amountUsdc * 1e7)) : remaining;
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     const cfg = await config();
     if (amount > BigInt(cfg.whitelist_threshold as bigint) && !(await isWhitelisted(kp.publicKey()))) {
       await setWhitelist(kp.publicKey(), true);
-      steps.push({ step: "whitelist", detail: "Dilim eşiğin üzerinde — fonlayıcı lisanslandı" });
+      steps.push({ step: "whitelist", detail: "The tranche is over the threshold — the funder is whitelisted" });
     }
 
     const hash = await fund(body.invoiceId, role, amount);
