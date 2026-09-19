@@ -44,7 +44,7 @@ export async function discover(opts?: {
 
   const url = `https://${homeDomain}/.well-known/stellar.toml`;
   const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new AnchorConfigError(`stellar.toml okunamadı: ${url} → HTTP ${res.status}`);
+  if (!res.ok) throw new AnchorConfigError(`stellar.toml could not be read: ${url} → HTTP ${res.status}`);
   const toml = await res.text();
 
   const scalar = (name: string) =>
@@ -55,7 +55,7 @@ export async function discover(opts?: {
   const signingKey = scalar("SIGNING_KEY");
   if (!webAuthEndpoint || !transferServer || !signingKey) {
     throw new AnchorConfigError(
-      `stellar.toml eksik alan içeriyor (WEB_AUTH_ENDPOINT / TRANSFER_SERVER / SIGNING_KEY): ${url}`,
+      `stellar.toml is missing a field (WEB_AUTH_ENDPOINT / TRANSFER_SERVER / SIGNING_KEY): ${url}`,
     );
   }
 
@@ -71,7 +71,7 @@ export async function discover(opts?: {
     process.env.PUBLIC_USDC_ISSUER ??
     null;
   if (!issuer) {
-    throw new AnchorConfigError(`${assetCode} issuer'ı stellar.toml'da bulunamadı: ${url}`);
+    throw new AnchorConfigError(`${assetCode} issuer was not found in stellar.toml: ${url}`);
   }
 
   const config: AnchorConfig = {

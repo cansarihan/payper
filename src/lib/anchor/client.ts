@@ -42,7 +42,7 @@ export class AnchorClient {
       `${this.config.webAuthEndpoint}?account=${signer.publicKey()}&home_domain=${this.config.homeDomain}`,
       { cache: "no-store" },
     );
-    if (!res.ok) throw new Error(`SEP-10 challenge alınamadı: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`the SEP-10 challenge could not be fetched: HTTP ${res.status}`);
     const { transaction, network_passphrase } = (await res.json()) as {
       transaction: string;
       network_passphrase?: string;
@@ -58,17 +58,17 @@ export class AnchorClient {
       this.config.homeDomain,
       new URL(this.config.webAuthEndpoint).host,
     );
-    this.log({ tag: "SEP10", msg: `challenge doğrulandı · signing key ${short(this.config.signingKey)}` });
+    this.log({ tag: "SEP10", msg: `challenge verified · signing key ${short(this.config.signingKey)}` });
 
     tx.sign(signer);
-    this.log({ tag: "SIGN", msg: `challenge imzalandı · ${short(signer.publicKey())}` });
+    this.log({ tag: "SIGN", msg: `challenge signed · ${short(signer.publicKey())}` });
 
     const post = await fetch(this.config.webAuthEndpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ transaction: tx.toXDR() }),
     });
-    if (!post.ok) throw new Error(`SEP-10 token alınamadı: HTTP ${post.status}`);
+    if (!post.ok) throw new Error(`the SEP-10 token could not be fetched: HTTP ${post.status}`);
     const { token } = (await post.json()) as { token: string };
     this.log({ tag: "POST", msg: `/auth → { token: ${token.slice(0, 12)}… }` });
     return token;
@@ -81,7 +81,7 @@ export class AnchorClient {
 
   async info(): Promise<Record<string, unknown>> {
     const res = await fetch(`${this.config.transferServer}/info`, { cache: "no-store" });
-    if (!res.ok) throw new Error(`SEP-6 /info alınamadı: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`SEP-6 /info could not be fetched: HTTP ${res.status}`);
     return (await res.json()) as Record<string, unknown>;
   }
 
@@ -114,7 +114,7 @@ export class AnchorClient {
       headers: { "content-type": "application/json", authorization: `Bearer ${opts.jwt}` },
       body: JSON.stringify({ sell_asset: sell, buy_asset: buy, sell_amount: opts.sellAmount }),
     });
-    if (!res.ok) throw new Error(`SEP-38 teklifi alınamadı: HTTP ${res.status} ${await res.text()}`);
+    if (!res.ok) throw new Error(`the SEP-38 quote could not be fetched: HTTP ${res.status} ${await res.text()}`);
     const q = (await res.json()) as never as {
       id: string; price: string; expires_at: string; sell_amount: string; buy_amount: string;
     };
@@ -132,7 +132,7 @@ export class AnchorClient {
     });
     if (!res.ok) return undefined;
     const body = (await res.json()) as { id?: string };
-    this.log({ tag: "SEP12", msg: `müşteri onaylandı${body.id ? ` id=${body.id}` : ""}` });
+    this.log({ tag: "SEP12", msg: `customer approved${body.id ? ` id=${body.id}` : ""}` });
     return body.id;
   }
 
@@ -163,14 +163,14 @@ export class AnchorClient {
       headers: { authorization: `Bearer ${opts.jwt}` },
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`SEP-6 çekim başlatılamadı: HTTP ${res.status} ${await res.text()}`);
+    if (!res.ok) throw new Error(`the SEP-6 withdrawal could not be started: HTTP ${res.status} ${await res.text()}`);
     const body = (await res.json()) as {
       id: string;
       account_id?: string;
       memo?: string;
       memo_type?: string;
     };
-    this.log({ tag: "200", msg: `id=${body.id} hazine=${body.account_id ? short(body.account_id) : "—"} memo=${body.memo ?? "—"}` });
+    this.log({ tag: "200", msg: `id=${body.id} treasury=${body.account_id ? short(body.account_id) : "—"} memo=${body.memo ?? "—"}` });
     return body;
   }
 
@@ -193,7 +193,7 @@ export class AnchorClient {
       headers: { authorization: `Bearer ${opts.jwt}` },
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`SEP-6 yatırma başlatılamadı: HTTP ${res.status} ${await res.text()}`);
+    if (!res.ok) throw new Error(`the SEP-6 deposit could not be started: HTTP ${res.status} ${await res.text()}`);
     const body = (await res.json()) as {
       id: string;
       how?: string;
@@ -214,8 +214,8 @@ export class AnchorClient {
       headers: { "content-type": "application/json", authorization: `Bearer ${jwt}` },
       body: JSON.stringify({ amount }),
     });
-    if (!res.ok) throw new Error(`banka havalesi simüle edilemedi: HTTP ${res.status}`);
-    this.log({ tag: "BANK", msg: `fiat geldi · ${id} hesabına geçti` });
+    if (!res.ok) throw new Error(`the bank transfer could not be simulated: HTTP ${res.status}`);
+    this.log({ tag: "BANK", msg: `fiat received · ${id} credited` });
   }
 
   async getTransaction(jwt: string, id: string) {
@@ -223,7 +223,7 @@ export class AnchorClient {
       headers: { authorization: `Bearer ${jwt}` },
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`SEP-6 işlem durumu alınamadı: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`the SEP-6 transaction status could not be fetched: HTTP ${res.status}`);
     const body = (await res.json()) as { transaction: Record<string, unknown> };
     return body.transaction;
   }
@@ -237,9 +237,9 @@ export class AnchorClient {
       this.log({ tag: "GET", msg: `/sep6/transaction?id=${id} → status=${status}` });
       if (want.includes(status)) return tx;
       if (status === "error" || status === "refunded") {
-        throw new Error(`anchor işlemi ${status} durumunda: ${id}`);
+        throw new Error(`the anchor transaction is in status ${status}: ${id}`);
       }
-      if (Date.now() > deadline) throw new Error(`anchor ${want.join("/")} durumuna geçmedi: ${id}`);
+      if (Date.now() > deadline) throw new Error(`the anchor never reached ${want.join("/")}: ${id}`);
       await new Promise((r) => setTimeout(r, 2000));
     }
   }

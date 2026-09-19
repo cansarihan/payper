@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { C, FONT, shortKey, trNumber, usdc } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
@@ -26,6 +26,18 @@ export function Anchor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnchorRunResult | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const startedAt = useRef(0);
+
+  // A run takes ten to twenty-five seconds of real requests. Without a moving
+  // number on screen that reads as a hang, which is what it looked like.
+  useEffect(() => {
+    if (!busy) return;
+    startedAt.current = Date.now();
+    setElapsed(0);
+    const iv = setInterval(() => setElapsed((Date.now() - startedAt.current) / 1000), 100);
+    return () => clearInterval(iv);
+  }, [busy]);
 
   const anchor = state.anchor;
   const invoice =
@@ -254,9 +266,9 @@ export function Anchor({
               }}
             >
               {!invoice
-                ? "Uygun fatura yok"
+                ? d.anchorNoInvoice
                 : busy
-                  ? `${d.loading}…`
+                  ? `${d.loading}… ${elapsed.toFixed(1)}s`
                   : tab === "off"
                     ? d.anchorRun[0]
                     : d.anchorRun[1]}
@@ -273,8 +285,7 @@ export function Anchor({
               fontWeight: 500,
             }}
           >
-            <b>Sandbox</b> · Banka ve KYC simüle; Stellar bacağı gerçek testnet USDC. İşlem
-            başına limit aşılırsa tutar tranşlara bölünür.
+            {d.anchorSandbox}
           </div>
         </div>
 
@@ -307,11 +318,93 @@ export function Anchor({
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)", fontWeight: 600 }}>
                 {tab === "off"
-                  ? `${trNumber(Number(result?.usdcIn ?? 0), 4)} USDC satıldı`
-                  : `${trNumber(Number(result?.fiatIn ?? 0))} ₺ gönderildi`}
+                  ? `${trNumber(Number(result?.usdcIn ?? 0), 4)} ${d.anchorSold}`
+                  : `${trNumber(Number(result?.fiatIn ?? 0))} ₺ ${d.anchorSent}`}
                 {" · "}
-                {result?.legs?.length ?? 0} tranş
+                {result?.legs?.length ?? 0} {d.anchorTranches}
               </div>
+
+              {/* Each transfer, with the anchor's own id and the Stellar
+                  transaction it produced. The claim and the receipt together. */}
+              {(result?.legs?.length ?? 0) > 0 && (
+                <div style={{ display: "grid", gap: 8, marginTop: 18 }}>
+                  <Label light>{d.anchorLegs}</Label>
+                  {result!.legs!.map((leg) => (
+                    <div
+                      key={leg.id}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0,1fr) auto",
+                        gap: 10,
+                        alignItems: "center",
+                        padding: "11px 13px",
+                        borderRadius: 13,
+                        background: C.panel,
+                        fontFamily: FONT.mono,
+                        fontSize: 11,
+                      }}
+                    >
+                      <span style={{ display: "grid", gap: 3, minWidth: 0 }}>
+                        <span style={{ color: "rgba(255,255,255,.55)", overflowWrap: "anywhere" }}>
+                          {leg.id}
+                        </span>
+                        <span style={{ color: C.mint }}>
+                          {leg.amountIn} → {leg.amountOut} ·{" "}
+                          <span style={{ color: leg.status === "completed" ? C.mint : C.amber }}>
+                            {leg.status}
+                          </span>
+                        </span>
+                      </span>
+                      {leg.stellarTx && (
+                        <a
+                          href={`https://stellar.expert/explorer/${
+                            state.network === "mainnet" ? "public" : "testnet"
+                          }/tx/${leg.stellarTx}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            color: C.white,
+                            textDecoration: "none",
+                            border: "1px solid rgba(255,255,255,.2)",
+                            borderRadius: 999,
+                            padding: "6px 12px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {leg.stellarTx.slice(0, 8)}… ↗
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {busy && (
+            <div
+              style={{
+                borderRadius: 20,
+                padding: "14px 18px",
+                background: "rgba(255,255,255,.55)",
+                fontSize: 12.5,
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: C.amber,
+                  animation: "pulse 1.2s infinite",
+                  flex: "none",
+                }}
+              />
+              {d.anchorElapsed} · {elapsed.toFixed(1)}s
             </div>
           )}
 
@@ -336,7 +429,7 @@ export function Anchor({
                   color: "rgba(255,255,255,.55)",
                 }}
               >
-                anchor-client · kayıt
+                anchor-client · {lang === "tr" ? "kayıt" : "trace"}
               </span>
               <span
                 style={{

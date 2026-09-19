@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       if (available <= 0) {
         return fail(
           new Error(
-            `Satıcının çekilebilir USDC'si yok (${available.toFixed(7)}). Önce faturayı fonlayın.`,
+            `The supplier holds no withdrawable USDC (${available.toFixed(7)}). Fund an invoice first.`,
           ),
           409,
         );

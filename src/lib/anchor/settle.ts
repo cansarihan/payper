@@ -136,6 +136,20 @@ export async function depositFromBank(opts: {
  *
  * Paid to the anchor's treasury with the memo it returns.
  */
+/** A memo of the type the anchor said it would look for. */
+function anchorMemo(value: string, type: string | undefined): Memo {
+  switch ((type ?? "text").toLowerCase()) {
+    case "id":
+      return Memo.id(value);
+    case "hash":
+      return Memo.hash(Buffer.from(value, "hex").toString("hex"));
+    case "return":
+      return Memo.return(Buffer.from(value, "hex").toString("hex"));
+    default:
+      return Memo.text(value);
+  }
+}
+
 export async function withdrawToBank(opts: {
   anchor: AnchorClient;
   signer: Keypair;
@@ -160,7 +174,7 @@ export async function withdrawToBank(opts: {
       dest: opts.bank?.iban,
       destExtra: opts.bank?.holder,
     });
-    if (!wd.account_id) throw new Error("anchor bir hazine adresi döndürmedi");
+    if (!wd.account_id) throw new Error("the anchor returned no treasury address");
 
     const account = await horizon.loadAccount(signer.publicKey());
     const builder = new TransactionBuilder(account, {
@@ -171,7 +185,11 @@ export async function withdrawToBank(opts: {
         Operation.payment({ destination: wd.account_id, asset, amount }),
       )
       .setTimeout(60);
-    if (wd.memo) builder.addMemo(Memo.text(wd.memo));
+    // The anchor names the memo type it will match on, and matching is the
+    // whole mechanism: the watcher looks for a payment carrying exactly this
+    // memo. Sending MEMO_TEXT where it asked for MEMO_ID leaves the money in
+    // the treasury and the transfer stuck at pending_user_transfer_start.
+    if (wd.memo) builder.addMemo(anchorMemo(wd.memo, wd.memo_type));
     const tx = builder.build();
     tx.sign(signer);
     const sent = await horizon.submitTransaction(tx);

@@ -52,6 +52,13 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  anchorNoInvoice: string;
+  anchorSandbox: string;
+  anchorSold: string;
+  anchorSent: string;
+  anchorTranches: string;
+  anchorElapsed: string;
+  anchorLegs: string;
   needsRoleHint: string;
   anchorTitle: string;
   anchorLead: string;
@@ -304,6 +311,14 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  anchorNoInvoice: "No eligible invoice",
+  anchorSandbox:
+    "Sandbox · the bank and KYC legs are simulated; the Stellar leg is real testnet USDC. If a transfer exceeds the anchor's per-transaction limit the amount is split into tranches.",
+  anchorSold: "USDC sold",
+  anchorSent: "sent",
+  anchorTranches: "tranche",
+  anchorElapsed: "The flow runs real SEP requests against the anchor and usually takes 10 to 25 seconds",
+  anchorLegs: "Transfers",
   needsRoleHint: "Acting here needs the {role} role — open it to look, switch to act",
   anchorTitle: "The lira bridge",
   anchorLead:
@@ -652,6 +667,14 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  anchorNoInvoice: "Uygun fatura yok",
+  anchorSandbox:
+    "Sandbox · banka ve KYC bacağı simüle; Stellar bacağı gerçek testnet USDC. Transfer anchor'ın işlem başına limitini aşarsa tutar tranşlara bölünür.",
+  anchorSold: "USDC satıldı",
+  anchorSent: "gönderildi",
+  anchorTranches: "tranş",
+  anchorElapsed: "Akış anchor'a gerçek SEP istekleri atıyor; genelde 10–25 saniye sürüyor",
+  anchorLegs: "Transferler",
   needsRoleHint: "Burada işlem yapmak {role} rolünü gerektiriyor — bakmak için açabilirsin, işlem için rol değiştir",
   anchorTitle: "TL köprüsü",
   anchorLead:
