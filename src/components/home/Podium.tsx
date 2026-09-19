@@ -19,20 +19,20 @@ export function Podium({ lang, apyBps }: { lang: Lang; apyBps: number | null }) 
   const headIn = Math.min(1, p * 4);
 
   const bars = [
-    { label: h.pod[0], value: "%4,00", height: 250, order: 3, ours: false },
-    { label: h.pod[1], value: "%5,70", height: 330, order: 1, ours: false },
+    { label: h.pod[0], value: "%4,00", height: 60, order: 3, ours: false },
+    { label: h.pod[1], value: "%5,70", height: 79, order: 1, ours: false },
     {
       label: "◉ payper · treasury",
       // The only bar read from chain. Until it arrives it says so, because a
       // placeholder number next to four cited references would be indistinguishable
       // from them.
       value: apyBps === null ? "··" : `%${(apyBps / 100).toFixed(2).replace(".", ",")}`,
-      height: 420,
+      height: 100,
       order: 0,
       ours: true,
     },
-    { label: h.pod[2], value: "%4,50", height: 280, order: 2, ours: false },
-    { label: h.pod[3], value: "%3,30", height: 220, order: 4, ours: false },
+    { label: h.pod[2], value: "%4,50", height: 67, order: 2, ours: false },
+    { label: h.pod[3], value: "%3,30", height: 52, order: 4, ours: false },
   ];
 
   return (
@@ -102,11 +102,11 @@ export function Podium({ lang, apyBps }: { lang: Lang; apyBps: number | null }) 
               <div
                 key={b.label}
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
+                  display: "grid",
+                  gridTemplateRows: "auto minmax(0,1fr)",
                   gap: 18,
-                  justifyContent: "end",
-                  alignItems: "center",
+                  alignItems: "end",
+                  justifyItems: "center",
                   height: "min(500px,54vh)",
                 }}
               >
@@ -144,8 +144,8 @@ export function Podium({ lang, apyBps }: { lang: Lang; apyBps: number | null }) 
                 <div
                   style={{
                     width: "100%",
-                    height: b.height,
-                    flex: "none",
+                    height: `${b.height}%`,
+                    alignSelf: "end",
                     borderRadius: "10px 10px 0 0",
                     background: b.ours
                       ? `linear-gradient(180deg,${C.mint},${C.green})`

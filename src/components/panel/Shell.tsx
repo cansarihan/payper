@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { Mark } from "@/components/Logo";
+import { Lockup } from "@/components/Logo";
 import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
@@ -64,7 +64,7 @@ export function PanelShell({
           }}
         >
           <a href="/" style={{ textDecoration: "none", color: C.ink, display: "flex" }}>
-            <Mark colour={C.ink} size={34} />
+            <Lockup colour={C.ink} size={30} />
           </a>
 
           <nav className="panel-nav" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

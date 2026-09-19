@@ -120,7 +120,8 @@ interface Copy {
   statsLabels: readonly [string, string, string, string];
 
   howTitle: string;
-  howSteps: readonly (readonly [string, string, string])[];
+  howP: string;
+  steps: readonly (readonly [string, string, string])[];
   waysTitle: string;
   ways: readonly (readonly [string, string, string])[];
   pillarsTitle: string;
@@ -284,15 +285,35 @@ const en: Copy = {
   exploreCta: "How it works",
   statsLabels: ["Financed to date", "Invoices in the book", "Treasury yield", "Defaults"],
 
-  howTitle: "Seven steps, each one a contract call or a SEP flow",
-  howSteps: [
-    ["Register", "register()", "The ETTN hash is written. A second registration of the same ETTN is refused before anything else happens."],
-    ["Acknowledge", "acknowledge()", "Only the address written on the invoice can confirm it. This is what makes the receivable real to a funder."],
-    ["Price", "quote()", "Four components. The treasury's yield and the observed currency move are read from chain on every call."],
-    ["Accept", "accept_quote()", "The discount is fixed so funders subscribe against a known payout. The lock expires on its own."],
-    ["Fund", "fund()", "Contributions sit in the treasury while the round fills. On completion the payout is drawn and paid."],
-    ["Settle", "SEP-6", "The supplier sells USDC for lira; at maturity the buyer pays lira back in."],
-    ["Distribute", "repay()", "Funders are repaid pro rata, each with their share of the discount."],
+  howTitle: "Five steps, each one a contract call or a SEP flow",
+  howP:
+    "No step in between decides off chain. The price is not a fixed number; it is computed live from treasury yield and the observed currency move.",
+  steps: [
+    [
+      "Upload the UBL-TR XML",
+      "The ETTN hash and the document SHA-256 are written on chain. A second upload of the same ETTN is refused before anything else runs.",
+      "ETTN SHA-256 · document hash · XAdES structural check · DataKey::Ettn uniqueness",
+    ],
+    [
+      "The buyer acknowledges",
+      "The buyer named on the invoice signs; the debt becomes final on chain and the receivable becomes real to a funder.",
+      "acknowledge() · only the address written on the invoice can call it",
+    ],
+    [
+      "A live discount",
+      "Four components, each returned with its provenance. Two of them are read from chain on every call.",
+      "quote() · treasury APY · TRY/USD drift and range · credit · fee",
+    ],
+    [
+      "Funded, then paid out in lira",
+      "Contributions sit in the treasury while the round fills; on completion the contract draws the payout and the anchor converts it.",
+      "accept_quote() → fund() → treasury.withdraw · SEP-38 rate lock · SEP-6 withdraw",
+    ],
+    [
+      "Distribution at maturity",
+      "The buyer pays lira in; the contract repays funders pro rata, each with their share of the discount.",
+      "SEP-6 deposit → repay() → pro-rata distribution",
+    ],
   ],
   waysTitle: "Three ways in",
   ways: [
@@ -465,15 +486,35 @@ const tr: Copy = {
   exploreCta: "Nasıl çalışır",
   statsLabels: ["Toplam finanse edilen", "Defterdeki fatura", "Hazine getirisi", "Temerrüt"],
 
-  howTitle: "Yedi adım, her biri bir kontrat çağrısı ya da SEP akışı",
-  howSteps: [
-    ["Kayıt", "register()", "ETTN hash'i yazılır. Aynı ETTN'in ikinci kaydı, başka hiçbir şey olmadan önce reddedilir."],
-    ["Onay", "acknowledge()", "Faturayı yalnızca üzerinde yazan adres onaylayabilir. Alacağı fonlayıcı için gerçek kılan budur."],
-    ["Fiyat", "quote()", "Dört bileşen. Hazine getirisi ve gözlenen kur hareketi her çağrıda zincirden okunur."],
-    ["Kabul", "accept_quote()", "İskonto sabitlenir, fonlayıcılar bilinen bir ödemeye abone olur. Kilit kendiliğinden düşer."],
-    ["Fonlama", "fund()", "Katkılar tur dolarken hazinede durur. Tamamlanınca ödeme çekilir ve satıcıya geçer."],
-    ["Nakde çevirme", "SEP-6", "Satıcı USDC'yi TL'ye çevirir; vadede alıcı TL öder."],
-    ["Dağıtım", "repay()", "Fonlayıcılara oransal, her birine iskontodaki payıyla ödenir."],
+  howTitle: "Beş adım, her biri bir kontrat çağrısı ya da SEP akışı",
+  howP:
+    "Aradaki hiçbir adım zincir dışında karar vermez. Fiyat sabit bir sayı değil; hazine getirisinden ve gözlenen kur hareketinden canlı hesaplanır.",
+  steps: [
+    [
+      "UBL-TR XML yükle",
+      "ETTN hash'i ve belgenin SHA-256'sı zincire yazılır. Aynı ETTN'in ikinci kez yüklenmesi her şeyden önce reddedilir.",
+      "ETTN SHA-256 · belge hash · XAdES yapısal kontrol · DataKey::Ettn tekillik",
+    ],
+    [
+      "Alıcı onaylar",
+      "Faturada yazılı alıcı imzalar; borç zincir üstünde kesinleşir ve alacak fonlayıcı için gerçek hâle gelir.",
+      "acknowledge() · yalnız faturada yazılı adres çağırabilir",
+    ],
+    [
+      "Canlı iskonto",
+      "Dört bileşen, her biri kaynağıyla birlikte döner. İkisi her çağrıda zincirden okunur.",
+      "quote() · hazine APY · TRY/USD sapma ve bant · kredi · ücret",
+    ],
+    [
+      "Fonlanır, lira olarak ödenir",
+      "Tur dolarken katkılar hazinede bekler; tamamlanınca kontrat ödemeyi çeker ve anchor çevirir.",
+      "accept_quote() → fund() → treasury.withdraw · SEP-38 kur kilidi · SEP-6 withdraw",
+    ],
+    [
+      "Vadede dağıtım",
+      "Alıcı lirayı öder; kontrat fonlayıcılara oransal, her birine iskonto payıyla birlikte geri öder.",
+      "SEP-6 deposit → repay() → oransal dağıtım",
+    ],
   ],
   waysTitle: "Üç giriş yolu",
   ways: [

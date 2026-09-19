@@ -4,73 +4,152 @@ import { home } from "@/lib/i18n/home";
 
 type Copy = ReturnType<typeof t>;
 
-/** The seven steps, each named with the call behind it. */
-export function Steps({ d }: { d: Copy }) {
+/** How it works: five steps, each one a contract call or a SEP flow. */
+export function Steps({ d, lang }: { d: Copy; lang: Lang }) {
+  const q = lang === "en" ? "" : `?lang=${lang}`;
+  const fns = ["register", "acknowledge", "quote", "fund", "repay"];
+  const colours = [C.mint, C.blue, C.coral, C.lime, C.mint];
+
   return (
-    <Section id="how">
-      <Heading>{d.howTitle}</Heading>
-      <div style={{ display: "grid", gap: 10, marginTop: 34 }}>
-        {d.howSteps.map(([title, call, body], i) => (
-          <div
-            key={call}
-            className={i % 2 ? "reveal-2" : "reveal"}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "48px minmax(0,1fr)",
-              gap: 20,
-              alignItems: "start",
-              padding: "22px 24px",
-              borderRadius: 22,
-              background: "#101010",
-            }}
-          >
-            <span
+    <section
+      id="how"
+      style={{
+        background: C.black,
+        color: C.white,
+        padding: "130px 32px 80px",
+        scrollMarginTop: 80,
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <h2
+          className="reveal-lg"
+          style={{
+            fontSize: "clamp(36px,5.4vw,74px)",
+            fontWeight: 500,
+            letterSpacing: "-.04em",
+            lineHeight: 1.02,
+            margin: "0 0 20px",
+            textWrap: "balance",
+          }}
+        >
+          {d.howTitle}
+        </h2>
+        <p
+          className="reveal-2"
+          style={{
+            fontSize: 17,
+            lineHeight: 1.6,
+            color: "rgba(255,255,255,.7)",
+            maxWidth: 640,
+            margin: "0 0 56px",
+            fontWeight: 500,
+          }}
+        >
+          {d.howP}
+        </p>
+
+        <div style={{ display: "grid", gap: 14 }}>
+          {d.steps.map(([title, desc, tech], i) => (
+            <div
+              key={title}
+              className={["reveal", "reveal-2", "reveal-3"][i % 3]}
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                background: i === 0 ? C.mint : "#1C1C1E",
-                color: i === 0 ? C.ink : "rgba(255,255,255,.6)",
                 display: "grid",
-                placeItems: "center",
-                fontFamily: FONT.mono,
-                fontSize: 14,
-                fontWeight: 700,
+                gridTemplateColumns: "56px minmax(0,1fr)",
+                gap: 22,
+                alignItems: "start",
+                padding: "26px 28px",
+                borderRadius: 16,
+                background: "rgba(255,255,255,.04)",
+                border: "1px solid rgba(255,255,255,.08)",
               }}
             >
-              {i + 1}
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <div
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 12,
-                  flexWrap: "wrap",
-                  marginBottom: 6,
+                  width: 46,
+                  height: 46,
+                  borderRadius: "50%",
+                  background: colours[i],
+                  color: i === 1 || i === 2 ? C.white : C.ink,
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 15,
+                  fontWeight: 800,
                 }}
               >
-                <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-.02em" }}>
-                  {title}
-                </span>
-                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.mint }}>{call}</span>
+                0{i + 1}
+              </span>
+              <div style={{ display: "grid", gap: 8, minWidth: 0 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 21, fontWeight: 600, letterSpacing: "-.02em" }}>
+                    {title}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: FONT.mono,
+                      fontSize: 11,
+                      color: colours[i],
+                      background: "rgba(255,255,255,.06)",
+                      padding: "3px 8px",
+                      borderRadius: 6,
+                    }}
+                  >
+                    {fns[i]}()
+                  </span>
+                </div>
+                <div style={{ fontSize: 14.5, lineHeight: 1.6, color: "rgba(255,255,255,.72)" }}>
+                  {desc}
+                </div>
+                <div
+                  style={{
+                    fontFamily: FONT.mono,
+                    fontSize: 11.5,
+                    lineHeight: 1.7,
+                    color: "rgba(255,255,255,.45)",
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {tech}
+                </div>
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  color: "rgba(255,255,255,.62)",
-                  maxWidth: 640,
-                }}
-              >
-                {body}
-              </p>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <div style={{ marginTop: 44 }}>
+          <a
+            href={`/app${q}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 12,
+              background: C.mint,
+              color: C.ink,
+              borderRadius: 999,
+              padding: "8px 8px 8px 22px",
+              fontSize: 15,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            <span>{d.uploadCta}</span>
+            <span
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: C.ink,
+                color: C.mint,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              →
+            </span>
+          </a>
+        </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
