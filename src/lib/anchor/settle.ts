@@ -15,6 +15,14 @@ export interface Limits {
   minFiat: number;
   maxFiat: number;
   minAsset: number;
+  /**
+   * The largest asset amount one withdrawal may carry.
+   *
+   * The anchor caps the *fiat* side, so the asset-side ceiling has to be
+   * derived from the rate. Without it a withdrawal above the cap is built,
+   * sent, and refused by the anchor after the money has already left.
+   */
+  maxAsset: number;
 }
 
 export interface Leg {
@@ -27,11 +35,14 @@ export interface Leg {
 
 export async function fetchLimits(anchor: AnchorClient): Promise<Limits> {
   const health = await anchor.health();
-  return {
-    minFiat: Number(health?.limits?.min_onramp_try ?? 50),
-    maxFiat: Number(health?.limits?.max_onramp_try ?? 3000),
-    minAsset: Number(health?.limits?.min_offramp_usdc ?? 1),
-  };
+  const minFiat = Number(health?.limits?.min_onramp_try ?? 50);
+  const maxFiat = Number(health?.limits?.max_onramp_try ?? 3000);
+  const minAsset = Number(health?.limits?.min_offramp_usdc ?? 1);
+  // Selling the asset yields fiat at the sell rate, so that is the one that
+  // decides how much asset fits under the fiat cap.
+  const sell = Number(health?.rates?.sell_rate ?? 0);
+  const maxAsset = sell > 0 ? Math.max(minAsset, Math.floor((maxFiat / sell) * 1e7) / 1e7) : 1e9;
+  return { minFiat, maxFiat, minAsset, maxAsset };
 }
 
 /**
@@ -164,7 +175,7 @@ export async function withdrawToBank(opts: {
   const asset = new Asset(anchor.config.assetCode, anchor.config.assetIssuer);
   const legs: Leg[] = [];
 
-  for (const part of tranche(opts.amountAsset, limits.minAsset, 1e9, 7)) {
+  for (const part of tranche(opts.amountAsset, limits.minAsset, limits.maxAsset, 7)) {
     const amount = part.toFixed(7);
     const quote = await anchor.quote({ jwt, direction: "sell_asset", sellAmount: amount });
     const wd = await anchor.startWithdraw({

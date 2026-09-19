@@ -201,7 +201,7 @@ export class AnchorClient {
     };
     this.log({
       tag: "200",
-      msg: `id=${body.id} talimatlar=${Object.keys(body.instructions ?? {}).join(",") || "—"}`,
+      msg: `id=${body.id} instructions=${Object.keys(body.instructions ?? {}).join(",") || "—"}`,
     });
     return body;
   }
