@@ -32,6 +32,9 @@
   .kpi b { display: block; font-size: 15pt; font-weight: 700; letter-spacing: -.02em; }
   .kpi span { font-size: 8pt; color: #6A6A6A; }
   .arch { font-family: 'JetBrains Mono', monospace; font-size: 7.6pt; line-height: 1.45; background: #0A0A0A; color: #E8E8E8; padding: 10pt 12pt; border-radius: 7pt; white-space: pre; overflow: hidden; break-inside: avoid; }
+  .cmd { font-family: 'JetBrains Mono', monospace; font-size: 7.4pt; line-height: 1.55; background: #0A0A0A; color: #E8E8E8; padding: 9pt 11pt; border-radius: 7pt; white-space: pre-wrap; word-break: break-all; break-inside: avoid; margin: 5pt 0 8pt; }
+  .cmd .out { color: #3DE29C; }
+  .cmd .hint { color: #7A7A7A; }
   .arch .m { color: #3DE29C; }
   .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 7.4pt; font-weight: 600; padding: 1.5pt 5pt; border-radius: 3pt; background: #EDEDEA; margin-right: 3pt; }
   .page { break-before: page; }
@@ -73,11 +76,13 @@ $ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testn
 çalıştıran bir kontrat bu karşılaştırmada düşerdi. İlk çalıştırılacak kontrol bu.</p>
 
 <h3>Ardından gösterilecekler</h3>
+<p style="font-size:9.4pt;color:#6A6A6A;margin:0 0 6pt"><code>stellar contract invoke</code> okuma için bile ücreti ödeyecek bir kaynak hesap ister:
+<code>--source payper-admin --network testnet</code>. Tam komutlar README'nin <b>Proving it, not describing it</b> bölümünde.</p>
 <table>
   <tr><th style="width:46mm">Komut</th><th>Ne gösteriyor</th></tr>
-  <tr><td class="mono">-- name</td><td><code>DeFindex-Vault-payper Treasury</code> — vault bir token, adı factory tarafından verildi</td></tr>
-  <tr><td class="mono">-- balance --id &lt;adaptör&gt;</td><td>Hazinemizin vault payı: <b>264.979.712</b> (toplam arzın %99,9996'sı)</td></tr>
-  <tr><td class="mono">-- total_supply</td><td>264.980.712 — aradaki 1.000 vault'un minimum likidite kilidi</td></tr>
+  <tr><td class="mono">invoke … -- name</td><td><code>DeFindex-Vault-payper Treasury</code> — vault bir token, adı factory tarafından verildi</td></tr>
+  <tr><td class="mono">invoke … -- balance --id &lt;adaptör&gt;</td><td>Hazinemizin vault payı: <b>264.979.712</b> (toplam arzın %99,9996'sı)</td></tr>
+  <tr><td class="mono">invoke … -- total_supply</td><td>264.980.712 — aradaki 1.000 vault'un minimum likidite kilidi</td></tr>
   <tr><td class="mono">invoice -- treasury_assets</td><td>Fatura kontratının fiyatlarken gördüğü tutar, adaptör üzerinden vault'tan okunuyor</td></tr>
 </table>
 
@@ -118,9 +123,9 @@ $ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testn
 </ol>
 
 <h3>Terminalden doğrulama</h3>
-<div class="arch">$ curl -s https://tr-mock-anchor.fly.dev/.well-known/stellar.toml
-$ curl -s https://tr-mock-anchor.fly.dev/sep6/info
-$ curl -s 'https://tr-mock-anchor.fly.dev/sep38/prices?sell_asset=stellar:USDC:GBBD…FLA5&sell_amount=100'</div>
+<div class="cmd">curl -s https://tr-mock-anchor.fly.dev/.well-known/stellar.toml</div>
+<div class="cmd">curl -s https://tr-mock-anchor.fly.dev/sep6/info</div>
+<div class="cmd">curl -s 'https://tr-mock-anchor.fly.dev/sep38/prices?sell_asset=stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5&amp;sell_amount=100'</div>
 
 <div class="box">
   <h4>En güçlü kanıt bir hatadan geliyor</h4>
@@ -154,13 +159,12 @@ $ curl -s 'https://tr-mock-anchor.fly.dev/sep38/prices?sell_asset=stellar:USDC:G
 </table>
 
 <h3>Çalıştıracağın komut</h3>
-<div class="arch">$ curl -s https://payper.live/api/auth/passkey
-  { "ok": true, "passkeys": [ { "credentialId": "…", "address": "G…", "label": "…" } ] }
-
-$ PASSKEY_WALLET_SECRET=demo npx tsx -e "…keypairForCredential…"
-  cred-abc → <span class="m">GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL</span>
-  cred-abc → <span class="m">GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL</span>   ← aynı
-  cred-xyz → <span class="m">GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE</span>   ← farklı</div>
+<div class="cmd">curl -s https://payper.live/api/auth/passkey</div>
+<p style="font-size:9.4pt;color:#6A6A6A;margin:0 0 6pt">Türetimin deterministik olduğu, deponun kopyasından:</p>
+<div class="cmd">PASSKEY_WALLET_SECRET=demo npx tsx -e "import {keypairForCredential} from './src/lib/auth/passkey'; for (const c of ['cred-abc','cred-abc','cred-xyz']) console.log(c, keypairForCredential(c).publicKey())"
+<span class="out">cred-abc GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL
+cred-abc GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL
+cred-xyz GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE</span></div>
 
 <p>Aynı passkey hep aynı adrese varıyor, seed phrase yok, kullanıcının saklaması gereken hiçbir şey yok.</p>
 

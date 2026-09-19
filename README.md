@@ -346,16 +346,20 @@ The treasury is a DeFindex vault we created through **their** factory on
 testnet. The strongest evidence is not that we say so — it is that the vault
 runs their published code, byte for byte:
 
-```bash
-# The wasm hash our vault is running
-curl -s https://api.stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
-  | python3 -c "import json,sys; print(json.load(sys.stdin)['wasm'])"
-# f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be
+Both commands are one line each. Paste them as they are.
 
-# The hash DeFindex publishes for its vault, from their own repository
-curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testnet.contracts.json \
-  | python3 -c "import json,sys; print(json.load(sys.stdin)['hashes']['defindex_vault'])"
-# f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be
+```bash
+curl -s https://api.stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP | grep -o '"wasm":"[a-f0-9]*"'
+```
+```
+"wasm":"f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be"
+```
+
+```bash
+curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testnet.contracts.json | grep -o '"defindex_vault": *"[a-f0-9]*"'
+```
+```
+"defindex_vault": "f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be"
 ```
 
 Identical. A vault claiming to be a DeFindex vault while running different code
@@ -363,18 +367,26 @@ would fail this comparison, which is why it is the check worth running first.
 
 The rest follows from it:
 
+`stellar contract invoke` needs a source account for the fee, even for a read.
+Any funded testnet key will do; `--source` below is the one the deploy script
+creates.
+
 ```bash
 # It is a token. Name and symbol were set when the factory deployed it.
-stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
-  --network testnet -- name      # "DeFindex-Vault-payper Treasury"
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- name
+```
+```
+"DeFindex-Vault-payper Treasury"
+```
 
-# Our position, in vault shares, and the vault's total supply
-stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
-  --network testnet -- balance --id CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF
+```bash
+# Our position, in vault shares
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF
+```
 
-# What the invoice contract sees when it prices a quote
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
-  --network testnet -- treasury_assets
+```bash
+# And what the invoice contract sees when it prices a quote
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- treasury_assets
 ```
 
 A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
@@ -428,16 +440,19 @@ replayed. Each credential is bound to one Stellar address derived from the
 credential id and a server secret:
 
 ```bash
-# The credentials this server knows, with the address each controls
 curl -s https://payper.live/api/auth/passkey
+```
 
-# The derivation is deterministic: one credential, one address, always
-PASSKEY_WALLET_SECRET=demo npx tsx -e "
-  import { keypairForCredential } from './src/lib/auth/passkey';
-  console.log(keypairForCredential('cred-abc').publicKey());
-  console.log(keypairForCredential('cred-abc').publicKey());  // same
-  console.log(keypairForCredential('cred-xyz').publicKey());  // different
-"
+The derivation is deterministic — one credential, one address, always. From a
+clone of this repository:
+
+```bash
+PASSKEY_WALLET_SECRET=demo npx tsx -e "import {keypairForCredential} from './src/lib/auth/passkey'; for (const c of ['cred-abc','cred-abc','cred-xyz']) console.log(c, keypairForCredential(c).publicKey())"
+```
+```
+cred-abc GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL
+cred-abc GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL
+cred-xyz GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE
 ```
 
 So there is no seed phrase and nothing for a user to keep — and the signing key
@@ -454,16 +469,17 @@ recorded per address.
 
 ```bash
 # The invoice as the contract holds it
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
-  --network testnet -- get_invoice --invoice_id 4
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- get_invoice --invoice_id 4
+```
 
+```bash
 # Who funded it, and for how much
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
-  --network testnet -- funders_of --invoice_id 4
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- funders_of --invoice_id 4
+```
 
-# Whether an ETTN can still be financed
-stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
-  --network testnet -- is_ettn_available --ettn_hash <32-byte hash>
+```bash
+# How many invoices the contract holds
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB --source payper-admin --network testnet -- invoice_count
 ```
 
 **We do not mint a token per invoice.** There is no SEP-41 contract and no NFT
