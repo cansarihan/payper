@@ -397,11 +397,19 @@ function AccountMenu({
     go?: Screen;
   }[] = [
     {
-      label: d.acct[0][0],
-      meta: session ? shortKey(session.address, 4, 4) : d.walletNone,
-      icon: "◎",
-      bg: session ? C.mint : "rgba(245,165,36,.25)",
-      fg: C.ink,
+      // A passkey-derived address is not a wallet, and calling it one here
+      // while the wallet screen says none is linked reads as a contradiction.
+      label: session?.method === "passkey" ? d.passkeyAccount : d.acct[0][0],
+      meta: session?.wallet
+        ? shortKey(session.wallet.address, 4, 4)
+        : session?.method === "passkey"
+          ? d.noWalletLinked
+          : session
+            ? shortKey(session.address, 4, 4)
+            : d.walletNone,
+      icon: session?.method === "passkey" ? "⌘" : "◎",
+      bg: session?.wallet ? C.mint : session?.method === "passkey" ? C.blue : "rgba(245,165,36,.25)",
+      fg: session?.method === "passkey" && !session.wallet ? C.white : C.ink,
       go: "wallet",
     },
     { label: d.acct[1][0], meta: d.acct[1][1], icon: "₺", bg: C.blue, fg: C.white },

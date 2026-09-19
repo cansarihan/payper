@@ -86,6 +86,10 @@ interface Copy {
   signerLabel: string;
   methods: Readonly<Record<"wallet" | "passkey" | "demo", string>>;
   sessionAddress: string;
+  passkeyAccount: string;
+  walletNotNeeded: string;
+  noWalletLinked: string;
+  walletCancelled: string;
   roleLabel: string;
   passkeyNote: string;
   linkedWallet: string;
@@ -376,6 +380,10 @@ const en: Copy = {
     demo: "a server-held key, for the stage",
   },
   sessionAddress: "Session address",
+  passkeyAccount: "Passkey account",
+  walletNotNeeded: "Your passkey account is ready to use. Nothing needs linking.",
+  noWalletLinked: "none linked — not needed",
+  walletCancelled: "The wallet picker was closed.",
   roleLabel: "Role",
   passkeyNote:
     "Signing in with the passkey created this address — there is nothing you need to connect. A passkey proves who is asking; it cannot sign Soroban XDR on its own, so the key it derives lives on the server until a Soroban smart account can verify secp256r1 on chain. Linking a browser wallet below is optional, for signing with a key you already hold.",
@@ -742,6 +750,10 @@ const tr: Copy = {
     demo: "sahne için sunucuda tutulan anahtar",
   },
   sessionAddress: "Oturum adresi",
+  passkeyAccount: "Passkey hesabı",
+  walletNotNeeded: "Passkey hesabın kullanıma hazır. Bağlanması gereken bir şey yok.",
+  noWalletLinked: "bağlı değil — gerekmiyor",
+  walletCancelled: "Cüzdan seçici kapatıldı.",
   roleLabel: "Rol",
   passkeyNote:
     "Bu adres passkey ile giriş yaptığın anda oluştu — bağlaman gereken bir şey yok. Passkey kimin sorduğunu kanıtlar; Soroban XDR'ı tek başına imzalayamaz, o yüzden türettiği anahtar, secp256r1'i zincirde doğrulayan bir Soroban akıllı hesabı gelene kadar sunucuda duruyor. Aşağıdaki cüzdan bağlama isteğe bağlı — zaten elinde olan bir anahtarla imzalamak istersen.",

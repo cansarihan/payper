@@ -32,6 +32,10 @@ export function Wallet({
 
   const linked = session?.wallet ?? null;
   const method = session?.method ?? "demo";
+  const explorer = (address: string) =>
+    `https://stellar.expert/explorer/${
+      state.network === "mainnet" ? "public" : "testnet"
+    }/account/${address}`;
 
   async function link() {
     setBusy("link");
@@ -72,7 +76,9 @@ export function Wallet({
       if (!json.ok || !json.session) throw new Error(json.error ?? "The wallet could not be linked");
       onSession(json.session);
     } catch (e) {
-      setError((e as Error).message);
+      const message = (e as Error).message;
+      // Closing the wallet chooser is a decision, not a failure.
+      setError(/closed the modal|user rejected|cancel/i.test(message) ? null : message);
     } finally {
       setBusy(null);
     }
@@ -124,7 +130,11 @@ export function Wallet({
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>
-            <Row k={d.sessionAddress} v={session ? shortKey(session.address, 8, 6) : "—"} />
+            <Row
+              k={d.sessionAddress}
+              v={session ? shortKey(session.address, 8, 6) : "—"}
+              href={session ? explorer(session.address) : undefined}
+            />
             <Row k={d.roleLabel} v={session ? d.roles[session.role] : "—"} />
             {session?.credentialId && (
               <Row k="credential" v={shortKey(session.credentialId, 8, 6)} />
@@ -175,7 +185,12 @@ export function Wallet({
             <>
               <div style={{ display: "grid", gap: 10 }}>
                 <Row k={d.walletName} v={linked.walletName} dark />
-                <Row k={d.address} v={shortKey(linked.address, 8, 6)} dark />
+                <Row
+                  k={d.address}
+                  v={shortKey(linked.address, 8, 6)}
+                  dark
+                  href={explorer(linked.address)}
+                />
                 <Row
                   k={d.linkedAt}
                   v={new Date(linked.linkedAt).toLocaleString(lang === "tr" ? "tr-TR" : "en-GB")}
@@ -217,21 +232,54 @@ export function Wallet({
               </div>
             </>
           ) : (
-            <button
-              onClick={() => void link()}
-              disabled={busy !== null}
-              style={{
-                border: 0,
-                borderRadius: 999,
-                padding: "15px 26px",
-                background: C.ink,
-                color: C.white,
-                fontSize: 15,
-                fontWeight: 700,
-              }}
-            >
-              {busy === "link" ? `${d.loading}…` : d.linkCta}
-            </button>
+            <>
+              {method === "passkey" && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "13px 15px",
+                    borderRadius: 16,
+                    background: "rgba(61,226,156,.14)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: "50%",
+                      background: C.green,
+                      color: C.white,
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: 13,
+                      flex: "none",
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.5 }}>
+                    {d.walletNotNeeded}
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={() => void link()}
+                disabled={busy !== null}
+                style={{
+                  border: `1px solid ${C.ink}`,
+                  borderRadius: 999,
+                  padding: "13px 24px",
+                  background: "transparent",
+                  color: C.ink,
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              >
+                {busy === "link" ? `${d.loading}…` : d.linkCta}
+              </button>
+            </>
           )}
 
           {error && (
@@ -267,7 +315,17 @@ const METHOD_ICON: Record<string, string> = {
   demo: "▷",
 };
 
-function Row({ k, v, dark }: { k: string; v: string; dark?: boolean }) {
+function Row({
+  k,
+  v,
+  dark,
+  href,
+}: {
+  k: string;
+  v: string;
+  dark?: boolean;
+  href?: string;
+}) {
   return (
     <div
       style={{
@@ -280,7 +338,24 @@ function Row({ k, v, dark }: { k: string; v: string; dark?: boolean }) {
       }}
     >
       <span style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.6 }}>{k}</span>
-      <span style={{ fontFamily: FONT.mono, fontSize: 12.5, overflowWrap: "anywhere" }}>{v}</span>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 12.5,
+            overflowWrap: "anywhere",
+            color: dark ? C.mint : C.green,
+            textDecoration: "none",
+          }}
+        >
+          {v} ↗
+        </a>
+      ) : (
+        <span style={{ fontFamily: FONT.mono, fontSize: 12.5, overflowWrap: "anywhere" }}>{v}</span>
+      )}
     </div>
   );
 }
