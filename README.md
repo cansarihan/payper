@@ -335,6 +335,152 @@ every real wallet. They are now the specification's, verbatim.
 
 ---
 
+## Proving it, not describing it
+
+Every claim below can be checked from a terminal in under a minute. Nothing here
+asks to be believed.
+
+### The DeFi yield protocol is DeFindex, and the vault is theirs
+
+The treasury is a DeFindex vault we created through **their** factory on
+testnet. The strongest evidence is not that we say so — it is that the vault
+runs their published code, byte for byte:
+
+```bash
+# The wasm hash our vault is running
+curl -s https://api.stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['wasm'])"
+# f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be
+
+# The hash DeFindex publishes for its vault, from their own repository
+curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testnet.contracts.json \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['hashes']['defindex_vault'])"
+# f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be
+```
+
+Identical. A vault claiming to be a DeFindex vault while running different code
+would fail this comparison, which is why it is the check worth running first.
+
+The rest follows from it:
+
+```bash
+# It is a token. Name and symbol were set when the factory deployed it.
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
+  --network testnet -- name      # "DeFindex-Vault-payper Treasury"
+
+# Our position, in vault shares, and the vault's total supply
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
+  --network testnet -- balance --id CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF
+
+# What the invoice contract sees when it prices a quote
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
+  --network testnet -- treasury_assets
+```
+
+A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
+our adapter, the adapter deposits into the vault and receives shares, and a
+payout burns the shares it is worth. The position is the shares.
+
+**What it does not do yet:** the vault has no strategy attached, because none
+exists for this asset on testnet, so it holds funds without earning. The adapter
+refuses to report a rate it cannot measure and the quote is labelled `fallback`
+rather than wearing a number with no position behind it. That refusal is in
+`contracts/treasury_defindex/src/lib.rs`, and it is the honest half of this
+integration.
+
+### The anchor is a standard, discovered at run time
+
+Nothing about the anchor is written in our code. The domain is configuration;
+everything else is read from the anchor when a page loads.
+
+```bash
+# What we discover. Compare it with the boxes on the Anchor screen.
+curl -s https://tr-mock-anchor.fly.dev/.well-known/stellar.toml
+
+# What the rail supports, and its limits
+curl -s https://tr-mock-anchor.fly.dev/sep6/info
+
+# A firm quote, the same call the pricing screen makes
+curl -s 'https://tr-mock-anchor.fly.dev/sep38/prices?sell_asset=stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5&sell_amount=100'
+```
+
+Then run the flow in the interface. The terminal on the right fills with the
+requests as they happen — method, path, status code — and each resulting
+transfer carries the anchor's own transaction id next to a link to the Stellar
+transaction it produced. The claim and its receipt sit on the same row.
+
+One detail worth knowing, because it was a real bug and the fix is the proof
+that the rail is real rather than mocked: the anchor names the memo type it will
+match on. We were sending `MEMO_TEXT` where it asked for `MEMO_ID`, the payment
+arrived at the treasury, and the transfer sat at `pending_user_transfer_start`
+for ever. A simulated rail would not have cared.
+
+### Passkeys, and exactly how far they go
+
+A passkey proves who is asking. It cannot sign Soroban XDR — WebAuthn signs over
+its own authenticator data with its own key type. Bridging the two properly
+means a Soroban smart account verifying secp256r1 signatures on chain, which is
+on the roadmap and not in this build.
+
+What is here: the full WebAuthn ceremony, both halves, against the same
+single-use challenge store the wallet flow uses, so an assertion cannot be
+replayed. Each credential is bound to one Stellar address derived from the
+credential id and a server secret:
+
+```bash
+# The credentials this server knows, with the address each controls
+curl -s https://payper.live/api/auth/passkey
+
+# The derivation is deterministic: one credential, one address, always
+PASSKEY_WALLET_SECRET=demo npx tsx -e "
+  import { keypairForCredential } from './src/lib/auth/passkey';
+  console.log(keypairForCredential('cred-abc').publicKey());
+  console.log(keypairForCredential('cred-abc').publicKey());  // same
+  console.log(keypairForCredential('cred-xyz').publicKey());  // different
+"
+```
+
+So there is no seed phrase and nothing for a user to keep — and the signing key
+lives on the server, which the wallet screen says in as many words. Signing in
+with a passkey and linking a browser wallet afterwards is the path out of that,
+and the link is proved with the same challenge and signature as signing in.
+
+### The receivable on chain — and what we do not claim
+
+The e-invoice becomes a contract-native record: the ETTN's SHA-256 and the
+document's SHA-256 are written at registration, the ETTN key is what makes a
+second financing impossible, and funder claims against it are divisible and
+recorded per address.
+
+```bash
+# The invoice as the contract holds it
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
+  --network testnet -- get_invoice --invoice_id 4
+
+# Who funded it, and for how much
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
+  --network testnet -- funders_of --invoice_id 4
+
+# Whether an ETTN can still be financed
+stellar contract invoke --id CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB \
+  --network testnet -- is_ettn_available --ettn_hash <32-byte hash>
+```
+
+**We do not mint a token per invoice.** There is no SEP-41 contract and no NFT
+standing for a receivable. What exists is a registry with divisible claims —
+functionally what a per-invoice token would deliver at this stage, without a
+second asset to manage. The claims are not transferable between addresses
+either: `repay()` pays the funders the contract recorded, and nobody can sell
+their share on. Making them transferable is the step that would turn this into
+tokenisation in the sense the word usually carries, and it is a deliberate
+omission rather than an oversight.
+
+The one thing that *is* tokenised is the treasury position, and it is DeFindex's
+token rather than ours: pooled capital becomes vault shares, and the shares are
+the claim.
+
+---
+
 ## Honest limitations
 
 **The signature is checked structurally, not cryptographically.** `ds:SignedInfo`,

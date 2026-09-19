@@ -1,0 +1,260 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Urbanist', sans-serif; color: #0A0A0A; font-size: 10.2pt; line-height: 1.55; margin: 0; }
+  h1 { font-size: 30pt; font-weight: 600; letter-spacing: -.035em; line-height: 1.02; margin: 0 0 6pt; }
+  h2 { font-size: 16pt; font-weight: 700; letter-spacing: -.02em; margin: 20pt 0 7pt; padding-top: 9pt; border-top: 2px solid #0A0A0A; break-after: avoid; }
+  h3 { font-size: 11.5pt; font-weight: 700; margin: 13pt 0 5pt; break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+  li { margin-bottom: 3pt; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 8.4pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9pt; break-inside: avoid; }
+  th { text-align: left; font-weight: 700; border-bottom: 1.5px solid #0A0A0A; padding: 5pt 6pt 4pt; }
+  td { border-bottom: 1px solid #E4E4E0; padding: 5pt 6pt; vertical-align: top; }
+  .cover { background: #0A0A0A; color: #fff; margin: -18mm -16mm 0; padding: 40mm 16mm 22mm; break-after: page; }
+  .cover h1 { color: #fff; font-size: 40pt; }
+  .cover .mint { color: #3DE29C; }
+  .cover p { color: rgba(255,255,255,.72); font-size: 11.5pt; max-width: 135mm; }
+  .meta { margin-top: 16mm; display: flex; gap: 14mm; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 8.6pt; color: rgba(255,255,255,.55); }
+  .box { background: #F4F5F3; border-left: 3px solid #3DE29C; padding: 8pt 11pt; margin: 8pt 0 11pt; break-inside: avoid; }
+  .box.warn { border-left-color: #F5A524; }
+  .box.copy { background: #fff; border: 1px solid #D8D8D4; border-left: 3px solid #1E7CFF; }
+  .box h4 { margin: 0 0 4pt; font-size: 9.4pt; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #6A6A6A; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9pt; }
+  .card { border: 1px solid #E4E4E0; border-radius: 7pt; padding: 8pt 10pt; break-inside: avoid; }
+  .card b { display: block; font-size: 9.6pt; margin-bottom: 2pt; }
+  .card span { font-size: 8.8pt; color: #5A5A5A; }
+  .kpi { display: flex; gap: 8pt; flex-wrap: wrap; margin: 8pt 0 12pt; }
+  .kpi div { flex: 1 1 26mm; border: 1px solid #E4E4E0; border-radius: 7pt; padding: 7pt 9pt; }
+  .kpi b { display: block; font-size: 15pt; font-weight: 700; letter-spacing: -.02em; }
+  .kpi span { font-size: 8pt; color: #6A6A6A; }
+  .arch { font-family: 'JetBrains Mono', monospace; font-size: 7.6pt; line-height: 1.45; background: #0A0A0A; color: #E8E8E8; padding: 10pt 12pt; border-radius: 7pt; white-space: pre; overflow: hidden; break-inside: avoid; }
+  .arch .m { color: #3DE29C; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 7.4pt; font-weight: 600; padding: 1.5pt 5pt; border-radius: 3pt; background: #EDEDEA; margin-right: 3pt; }
+  .page { break-before: page; }
+  a { color: #1A8F63; text-decoration: none; }
+</style></head><body>
+<div class="cover">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;letter-spacing:.14em;color:#3DE29C;margin-bottom:10mm">
+    RISE IN × STELLAR PRO HACKATHON 2026 · GENESIS TRACK
+  </div>
+  <h1>Jüri karşısında<br><span class="mint">kanıt defteri</span></h1>
+  <p>Dört iddia, dördünün de terminalden bir dakikada doğrulanabilir karşılığı. Sorulduğunda
+  ne söyleyeceğin, hangi komutu çalıştıracağın, ve sormadan önce senin söylemen gereken şeyler.</p>
+  <div class="meta">
+    <span>payper.live</span><span>Stellar testnet</span><span>Can Sarıhan · Berk Çiçek</span>
+  </div>
+</div>
+
+<h2>1 · DeFi getiri protokolü — DeFindex</h2>
+
+<div class="box">
+  <h4>Jüri sorarsa ilk cümlen</h4>
+  "Hazinemiz bir DeFindex vault'u. Söylememize gerek yok, kanıtı zincirde: vault'umuzun çalıştırdığı
+  wasm hash'i, DeFindex'in kendi deposunda yayımladığı hash ile <b>birebir aynı</b>."
+</div>
+
+<h3>Çalıştıracağın komut</h3>
+<div class="arch">$ curl -s https://api.stellar.expert/explorer/testnet/contract/CBXHELM6…ODCP \
+    | python3 -c "import json,sys; print(json.load(sys.stdin)['wasm'])"
+
+<span class="m">f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be</span>
+
+$ curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testnet.contracts.json \
+    | python3 -c "import json,sys; print(json.load(sys.stdin)['hashes']['defindex_vault'])"
+
+<span class="m">f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be</span></div>
+
+<p>Aynı olmaları tesadüf değil: vault'u <b>onların factory'si</b> deploy etti
+(<code>CDSCWE4G…4A32</code>), o yüzden kodu da onların. DeFindex vault'u olduğunu söyleyip başka kod
+çalıştıran bir kontrat bu karşılaştırmada düşerdi. İlk çalıştırılacak kontrol bu.</p>
+
+<h3>Ardından gösterilecekler</h3>
+<table>
+  <tr><th style="width:46mm">Komut</th><th>Ne gösteriyor</th></tr>
+  <tr><td class="mono">-- name</td><td><code>DeFindex-Vault-payper Treasury</code> — vault bir token, adı factory tarafından verildi</td></tr>
+  <tr><td class="mono">-- balance --id &lt;adaptör&gt;</td><td>Hazinemizin vault payı: <b>264.979.712</b> (toplam arzın %99,9996'sı)</td></tr>
+  <tr><td class="mono">-- total_supply</td><td>264.980.712 — aradaki 1.000 vault'un minimum likidite kilidi</td></tr>
+  <tr><td class="mono">invoice -- treasury_assets</td><td>Fatura kontratının fiyatlarken gördüğü tutar, adaptör üzerinden vault'tan okunuyor</td></tr>
+</table>
+
+<h3>Mekanizma — "DeFindex'e gönderiyoruz" değil</h3>
+<p><code>fund()</code> adaptörü çağırıyor, adaptör vault'a <code>deposit</code> yapıp <b>pay</b> alıyor,
+ödeme de karşılık gelen payı yakıyor. Pozisyon payların kendisi. Test ettik:</p>
+<div class="arch">top-up : 2000.00 TRY → 40.7921817 USDC  [completed]   9.6s
+çekim  : 40.7921817 USDC → 1980.09 TRY  [completed]  +5.5s   tx 644b32cf…</div>
+
+<div class="box warn">
+  <h4>Sormadan önce sen söyle</h4>
+  Vault'a strateji bağlı değil, çünkü testnet'te bu varlık için strateji yok — yani vault parayı
+  tutuyor ama kazanmıyor. Adaptör ölçemediği bir oranı raporlamayı <b>reddediyor</b> ve teklif
+  <code>fallback</code> etiketiyle geliyor. Arkasında pozisyon olmayan bir sayıyı "canlı" diye
+  göstermektense bunu tercih ettik. Bu, entegrasyonun dürüst yarısı — ve kodda böyle yazıyor:
+  <code>panic_with_error!(&amp;env, Error::NoYieldYet)</code>.
+</div>
+
+<h2 class="page">2 · Anchor</h2>
+
+<div class="box">
+  <h4>Jüri sorarsa ilk cümlen</h4>
+  "Anchor hakkında kodumuzda yazılı tek şey alan adı. Alan adı, varlık, kur, uç noktalar — hepsi
+  sayfa yüklenirken anchor'ın kendi <code>stellar.toml</code>'undan okunuyor. Başka bir anchor'a
+  geçmek tek satırlık bir değişiklik; bir API yerine standart konuşmanın bütün sebebi bu."
+</div>
+
+<h3>Ekranda göstereceğin sıra</h3>
+<ol>
+  <li><b>Üstteki dört kutu</b> — bunlar keşfedildi, yazılmadı. Yanındaki "Check it yourself"
+  şeridinden <code>stellar.toml</code> komutunu kopyala, terminalde çalıştır, ekrandakiyle karşılaştır.</li>
+  <li><b>Akışı çalıştır.</b> Sağdaki terminal gerçek isteklerle doluyor — metot, yol, durum kodu,
+  zaman damgası. SEP-1 → SEP-10 → SEP-12 → SEP-38 → SEP-6 sırayla geçiyor.</li>
+  <li><b>Sonuçtaki transferler.</b> Her biri anchor'ın kendi işlem id'sini ve ürettiği Stellar
+  işlemine giden linki taşıyor. İddia ile makbuz aynı satırda.</li>
+  <li><b>Limit aşılırsa</b> tutar tranşlara bölünüyor — 3.030 ₺ → iki kez 1.515 ₺, ikisi de
+  <code>completed</code>.</li>
+</ol>
+
+<h3>Terminalden doğrulama</h3>
+<div class="arch">$ curl -s https://tr-mock-anchor.fly.dev/.well-known/stellar.toml
+$ curl -s https://tr-mock-anchor.fly.dev/sep6/info
+$ curl -s 'https://tr-mock-anchor.fly.dev/sep38/prices?sell_asset=stellar:USDC:GBBD…FLA5&sell_amount=100'</div>
+
+<div class="box">
+  <h4>En güçlü kanıt bir hatadan geliyor</h4>
+  Anchor, eşleştireceği memo tipini söylüyor. Biz <code>MEMO_ID</code> istenen yere
+  <code>MEMO_TEXT</code> gönderiyorduk; ödeme hazinesine ulaşıyor ama izleyici tanımıyordu ve işlem
+  sonsuza kadar <code>pending_user_transfer_start</code>'ta kalıyordu. <b>Simüle edilmiş bir kanal
+  bunu umursamazdı.</b> Düzelttikten sonra 9,6 saniyede <code>completed</code>. Bu hikâyeyi anlat —
+  kanalın gerçek olduğunun en iyi kanıtı.
+</div>
+
+<h2 class="page">3 · Passkey</h2>
+
+<div class="box">
+  <h4>Jüri sorarsa ilk cümlen</h4>
+  "Passkey <b>kimin sorduğunu</b> kanıtlar. Soroban XDR'ı tek başına imzalayamaz — WebAuthn kendi
+  doğrulayıcı verisini kendi anahtar tipiyle imzalar. İkisini doğru köprülemek, secp256r1 imzalarını
+  zincirde doğrulayan bir Soroban akıllı hesabı demek; o yol haritasında, bu derlemede değil."
+</div>
+
+<h3>Elimizde olan</h3>
+<table>
+  <tr><th style="width:44mm">Parça</th><th>Durum</th></tr>
+  <tr><td>WebAuthn töreni</td><td>İki yarısı da: <code>register-options</code> → <code>register</code>,
+  <code>login-options</code> → <code>login</code></td></tr>
+  <tr><td>Tekrar koruması</td><td>Cüzdan akışının kullandığı <b>aynı tek kullanımlık</b> challenge deposu;
+  bir assertion tekrar oynatılamıyor</td></tr>
+  <tr><td>Sayaç kontrolü</td><td>Yükselen imza sayacı — klonlanmış bir doğrulayıcı böyle yakalanır</td></tr>
+  <tr><td>Adres türetimi</td><td>Kimlik bilgisi + sunucu sırrı → SHA-256 → Ed25519 anahtarı</td></tr>
+  <tr><td>Cüzdan bağlama</td><td>Passkey ile girip sonradan tarayıcı cüzdanı kanıtlama; kanıt girişle aynı
+  challenge ve imza</td></tr>
+</table>
+
+<h3>Çalıştıracağın komut</h3>
+<div class="arch">$ curl -s https://payper.live/api/auth/passkey
+  { "ok": true, "passkeys": [ { "credentialId": "…", "address": "G…", "label": "…" } ] }
+
+$ PASSKEY_WALLET_SECRET=demo npx tsx -e "…keypairForCredential…"
+  cred-abc → <span class="m">GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL</span>
+  cred-abc → <span class="m">GACC2HRYKYLUQKJ3WJ5CZGU4GNLNRHZNMODRL5Z7NPQFATO6SWCH2GOL</span>   ← aynı
+  cred-xyz → <span class="m">GBHKX4UKZKZNRVUUPEYIFG6KFW2EZHLWOTA2GXVBK7D33T64AI2NE3NE</span>   ← farklı</div>
+
+<p>Aynı passkey hep aynı adrese varıyor, seed phrase yok, kullanıcının saklaması gereken hiçbir şey yok.</p>
+
+<div class="box warn">
+  <h4>Sormadan önce sen söyle</h4>
+  İmzalayan anahtar <b>sunucuda</b> duruyor. Cüzdan ekranı bunu aynen bu cümleyle yazıyor. Çıkış yolu
+  da orada: passkey ile gir, sonra tarayıcı cüzdanını bağla — o andan itibaren oturumun senin
+  tuttuğun bir anahtarı olur.
+</div>
+
+<h2 class="page">4 · E-faturanın zincir üstündeki hâli</h2>
+
+<div class="box">
+  <h4>Jüri "tokenize ettiniz mi" derse — dürüst cevap</h4>
+  "<b>Fatura başına token basmıyoruz.</b> SEP-41 kontratı ya da alacağı temsil eden bir NFT yok.
+  Olan şey, bölünebilir talep haklarıyla çalışan zincir üstü bir sicil. Tokenize olan tek şey hazine
+  pozisyonu, o da bizim değil DeFindex'in token'ı: havuzdaki sermaye vault payına dönüşüyor."
+</div>
+
+<h3>Gerçekten olan</h3>
+<table>
+  <tr><th style="width:42mm">Zincirde ne var</th><th>Nasıl gösterilir</th></tr>
+  <tr><td>ETTN'in SHA-256'sı, kalıcı depolamada, TTL maksimuma çekilmiş</td>
+  <td><code>is_ettn_available --ettn_hash …</code> → ikinci finansmanı imkânsız kılan anahtar</td></tr>
+  <tr><td>Belgenin SHA-256'sı</td><td><code>get_invoice --invoice_id 4</code> → belge sonradan
+  değişmediği kanıtlanabilir</td></tr>
+  <tr><td>Fonlayıcı başına bölünebilir talep</td><td><code>funders_of --invoice_id 4</code> → adres ve
+  tutar</td></tr>
+  <tr><td>Vadede oransal dağıtım</td><td><code>repay()</code> defteri gezip her fonlayıcıya payını
+  gönderiyor</td></tr>
+</table>
+
+<h3>Eksik olan ve neden</h3>
+<p>Talep hakları <b>adresler arası devredilemiyor</b>. <code>repay()</code> kontratın kaydettiği
+fonlayıcılara ödüyor; kimse payını başkasına satamıyor. Devredilebilir hâle getirmek, kelimenin
+alışıldık anlamıyla tokenizasyon olurdu — bu bilinçli bir eksiklik, gözden kaçmış bir şey değil.
+Maliyeti: fatura kontratına bir <code>transfer</code> fonksiyonu, testleri ve <b>yeni bir kontrat
+adresi</b>. Yarışma gününde demo defterini yeniden kurmak anlamına geldiği için yapmadık.</p>
+
+<div class="box">
+  <h4>Bu soruyu güce çeviren cümle</h4>
+  "Tokenizasyon bir amaç değil araç. Amacımız alacağın <b>bölünebilir ve doğrulanabilir</b> olması —
+  ikisi de bugün çalışıyor. Devredilebilirlik bir sonraki adım ve nasıl yapılacağı belli: kontrata
+  bir transfer fonksiyonu. Bunu yarışma günü yapıp çalışan bir demoyu riske atmaktansa, eksik
+  olduğunu söylemeyi tercih ettik."
+</div>
+
+<h2 class="page">Sana sorulacak dört zor soru</h2>
+
+<h3>"Bunu blockchain olmadan da yapamaz mıydınız?"</h3>
+<p><b>Kabul et, sonra asıl cevabı ver.</b> ETTN tekilliği, fiyatlama, oransal dağıtım, banka
+transferi — hepsi bir veritabanıyla yapılır. Türkiye'de KKB'nin Fatura Kayıt Sistemi zaten
+çift finansmanı engelliyor. Zincirin yaptığı üç şey var: <b>(1)</b> fonlayıcı kitlesini açıyor —
+faktoring şirketinin tavanı bilançosudur, burada USDC tutan herkes elli dolarla fonlayabiliyor;
+<b>(2)</b> fiyat bize sorulmadan doğrulanabiliyor; <b>(3)</b> vadede ödeyen biz değiliz,
+<code>repay()</code> biz batsak da çalışıyor. UBL ayrıştırma, KYC ve banka bacağı klasik yazılım —
+oraya zincir sokmadık.</p>
+
+<h3>"Bir çekin birden fazla sahibi olamaz"</h3>
+<p><b>Çek için haklılar, fatura için değil.</b> Çek kambiyo senedidir, kısmi ciro geçersizdir.
+Biz çek değil <b>e-fatura alacağı</b> finanse ediyoruz; adi alacakta kısmi temlik geçerlidir ve
+para alacağı bölünebilir. Üstelik temlikin borçluya karşı hüküm doğurması bildirim gerektirir —
+bizim <code>acknowledge()</code> adımı tam buna oturuyor. Ayrıca kontratımız mülkiyet devretmiyor,
+ödeme üzerinde oransal katılım yaratıyor; bu daha da rahat bir zemin. <i>(Avukata teyit ettirin.)</i></p>
+
+<h3>"Sahte fatura kesip finanse ettiremez miyim?"</h3>
+<p><b>Sahte fatura kesilebilir, biz engellemiyoruz</b> — yapıyı doğruluyoruz, varlığı değil. Kapı
+<code>acknowledge()</code>: faturada yazılı adres imzalamak zorunda, o yüzden gerçek bir firmaya
+kesilen sahte fatura asla fonlanmıyor. Durdurmadığı şey muvazaa — iki cüzdanlı tek kişi. Buna karşı
+bugünkü sürtünme anchor'ın SEP-12 KYC'si, tedarikçiye rücu ve whitelist eşiği; hepsi ekonomik ve
+hukuki, hiçbiri kriptografik. Kapatacak iki şey yol haritasında: GİB doğrulaması ve VKN ↔ adres bağı.</p>
+
+<h3>"Kur riskini kim taşıyor?"</h3>
+<p><b>Henüz modellenmedi, söyleyin.</b> <code>repay()</code> sabit <code>face_usdc</code> çekiyor,
+alıcı ise sabit lira borçlu; doksan günde ikisi uyuşmayı bırakıyor. Kur primi (723 bps, canlı
+ölçülüyor) riski <b>fiyatlıyor</b>, <b>atamıyor</b>. Üretimde iki dürüst çözüm var: ya alıcı lira
+cinsinden yükümlü kalır ve platform açığı hedge eder, ya da fonlayıcının alacağı liraya endekslenir.
+"Çözdük" derseniz ilk takip sorusunda düşersiniz.</p>
+
+<h2>Üç dakikalık demo sırası</h2>
+<table>
+  <tr><th style="width:14mm">Sn</th><th>Ne yapıyorsun</th><th>Ne söylüyorsun</th></tr>
+  <tr><td>0–20</td><td>Ana sayfa, canlı rakamlar</td><td>Sermaye Türk bankalarının bilançosunda kilitli; biz o kapıyı açıyoruz</td></tr>
+  <tr><td>20–40</td><td>Fatura yükle → kopya dosyayı da yükle</td><td>Aynı ETTN, farklı belge. Kontrat reddediyor — politika değil, değişmez kural</td></tr>
+  <tr><td>40–60</td><td>Alıcı onayı</td><td>Alacağı bir yabancı için gerçek kılan tek imza</td></tr>
+  <tr><td>60–90</td><td>İskonto kırılımı</td><td>Dört bileşen, kur <code>live</code>, 29 günlük pencere ve sapma ekranda</td></tr>
+  <tr><td>90–120</td><td><b>Sesle ödeme</b> — telefonla QR, tonları çal</td><td>Kamerasız, eşleşmesiz, veri bağlantısız. Ses istek taşıyor, yetki değil</td></tr>
+  <tr><td>120–150</td><td>Anchor akışını çalıştır</td><td>Terminal gerçek isteklerle doluyor; her transferin Stellar tx linki var</td></tr>
+  <tr><td>150–180</td><td>Kapanış / temerrüt şelalesi</td><td>İki bitiş yolu da aynı kontratta; erken temerrüt zincirde reddediliyor</td></tr>
+</table>
+
+<div class="box">
+  <h4>Kapanış cümlen</h4>
+  "Buradaki her sayı şu an zincirden okundu. Hangisine şüpheyle bakıyorsanız komutu ekranda,
+  kopyalayıp kendiniz çalıştırabilirsiniz. Bizim iddiamız değil, sizin doğrulamanız."
+</div>
+</body></html>
