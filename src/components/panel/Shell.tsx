@@ -5,12 +5,30 @@ import { useEffect, useRef, useState } from "react";
 import { Lockup } from "@/components/Logo";
 import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
-import type { AppState, Session } from "@/lib/types";
+import type { AppState, Session, SessionRole } from "@/lib/types";
 
 export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats" | "wallet";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "pay", "board", "settle"];
 
 const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.green, C.mint, C.lime];
+
+/**
+ * Which role acts on each screen.
+ *
+ * A screen outside the session's role is dimmed rather than disabled: the data
+ * on it is still worth reading, and a judge should not have to sign in three
+ * times to see the product. The gate that actually refuses is the route
+ * handler, and the tooltip says which role it wants.
+ */
+const ACTS_AS: Partial<Record<Screen, SessionRole>> = {
+  upload: "seller",
+  buyer: "buyer",
+  quote: "seller",
+  anchor: "seller",
+  pay: "funder",
+  board: "funder",
+  settle: "buyer",
+};
 
 export function PanelShell({
   lang,
@@ -73,6 +91,8 @@ export function PanelShell({
             {d.nav.map((label, i) => {
               const target = SCREENS[i]!;
               const on = screen === target;
+              const wants = ACTS_AS[target];
+              const mine = !wants || !session || session.role === wants;
               return (
                 <button
                   key={target}
@@ -80,6 +100,9 @@ export function PanelShell({
                     setScreen(target);
                     window.scrollTo(0, 0);
                   }}
+                  title={
+                    mine ? undefined : d.needsRoleHint.replace("{role}", d.roles[wants!])
+                  }
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -92,7 +115,9 @@ export function PanelShell({
                     whiteSpace: "nowrap",
                     background: on ? C.ink : "rgba(255,255,255,.55)",
                     color: on ? C.white : C.ink,
-                    transition: "background .25s",
+                    opacity: on || mine ? 1 : 0.42,
+                    cursor: mine ? "pointer" : "not-allowed",
+                    transition: "background .25s, opacity .25s",
                   }}
                 >
                   <span

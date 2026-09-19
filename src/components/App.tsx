@@ -141,7 +141,7 @@ export function App({ lang }: { lang: Lang }) {
           ) : screen === "settle" ? (
             <Settle lang={lang} state={state} onDone={refresh} />
           ) : (
-            <Anchor state={state} onDone={refresh} />
+            <Anchor lang={lang} state={state} onDone={refresh} />
           )}
         </div>
       )}

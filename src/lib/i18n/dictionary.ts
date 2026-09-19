@@ -52,6 +52,21 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  needsRoleHint: string;
+  anchorTitle: string;
+  anchorLead: string;
+  anchorTabs: readonly [string, string];
+  anchorRun: readonly [string, string];
+  anchorSteps: {
+    off: readonly (readonly [string, string, string])[];
+    on: readonly (readonly [string, string, string])[];
+  };
+  anchorStates: Readonly<Record<"idle" | "running" | "done", string>>;
+  anchorSettledTo: readonly [string, string];
+  anchorProof: string;
+  anchorProofLead: string;
+  anchorFailed: string;
+  unreadable: string;
   walletTitle: string;
   walletLead: string;
   signerLabel: string;
@@ -289,6 +304,36 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  needsRoleHint: "Acting here needs the {role} role — open it to look, switch to act",
+  anchorTitle: "The lira bridge",
+  anchorLead:
+    "One standard door: discovery from stellar.toml, SEP-10 identity, a SEP-38 firm rate, SEP-6 deposit and withdrawal. Moving to another anchor is one domain change.",
+  anchorTabs: ["Supplier withdrawal · USDC → TRY", "Buyer payment · TRY → USDC"],
+  anchorRun: ["Run the USDC → TRY flow", "Run the TRY → USDC flow"],
+  anchorSteps: {
+    off: [
+      ["stellar.toml discovery", "SEP-1", "Endpoints and the signing key are read"],
+      ["Wallet identity", "SEP-10", "A challenge is signed, a JWT comes back"],
+      ["Rate lock", "SEP-38", "A firm USDC→TRY rate"],
+      ["Withdrawal request", "SEP-6", "The treasury address and memo come back"],
+      ["On-chain payment", "Soroban", "USDC is sent to the treasury with the memo"],
+      ["Lira to the bank", "Bank", "status=completed · lira to the IBAN"],
+    ],
+    on: [
+      ["Wallet identity", "SEP-10", "The buyer's wallet signs and takes a JWT"],
+      ["Rate lock", "SEP-38", "A firm TRY→USDC rate"],
+      ["Deposit request", "SEP-6", "An IBAN and a reference come back"],
+      ["Bank transfer", "Bank", "Lira is sent with the reference written on it"],
+      ["The anchor pays USDC", "SEP-6", "pending_anchor → completed"],
+    ],
+  },
+  anchorStates: { idle: "ready", running: "running", done: "complete" },
+  anchorSettledTo: ["Reached the bank account", "USDC reached the contract"],
+  anchorProof: "Check it yourself",
+  anchorProofLead:
+    "Nothing on this screen is written here. Open the endpoints, or run the same requests from a terminal and compare them with the trace above.",
+  anchorFailed: "The anchor flow did not complete",
+  unreadable: "unreadable",
   walletTitle: "Identity and wallet",
   walletLead:
     "Who this session signs as, and which browser wallet has been proved alongside it. The two are separate on purpose.",
@@ -607,6 +652,36 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  needsRoleHint: "Burada işlem yapmak {role} rolünü gerektiriyor — bakmak için açabilirsin, işlem için rol değiştir",
+  anchorTitle: "TL köprüsü",
+  anchorLead:
+    "Tek standart kapı: stellar.toml'dan keşif, SEP-10 kimlik, SEP-38 sabit kur, SEP-6 yatırma ve çekme. Anchor değişirse yalnızca alan adı değişir.",
+  anchorTabs: ["Tedarikçi çekimi · USDC → TL", "Alıcı ödemesi · TL → USDC"],
+  anchorRun: ["USDC → TL akışını çalıştır", "TL → USDC akışını çalıştır"],
+  anchorSteps: {
+    off: [
+      ["stellar.toml keşfi", "SEP-1", "Uç noktalar ve imza anahtarı okunur"],
+      ["Cüzdan kimliği", "SEP-10", "Challenge imzalanır, JWT alınır"],
+      ["Kur kilidi", "SEP-38", "Sabit USDC→TRY kuru"],
+      ["Çekim talebi", "SEP-6", "Hazine adresi ve memo döner"],
+      ["Zincir üstü ödeme", "Soroban", "USDC memo ile hazineye gönderilir"],
+      ["TL banka hesabına", "Banka", "status=completed · IBAN'a TL"],
+    ],
+    on: [
+      ["Cüzdan kimliği", "SEP-10", "Alıcı cüzdanı imzalar, JWT alır"],
+      ["Kur kilidi", "SEP-38", "Sabit TRY→USDC kuru"],
+      ["Yatırma talebi", "SEP-6", "IBAN ve açıklama referansı döner"],
+      ["Banka havalesi", "Banka", "TL gönderilir, referans yazılır"],
+      ["Anchor USDC öder", "SEP-6", "pending_anchor → completed"],
+    ],
+  },
+  anchorStates: { idle: "hazır", running: "çalışıyor", done: "tamamlandı" },
+  anchorSettledTo: ["Banka hesabına geçti", "Kontrata USDC geçti"],
+  anchorProof: "Kendin doğrula",
+  anchorProofLead:
+    "Bu ekrandaki hiçbir şey burada yazılı değil. Uç noktaları aç ya da aynı istekleri terminalden çalıştırıp yukarıdaki izle karşılaştır.",
+  anchorFailed: "Anchor akışı tamamlanamadı",
+  unreadable: "okunamadı",
   walletTitle: "Kimlik ve cüzdan",
   walletLead:
     "Bu oturumun kim olarak imzaladığı ve yanında hangi tarayıcı cüzdanının kanıtlandığı. İkisi bilerek ayrı.",

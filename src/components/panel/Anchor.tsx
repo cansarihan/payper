@@ -3,24 +3,8 @@
 import { useState } from "react";
 
 import { C, FONT, shortKey, trNumber, usdc } from "@/lib/design";
+import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AnchorRunResult, AppState, SepLogView } from "@/lib/types";
-
-const OFF_STEPS: [string, string, string][] = [
-  ["stellar.toml keşfi", "SEP-1", "Uç noktalar ve imza anahtarı okunur"],
-  ["Cüzdan kimliği", "SEP-10", "Challenge imzalanır, JWT alınır"],
-  ["Kur kilidi", "SEP-38", "USDC→TRY sabit kur"],
-  ["Çekim talebi", "SEP-6", "Hazine adresi ve memo döner"],
-  ["Zincir üstü ödeme", "Soroban", "USDC memo ile hazineye gönderilir"],
-  ["TL banka hesabına", "Banka", "status=completed · IBAN'a TL"],
-];
-
-const ON_STEPS: [string, string, string][] = [
-  ["Cüzdan kimliği", "SEP-10", "Alıcı cüzdanı imzalar, JWT alır"],
-  ["Kur kilidi", "SEP-38", "TRY→USDC sabit kur"],
-  ["Yatırma talebi", "SEP-6", "IBAN ve açıklama referansı döner"],
-  ["Banka havalesi", "Banka", "TL gönderilir, referans yazılır"],
-  ["Anchor USDC öder", "SEP-6", "pending_anchor → completed"],
-];
 
 /**
  * The fiat rail, both directions, with the SEP trace it produced.
@@ -28,7 +12,16 @@ const ON_STEPS: [string, string, string][] = [
  * Domain, asset, rates, limits and treasury address are read from the anchor's
  * stellar.toml and health endpoint, not hard-coded here.
  */
-export function Anchor({ state, onDone }: { state: AppState; onDone: () => void }) {
+export function Anchor({
+  lang,
+  state,
+  onDone,
+}: {
+  lang: Lang;
+  state: AppState;
+  onDone: () => void;
+}) {
+  const d = t(lang);
   const [tab, setTab] = useState<"off" | "on">("off");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +32,7 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
     state.invoices.find((i) => i.status === "funded") ??
     state.invoices.find((i) => i.status === "repaid") ??
     state.active;
-  const steps = tab === "off" ? OFF_STEPS : ON_STEPS;
+  const steps = tab === "off" ? d.anchorSteps.off : d.anchorSteps.on;
   const ran = result?.ok === true && result.flow === tab;
   const done = ran ? steps.length : 0;
   const status = busy ? "pending_user_transfer_start" : ran ? "completed" : "incomplete";
@@ -56,7 +49,7 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
         body: JSON.stringify({ flow: tab, invoiceId: invoice.id }),
       });
       const json = (await res.json()) as AnchorRunResult;
-      if (!json.ok) throw new Error(json.error ?? "Anchor akışı tamamlanamadı");
+      if (!json.ok) throw new Error(json.error ?? d.anchorFailed);
       setResult(json);
       onDone();
     } catch (e) {
@@ -91,11 +84,10 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
               margin: "0 0 8px",
             }}
           >
-            TL köprüsü
+            {d.anchorTitle}
           </h1>
           <p style={{ opacity: 0.7, margin: 0, maxWidth: 640, lineHeight: 1.5, fontWeight: 500 }}>
-            Tek standart kapı: stellar.toml&apos;dan keşif, SEP-10 kimlik, SEP-38 sabit kur,
-            SEP-6 yatırma ve çekme. Anchor değişirse yalnızca alan adı değişir.
+            {d.anchorLead}
           </p>
         </div>
 
@@ -104,11 +96,15 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
           <Fact k="ASSET" v={`${anchor?.assetCode ?? "—"} · ${shortKey(anchor?.assetIssuer ?? "", 4, 4)}`} />
           <Fact
             k={`${rate?.pair ?? "USD/TRY"} · SEP-38`}
-            v={rate ? `alış ${trNumber(Number(rate.buy_rate), 4)} · satış ${trNumber(Number(rate.sell_rate), 4)}` : "—"}
+            v={
+              rate
+                ? `${lang === "tr" ? "alış" : "buy"} ${trNumber(Number(rate.buy_rate), 4)} · ${lang === "tr" ? "satış" : "sell"} ${trNumber(Number(rate.sell_rate), 4)}`
+                : "—"
+            }
           />
           <Fact
             k="TRANSFER_SERVER"
-            v={anchor ? new URL(anchor.endpoints.transferServer).pathname : "okunamadı"}
+            v={anchor ? new URL(anchor.endpoints.transferServer).pathname : d.unreadable}
             colour={anchor ? C.green : C.grey}
           />
         </div>
@@ -142,7 +138,7 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
               color: tab === k ? C.white : C.ink,
             }}
           >
-            {k === "off" ? "KOBİ çekimi · USDC → TL" : "Alıcı ödemesi · TL → USDC"}
+            {k === "off" ? d.anchorTabs[0] : d.anchorTabs[1]}
           </button>
         ))}
       </div>
@@ -159,10 +155,10 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
               }}
             >
               <span style={{ fontWeight: 700, fontSize: 16 }}>
-                {tab === "off" ? "KOBİ çekimi" : "Alıcı ödemesi"}
+                {tab === "off" ? d.anchorTabs[0] : d.anchorTabs[1]}
               </span>
               <span style={{ fontFamily: FONT.mono, fontSize: 11, opacity: 0.55 }}>
-                {done}/{steps.length} · {busy ? "çalışıyor" : ran ? "tamamlandı" : "hazır"}
+                {done}/{steps.length} · {busy ? d.anchorStates.running : ran ? d.anchorStates.done : d.anchorStates.idle}
               </span>
             </div>
 
@@ -260,10 +256,10 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
               {!invoice
                 ? "Uygun fatura yok"
                 : busy
-                  ? "Çalışıyor…"
+                  ? `${d.loading}…`
                   : tab === "off"
-                    ? "USDC → TL akışını çalıştır"
-                    : "TL → USDC akışını çalıştır"}
+                    ? d.anchorRun[0]
+                    : d.anchorRun[1]}
             </button>
           </div>
 
@@ -294,7 +290,7 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
                 animation: "rise .4s both",
               }}
             >
-              <Label light>{tab === "off" ? "Banka hesabına geçti" : "Kontrata USDC geçti"}</Label>
+              <Label light>{tab === "off" ? d.anchorSettledTo[0] : d.anchorSettledTo[1]}</Label>
               <div
                 style={{
                   fontSize: "clamp(34px,3.6vw,50px)",
@@ -383,7 +379,9 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
               )}
               {!busy && !result && (
                 <span style={{ color: "rgba(255,255,255,.35)" }}>
-                  # akışı çalıştırdığında gerçek istekler buraya düşer
+                  {lang === "tr"
+                    ? "# akışı çalıştırdığında gerçek istekler buraya düşer"
+                    : "# run the flow and the real requests land here"}
                 </span>
               )}
             </div>
@@ -399,12 +397,99 @@ export function Anchor({ state, onDone }: { state: AppState; onDone: () => void 
                   state.network === "mainnet" ? "public" : "testnet"
                 }/account/${anchor.treasury.address}`}
               >
-                hazine {shortKey(anchor.treasury.address, 4, 4)} ↗
+                {lang === "tr" ? "hazine" : "treasury"} {shortKey(anchor.treasury.address, 4, 4)} ↗
               </Pill>
+            )}
+          </div>
+
+          {/* The trace above is only worth as much as the reader's ability to
+              reproduce it, so the exact requests are on screen to copy. */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 24,
+              padding: 22,
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 5 }}>{d.anchorProof}</div>
+              <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: C.grey }}>
+                {d.anchorProofLead}
+              </p>
+            </div>
+            <Curl
+              label="SEP-1"
+              cmd={`curl -s https://${home}/.well-known/stellar.toml | head -40`}
+            />
+            <Curl
+              label="SEP-38"
+              cmd={`curl -s '${anchor?.endpoints.quoteServer ?? `https://${home}/sep38`}/prices?sell_asset=stellar:${anchor?.assetCode ?? "USDC"}:${anchor?.assetIssuer ?? ""}&sell_amount=100'`}
+            />
+            <Curl label="SEP-6" cmd={`curl -s ${anchor?.endpoints.transferServer ?? `https://${home}/sep6`}/info`} />
+            {anchor?.treasury && (
+              <Curl
+                label="Soroban"
+                cmd={`stellar contract invoke --id ${state.contracts.treasury} --network ${state.network} -- total_assets`}
+              />
             )}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** A request the reader can paste, with the copy button next to it. */
+function Curl({ label, cmd }: { label: string; cmd: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "58px minmax(0,1fr) auto",
+        gap: 10,
+        alignItems: "center",
+        padding: "10px 12px",
+        borderRadius: 14,
+        background: C.paper,
+      }}
+    >
+      <span style={{ fontFamily: FONT.mono, fontSize: 10, fontWeight: 700, color: C.green }}>
+        {label}
+      </span>
+      <code
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: 10.5,
+          color: C.ink,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+        title={cmd}
+      >
+        {cmd}
+      </code>
+      <button
+        onClick={() => {
+          void navigator.clipboard.writeText(cmd);
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 1400);
+        }}
+        style={{
+          border: 0,
+          borderRadius: 999,
+          padding: "6px 12px",
+          background: copied ? C.mint : C.ink,
+          color: copied ? C.ink : C.white,
+          fontSize: 10.5,
+          fontWeight: 700,
+        }}
+      >
+        {copied ? "✓" : "copy"}
+      </button>
     </div>
   );
 }
