@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Mark } from "@/components/Logo";
 import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session } from "@/lib/types";
@@ -63,7 +64,7 @@ export function PanelShell({
           }}
         >
           <a href="/" style={{ textDecoration: "none", color: C.ink, display: "flex" }}>
-            <Mark />
+            <Mark colour={C.ink} size={34} />
           </a>
 
           <nav className="panel-nav" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -157,37 +158,6 @@ export function ScreenHead({ step, title, lead }: { step: string; title: string;
         </p>
       )}
     </div>
-  );
-}
-
-/** The bracket mark. The wordmark belongs to the public site. */
-export function Mark({ colour = C.ink, scale = 1 }: { colour?: string; scale?: number }) {
-  const w = 26 * scale;
-  const h = 20 * scale;
-  const b = 5 * scale;
-  const r = 4 * scale;
-  return (
-    <span style={{ display: "flex", alignItems: "center", gap: 4 * scale }}>
-      <span
-        style={{
-          width: w,
-          height: h,
-          border: `${b}px solid ${colour}`,
-          borderRight: 0,
-          borderRadius: `${r}px 0 0 ${r}px`,
-        }}
-      />
-      <span style={{ width: 12 * scale, height: h, background: colour, borderRadius: 2 * scale }} />
-      <span
-        style={{
-          width: w,
-          height: h,
-          border: `${b}px solid ${colour}`,
-          borderLeft: 0,
-          borderRadius: `0 ${r}px ${r}px 0`,
-        }}
-      />
-    </span>
   );
 }
 

@@ -17,7 +17,7 @@ import type { AppState, Session } from "@/lib/types";
 /** The dashboard. One state fetch feeds every screen; no screen talks to chain. */
 export function App({ lang }: { lang: Lang }) {
   const d = t(lang);
-  const [screen, setScreen] = useState<Screen>("upload");
+  const [screen, setScreen] = useState<Screen>("overview");
   const [state, setState] = useState<AppState | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionKnown, setSessionKnown] = useState(false);

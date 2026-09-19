@@ -8,20 +8,31 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.PUBLIC_SITE_URL ?? "https://payper.live"),
-  title: "Payper · on-chain receivable financing",
+  title: "payper · on-chain receivable financing",
   description: DESCRIPTION,
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/brand/favicon-16.svg", type: "image/svg+xml" },
+      { url: "/brand/icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/brand/icon-256.png",
+  },
   openGraph: {
-    title: "Payper · on-chain receivable financing",
+    title: "payper · on-chain receivable financing",
     description: DESCRIPTION,
     locale: "en",
     type: "website",
+    images: [{ url: "/brand/lockup-on-ink-1040.png", width: 1040, height: 1040, alt: "payper" }],
   },
+  twitter: { card: "summary_large_image", images: ["/brand/lockup-on-ink-1040.png"] },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#050505",
+  themeColor: "#0A0A0A",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

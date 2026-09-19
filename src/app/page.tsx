@@ -1,7 +1,11 @@
 import { Hero, Marquee, TopNav } from "@/components/Hero";
-import { Closing, Pillars, Steps, Ways } from "@/components/Sections";
+import { Podium } from "@/components/home/Podium";
+import { Stack } from "@/components/home/Stack";
+import { YieldSources } from "@/components/home/YieldSources";
+import { Closing, LedBy, ModernCta, Pillars, Steps, Ways } from "@/components/Sections";
 import { C, FONT, shortKey, trLira, trNumber, trPct, usdc } from "@/lib/design";
 import { DEFAULT_LANG, isLang, t, type Lang } from "@/lib/i18n/dictionary";
+import type { AppState } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -72,13 +76,33 @@ export default async function Page({
       </section>
 
       <Steps d={d} />
-      <Ways d={d} />
+      <Ways
+        d={d}
+        lang={lang}
+        apyBps={state?.treasury.apyBps ?? null}
+        discountBps={state?.activeQuote?.totalDiscountBps ?? null}
+      />
+      <Podium lang={lang} apyBps={state?.treasury.apyBps ?? null} />
+      <YieldSources lang={lang} state={state} />
       <Pillars d={d} />
+      <LedBy lang={lang} />
+      <Stack lang={lang} />
+      <ModernCta d={d} lang={lang} />
       <Closing
         d={d}
         lang={lang}
-        contract={state?.contracts.invoice ?? ""}
+        contracts={
+          state
+            ? ([
+                [lang === "tr" ? "Fatura" : "Invoice", state.contracts.invoice],
+                [lang === "tr" ? "Hazine" : "Treasury", state.contracts.treasury],
+                ["TRY/USD", state.contracts.fxOracle],
+              ] as [string, string][]).filter(([, id]) => !!id)
+            : []
+        }
         network={state?.network ?? "testnet"}
+        anchorDomain={state?.anchor?.homeDomain ?? null}
+        treasuryMode={state?.treasury.mode ?? null}
       />
       <Wordmark />
       <Foot d={d} state={state} lang={lang} />
@@ -119,7 +143,7 @@ function Wordmark() {
 }
 
 /** Footer facts, read from the running deployment rather than written here. */
-function Foot({ d, state, lang }: { d: ReturnType<typeof t>; state: State | null; lang: Lang }) {
+function Foot({ d, state, lang }: { d: ReturnType<typeof t>; state: AppState | null; lang: Lang }) {
   const items = [
     state?.contracts.invoice ? `${d.contract} ${shortKey(state.contracts.invoice, 4, 4)}` : d.contract,
     "SEP-1 · 6 · 10 · 12 · 38 · 40 · 53",
@@ -152,7 +176,7 @@ function Foot({ d, state, lang }: { d: ReturnType<typeof t>; state: State | null
   );
 }
 
-function LiveFigures({ state, d }: { state: State; d: ReturnType<typeof t> }) {
+function LiveFigures({ state, d }: { state: AppState; d: ReturnType<typeof t> }) {
   const q = state.activeQuote;
   const annual = q && q.days > 0 ? (q.totalDiscountBps * 365) / q.days / 100 : null;
 
@@ -303,22 +327,12 @@ const Unreachable = ({ d }: { d: ReturnType<typeof t> }) => (
   </div>
 );
 
-interface State {
-  network: string;
-  contracts: { invoice: string; treasury: string; fxOracle: string };
-  invoices: { id: number; status: string; amountFiat: string }[];
-  active: { id: number; status: string; amountFiat: string } | null;
-  activeQuote: { days: number; totalDiscountBps: number; fxSource: string; yieldSource: string } | null;
-  treasury: { apyBps: number; apySource: string; assets: string };
-  anchor: { homeDomain: string } | null;
-}
-
 /** Call the route handler directly rather than over HTTP. */
-async function loadState(): Promise<State | null> {
+async function loadState(): Promise<AppState | null> {
   try {
     const { GET } = await import("./api/state/route");
     const res = await GET();
-    const body = (await res.json()) as State & { ok: boolean };
+    const body = (await res.json()) as AppState & { ok: boolean };
     return body.ok ? body : null;
   } catch {
     return null;

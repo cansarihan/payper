@@ -1,4 +1,5 @@
 import { LangSwitch } from "@/components/LangSwitch";
+import { Lockup } from "@/components/Logo";
 import { C, FONT } from "@/lib/design";
 import type { Lang, t } from "@/lib/i18n/dictionary";
 
@@ -20,16 +21,6 @@ const PARTNERS = [
   "UBL-TR",
   "Rise In",
 ];
-
-export function Mark({ colour = C.mint }: { colour?: string }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "flex-end", gap: 3, height: 17 }}>
-      {[7, 12, 17].map((h) => (
-        <span key={h} style={{ width: 5, height: h, borderRadius: 2, background: colour }} />
-      ))}
-    </span>
-  );
-}
 
 export function TopNav({ d, lang }: { d: Copy; lang: Lang }) {
   const q = lang === "en" ? "" : `?lang=${lang}`;
@@ -73,10 +64,7 @@ export function TopNav({ d, lang }: { d: Copy; lang: Lang }) {
             textDecoration: "none",
           }}
         >
-          <Mark />
-          <span style={{ fontWeight: 700, fontSize: 19, letterSpacing: "-.03em", color: C.white }}>
-            payper
-          </span>
+          <Lockup colour={C.white} size={24} />
         </a>
         {d.landingNav.map(([label, href]) => (
           <a

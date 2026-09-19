@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Lockup } from "@/components/Logo";
 import { C, FONT } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import { ROLE_LABEL, type Session, type SessionRole } from "@/lib/auth/roles";
@@ -103,8 +104,8 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
       <div style={{ width: "min(560px,100%)", display: "grid", gap: 22, animation: "rise .4s both" }}>
         <div>
           <a href="/" style={{ textDecoration: "none", color: C.white }}>
-            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-.04em", marginBottom: 20 }}>
-              [ payper ]
+            <div style={{ marginBottom: 20 }}>
+              <Lockup colour={C.mint} size={28} />
             </div>
           </a>
           <h1

@@ -122,9 +122,9 @@ interface Copy {
   howTitle: string;
   howSteps: readonly (readonly [string, string, string])[];
   waysTitle: string;
-  ways: readonly (readonly [string, string])[];
+  ways: readonly (readonly [string, string, string])[];
   pillarsTitle: string;
-  pillars: readonly (readonly [string, string])[];
+  pillars: readonly (readonly [string, string, string])[];
   proofTitle: string;
   proofLead: string;
   closingTitle: string;
@@ -296,15 +296,15 @@ const en: Copy = {
   ],
   waysTitle: "Three ways in",
   ways: [
-    ["Supplier", "Upload a term invoice and take the money today instead of in ninety days."],
-    ["Buyer", "Acknowledge once, pay at maturity as you already do. Nothing changes on your side."],
-    ["Funder", "Subscribe to a payout backed by an acknowledged invoice, priced from live chain data."],
+    ["Fund an acknowledged receivable", "Subscribe to a payout backed by an invoice the buyer has confirmed on chain. The price comes from live treasury yield and the observed currency move.", "Open the board"],
+    ["Take the money today", "Upload a term e-invoice and draw the discounted amount now instead of in ninety days. The ETTN is checked before anything else runs.", "Upload an invoice"],
+    ["Settle in lira", "SEP-6 in both directions. The supplier is paid in lira the same day; at maturity the buyer settles in lira and the contract distributes.", "See the anchor"],
   ],
   pillarsTitle: "What makes it different",
   pillars: [
-    ["One ETTN, one financing", "The identifier comes from the tax authority, so uniqueness is inherited rather than maintained by us. Selling the same receivable twice is refused by the contract, not by a policy."],
-    ["A price you can check", "Two of the four components are read from chain on every call, and each says whether it was live. A number that fell back to a parameter cannot be presented as live."],
-    ["Money that reaches a bank", "SEP-6 in both directions: the supplier is paid in lira, the buyer settles in lira. Every endpoint is discovered from the anchor at run time."],
+    ["ETTN", "One ETTN, one financing", "The identifier comes from the tax authority, so uniqueness is inherited rather than maintained by us. Selling the same receivable twice is refused by the contract, not by a policy."],
+    ["PRICING", "A price you can check", "Two of the four components are read from chain on every call, and each says whether it was live. A number that fell back to a parameter cannot be presented as live."],
+    ["SEP-6", "Money that reaches a bank", "SEP-6 in both directions: the supplier is paid in lira, the buyer settles in lira. Every endpoint is discovered from the anchor at run time."],
   ],
   proofTitle: "Everything here is checkable",
   proofLead: "The contracts are on testnet, the flow writes real transactions, and the figures on this page were read from chain when you loaded it.",
@@ -477,15 +477,15 @@ const tr: Copy = {
   ],
   waysTitle: "Üç giriş yolu",
   ways: [
-    ["KOBİ", "Vadeli faturanı yükle, parayı doksan gün sonra değil bugün al."],
-    ["Alıcı", "Bir kez onayla, vadede zaten ödediğin gibi öde. Senin tarafında değişen bir şey yok."],
-    ["Fonlayıcı", "Onaylanmış bir faturaya dayalı ödemeye abone ol; fiyat canlı zincir verisinden."],
+    ["Onaylı alacağı fonla", "Alıcının zincir üstünde onayladığı bir faturaya dayalı ödemeye abone ol. Fiyat canlı hazine getirisinden ve gözlenen kur hareketinden geliyor.", "Panoyu aç"],
+    ["Parayı bugün al", "Vadeli e-faturanı yükle, iskontolu tutarı doksan gün sonra değil şimdi çek. ETTN her şeyden önce kontrol edilir.", "Fatura yükle"],
+    ["Lira ile kapat", "Çift yönlü SEP-6. Tedarikçiye aynı gün lira geçer; vadede alıcı lira öder ve kontrat dağıtımı yapar.", "Anchor'ı gör"],
   ],
   pillarsTitle: "Farkı ne",
   pillars: [
-    ["Bir ETTN, bir finansman", "Kimlik vergi idaresinden gelir; tekillik bizim tuttuğumuz bir kayıt değil, miras alınan bir özelliktir. Aynı alacağı ikinci kez satmayı politika değil kontrat reddeder."],
-    ["Doğrulayabileceğin bir fiyat", "Dört bileşenin ikisi her çağrıda zincirden okunur ve her biri canlı olup olmadığını söyler. Yedeğe düşen bir sayı canlı diye sunulamaz."],
-    ["Bankaya inen para", "Çift yönlü SEP-6: satıcı TL alır, alıcı TL öder. Tüm uç noktalar anchor'dan çalışma anında keşfedilir."],
+    ["ETTN", "Bir ETTN, bir finansman", "Kimlik vergi idaresinden gelir; tekillik bizim tuttuğumuz bir kayıt değil, miras alınan bir özelliktir. Aynı alacağı ikinci kez satmayı politika değil kontrat reddeder."],
+    ["FİYAT", "Doğrulayabileceğin bir fiyat", "Dört bileşenin ikisi her çağrıda zincirden okunur ve her biri canlı olup olmadığını söyler. Yedeğe düşen bir sayı canlı diye sunulamaz."],
+    ["SEP-6", "Bankaya inen para", "Çift yönlü SEP-6: satıcı TL alır, alıcı TL öder. Tüm uç noktalar anchor'dan çalışma anında keşfedilir."],
   ],
   proofTitle: "Buradaki her şey doğrulanabilir",
   proofLead: "Kontratlar testnet'te, akış gerçek işlem yazıyor ve bu sayfadaki rakamlar sen açtığında zincirden okundu.",
