@@ -141,6 +141,7 @@ interface Copy {
   openContract: string;
   nextStep: readonly [string, string, string, string, string];
   tour: string;
+  firstCorridor: string;
   marketLabel: string;
   marketTitle: string;
   marketLead: string;
@@ -260,10 +261,11 @@ interface Copy {
 }
 
 const en: Copy = {
-  tagline: ["Turkish working capital,", "funded from anywhere."],
+  tagline: ["Working capital for suppliers,", "funded from anywhere."],
   lead:
-    "A supplier in Bursa waits ninety days to be paid. The capital that could close that gap is locked inside Turkish bank balance sheets. Payper opens that door to anyone holding USDC — in seconds, from fifty dollars up.",
-  leadEmphasis: "The supplier is paid the same day in lira. The funder never touches a Turkish bank.",
+    "A supplier waits ninety days to be paid while the capital that could close the gap sits inside domestic bank balance sheets, out of reach of anyone abroad. Payper opens that door to whoever holds USDC — in seconds, from fifty dollars up.",
+  leadEmphasis:
+    "The supplier is paid the same day in their own currency. The funder never opens an account in their country. The first corridor is Türkiye.",
   liveNow: "Stellar testnet · live",
 
   treasuryYield: "Treasury yield",
@@ -459,17 +461,18 @@ const en: Copy = {
   openContract: "open the contract ↗",
   nextStep: ["Acknowledge", "Price it", "Settle", "Funding board", "Settle"],
   tour: "Start tour",
+  firstCorridor: "First corridor · Türkiye",
   marketLabel: "MARKET",
   marketTitle: "Who pays, how much, and against what",
   marketLead:
-    "Two questions decide whether this is a business: is the capital pool real, and is the price better than what the supplier pays today. The second one is arithmetic, so it runs live on the quote below — and every assumption about the incumbent is a slider you can move.",
+    "The shape of the problem is the same wherever suppliers invoice on terms; what differs is the document standard, the identifier and the anchor. Türkiye is where it runs today, so that is what the figures below size. Two questions decide whether this is a business: is the capital pool real, and is the price better than what the supplier pays now. The second is arithmetic, so it runs live on the quote — and every assumption about the incumbent is a slider you can move.",
   segmentTitle: "The segment, not the population",
   segmentRows: [
     ["Who", "Suppliers invoicing one large corporate buyer — retail, automotive tier-2, construction materials"],
     ["Invoice", "50,000 – 500,000 ₺ · 30 to 120 day terms"],
     ["Pain", "Cannot wait for maturity; needs cash now and goes to a factor"],
     ["Lock", "The buyer's on-chain acknowledgement — the one condition the product needs"],
-    ["Capital", "USDC held anywhere. Not a Turkish bank balance sheet"],
+    ["Capital", "USDC held anywhere. Not a domestic bank balance sheet"],
     ["Distribution", "One buyer brings hundreds of suppliers; the sale happens once"],
   ],
   unitEconomics: "Platform economics",
@@ -650,10 +653,11 @@ const en: Copy = {
 };
 
 const tr: Copy = {
-  tagline: ["Türkiye'nin işletme sermayesi,", "her yerden fonlanabilir."],
+  tagline: ["Tedarikçinin işletme sermayesi,", "her yerden fonlanabilir."],
   lead:
-    "Bursa'daki üretici parasını doksan gün bekliyor. O açığı kapatacak sermaye Türk bankalarının bilançosunda kilitli. Payper o kapıyı USDC tutan herkese açıyor — saniyeler içinde, elli dolardan başlayarak.",
-  leadEmphasis: "Tedarikçiye aynı gün TL geçiyor. Fonlayıcı hiçbir Türk bankasına dokunmuyor.",
+    "Tedarikçi parasını doksan gün bekliyor; o açığı kapatacak sermaye ise yurt içi bankaların bilançosunda, dışarıdan kimsenin erişemeyeceği yerde duruyor. Payper o kapıyı USDC tutan herkese açıyor — saniyeler içinde, elli dolardan başlayarak.",
+  leadEmphasis:
+    "Tedarikçiye aynı gün kendi para biriminde ödeniyor. Fonlayıcı o ülkede hesap açmıyor. İlk koridor Türkiye.",
   liveNow: "Stellar testnet · canlı",
 
   treasuryYield: "Hazine getirisi",
@@ -849,17 +853,18 @@ const tr: Copy = {
   openContract: "kontratı aç ↗",
   nextStep: ["Onayla", "Fiyatla", "Kapat", "Fonlama panosu", "Kapat"],
   tour: "Turu başlat",
+  firstCorridor: "İlk koridor · Türkiye",
   marketLabel: "PAZAR",
   marketTitle: "Kim ödüyor, ne kadar, neye karşı",
   marketLead:
-    "Bunun bir iş olup olmadığına iki soru karar verir: sermaye havuzu gerçek mi, ve fiyat tedarikçinin bugün ödediğinden iyi mi. İkincisi aritmetik, o yüzden aşağıdaki teklif üzerinden canlı çalışıyor — ve mevcut oyuncuya dair her varsayım oynatabileceğin bir kaydırıcı.",
+    "Sorunun biçimi, tedarikçilerin vadeli fatura kestiği her yerde aynı; değişen şey belge standardı, kimlik ve anchor. Bugün Türkiye'de çalışıyor, aşağıdaki rakamlar da onu ölçüyor. Bunun bir iş olup olmadığına iki soru karar verir: sermaye havuzu gerçek mi, ve fiyat tedarikçinin bugün ödediğinden iyi mi. İkincisi aritmetik, o yüzden teklif üzerinden canlı çalışıyor — ve mevcut oyuncuya dair her varsayım oynatabileceğin bir kaydırıcı.",
   segmentTitle: "Nüfus değil, segment",
   segmentRows: [
     ["Kim", "Tek bir büyük kurumsal alıcıya fatura kesen tedarikçiler — perakende, otomotiv yan sanayi, inşaat malzemesi"],
     ["Fatura", "50.000 – 500.000 ₺ · 30–120 gün vade"],
     ["Acı", "Vadeyi bekleyemiyor; bugün nakit lazım, faktoringe gidiyor"],
     ["Kilit", "Alıcının zincir üstündeki onayı — ürünün çalışması için tek şart"],
-    ["Sermaye", "Her yerde tutulan USDC. Türk bankasının bilançosu değil"],
+    ["Sermaye", "Her yerde tutulan USDC. Yurt içi bankanın bilançosu değil"],
     ["Dağıtım", "Bir alıcı yüzlerce tedarikçi getirir; satış tek kapıdan"],
   ],
   unitEconomics: "Platform ekonomisi",

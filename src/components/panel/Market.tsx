@@ -93,6 +93,26 @@ export function Market({
 
       <div
         style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "6px 13px",
+          borderRadius: 999,
+          background: C.ink,
+          color: C.white,
+          fontFamily: FONT.mono,
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: ".06em",
+          marginBottom: 12,
+        }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.mint }} />
+        {d.firstCorridor.toUpperCase()}
+      </div>
+
+      <div
+        style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))",
           gap: 14,
