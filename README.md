@@ -24,7 +24,7 @@ instance of a general rule, marked where it appears.
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
 **Live:** [payper.live](https://payper.live) · **Contract:**
-[`CC76VPEQ…EJ4R`](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R)
+[`CB5U7ZMO…VBKJ`](https://stellar.expert/explorer/testnet/contract/CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ)
 
 ---
 
@@ -55,7 +55,7 @@ What to look for, in order:
 | 1 | `npm run smoke`, final step | The same ETTN is refused. This is the product's one invariant |
 | 2 | `npm run smoke`, step 3 | Currency risk reports `live` — read from the feed, not configured. The yield component reports `fallback` and says why, which is the point: provenance is labelled, never assumed |
 | 3 | Dashboard → Anchor | The SEP trace, request by request, with the status the anchor returned |
-| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R) | The transactions the run just wrote |
+| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ) | The transactions the run just wrote |
 
 Known limitations are in [Honest limitations](#honest-limitations), not buried.
 
@@ -119,17 +119,26 @@ chain on every call:
 
 | Component | Source | On the live deployment |
 |---|---|---|
-| Funding yield | Treasury APY, scaled to tenor | fallback · 195 bps |
+| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** once the reference window opens |
 | Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** · 723 bps |
 | Credit premium | Parameter | 120 bps |
 | Platform fee | Parameter | 50 bps |
 
 That is 10.88% over 89 days, about 44.6% annualised. Each component carries its
 provenance, so a number that fell back to a parameter cannot be presented as
-live — the interface labels it. The yield component reads `fallback` today for a
-reason worth stating plainly: the treasury is a DeFindex vault with no strategy
-attached, so it has no realised gain to measure, and the adapter refuses rather
-than substituting a number that would arrive wearing the live badge.
+live — the interface labels it.
+
+The yield component has two chain sources, in order. First the DeFindex vault's
+own realised gain. The vault carries no strategy on testnet — DeFindex's own
+strategies are bound to their test USDC, while this system holds Circle's
+testnet USDC because that is what the anchor issues — so there is nothing
+realised there to measure. The adapter then reads a Blend v2 pool instead:
+`b_rate`, the pool's bToken-to-underlying index, is sampled once when the
+reference is set and the growth since that sample is annualised. That is the
+rate this capital earns lending on Stellar, which is the cost of money the
+discount is meant to carry. Neither source is a parameter, and when neither can
+be read the adapter refuses rather than substituting a number that would arrive
+wearing the live badge.
 
 **The money reaches a bank account.** The supplier's USDC is sold for local
 currency through a SEP-6 anchor and the buyer settles in the same currency at
@@ -403,12 +412,12 @@ stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5R
 
 ```bash
 # Our position, in vault shares
-stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH
 ```
 
 ```bash
 # And what the invoice contract sees when it prices a quote
-stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- treasury_assets
+stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- treasury_assets
 ```
 
 A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
@@ -503,17 +512,17 @@ recorded per address.
 
 ```bash
 # The invoice as the contract holds it
-stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- get_invoice --invoice_id 4
+stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- get_invoice --invoice_id 4
 ```
 
 ```bash
 # Who funded it, and for how much
-stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- funders_of --invoice_id 4
+stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- funders_of --invoice_id 4
 ```
 
 ```bash
 # How many invoices the contract holds
-stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- invoice_count
+stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- invoice_count
 ```
 
 **The claims transfer.** A funder who needs the money back before maturity sells
@@ -523,12 +532,12 @@ contract moves the claim because the holder signed.
 
 ```bash
 # What an address is owed against an invoice
-stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-admin --network testnet -- claim_of --invoice_id 2 --holder <G...>
+stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-admin --network testnet -- claim_of --invoice_id 2 --holder <G...>
 ```
 
 ```bash
 # Sell half of it. Signed by the holder, refused for anyone else.
-stellar contract invoke --id CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R --source payper-funder --network testnet --send=yes -- transfer_claim --invoice_id 2 --from <G...> --to <G...> --amount 133680000
+stellar contract invoke --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ --source payper-funder --network testnet --send=yes -- transfer_claim --invoice_id 2 --from <G...> --to <G...> --amount 133680000
 ```
 
 A transfer that actually ran, on invoice 2:
@@ -604,9 +613,12 @@ entries and either call exceeds the transaction resource budget, which would str
 The attack is bounded and expensive rather than critical: entries can only be added while a quote
 lock is live, every entry must carry real USDC, and the total is capped at the payout — so an
 attacker filling an invoice in dust is funding it themselves, and is locking their own capital
-alongside everyone else's. It is griefing, not theft. The fix is a minimum ticket size and a cap on
-ledger entries, which is a contract change and therefore a redeploy; it is listed under open work
-rather than quietly patched.
+alongside everyone else's. It is griefing, not theft.
+
+**Fixed.** `fund()` now enforces `min_ticket_usdc` from config, waived only for the contribution
+that closes the invoice so the floor can never strand one, and the ledger is capped at
+`MAX_FUNDERS = 32`. Three tests hold it: dust is refused, the final contribution is still allowed
+below the floor, and the thirty-third entry is refused.
 
 ## Honest limitations
 
@@ -671,13 +683,22 @@ Stellar testnet, protocol 28.
 
 | | Address |
 |---|---|
-| Invoice contract | [`CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R`](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R) |
-| Treasury adapter | [`CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF`](https://stellar.expert/explorer/testnet/contract/CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF) |
+| Invoice contract | [`CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ`](https://stellar.expert/explorer/testnet/contract/CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ) |
+| Treasury adapter | [`CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH`](https://stellar.expert/explorer/testnet/contract/CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH) |
 | DeFindex vault | [`CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP`](https://stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP) |
 | Treasury, local fallback | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |
 | TRY/USD feed | [`CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC`](https://stellar.expert/explorer/testnet/contract/CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC) |
+| Blend v2 pool, rate reference | [`CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF`](https://stellar.expert/explorer/testnet/contract/CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF) |
 | USDC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` |
 | Anchor | `tr-mock-anchor.fly.dev` |
+
+The contract Wasm carries a SEP-46 `source_repo` pointing at this repository, and
+`.github/workflows/release.yml` runs stellar.expert's reproducible build on a tag, so the deployed
+hash can be checked against a build of this source:
+
+```bash
+stellar contract info meta --network testnet --id CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ | grep source_repo
+```
 
 ## Running it yourself
 

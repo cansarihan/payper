@@ -1,0 +1,34 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  id-token: write
+  contents: write
+  attestations: write
+
+jobs:
+  invoice:
+    uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
+    with:
+      release_name: ${{ github.ref_name }}
+      release_description: 'Invoice registry, pricing and settlement'
+      home_domain: 'payper.live'
+      relative_path: '["contracts/invoice"]'
+      package: 'payper-invoice'
+    secrets:
+      release_token: ${{ secrets.GITHUB_TOKEN }}
+
+  treasury:
+    uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
+    with:
+      release_name: ${{ github.ref_name }}-treasury
+      release_description: 'DeFindex treasury adapter'
+      home_domain: 'payper.live'
+      relative_path: '["contracts/treasury_defindex"]'
+      package: 'payper-treasury-defindex'
+    secrets:
+      release_token: ${{ secrets.GITHUB_TOKEN }}

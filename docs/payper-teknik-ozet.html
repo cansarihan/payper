@@ -125,8 +125,8 @@ büyüklüğünün altında altyapı hiç yok.</p>
 <h3>Deploy edilmiş kontratlar · Stellar testnet</h3>
 <table>
   <tr><th style="width:38mm">Kontrat</th><th>Adres</th></tr>
-  <tr><td>Fatura kontratı</td><td class="mono">CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R</td></tr>
-  <tr><td>Hazine adaptörü</td><td class="mono">CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF</td></tr>
+  <tr><td>Fatura kontratı</td><td class="mono">CB5U7ZMOZFN3ZYGIO6V5IJS4HRCWDNBM4OAEFZPB7A3DE4MVRP2YVBKJ</td></tr>
+  <tr><td>Hazine adaptörü</td><td class="mono">CBOP6OO5XKEPQXWBPBDYWKESWCNE6SKQI4EQRU2Y5RZI5DSZTXDYKUQH</td></tr>
   <tr><td>DeFindex vault</td><td class="mono">CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP</td></tr>
   <tr><td>Hazine, yerel yedek</td><td class="mono">CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI</td></tr>
   <tr><td>TRY/USD beslemesi</td><td class="mono">CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC</td></tr>
@@ -137,7 +137,7 @@ büyüklüğünün altında altyapı hiç yok.</p>
 <div class="kpi">
   <div><b>2.475</b><span>satır Rust · 9 dosya</span></div>
   <div><b>17.392</b><span>satır TS/TSX · 89 dosya</span></div>
-  <div><b>29</b><span>kontrat testi</span></div>
+  <div><b>32</b><span>kontrat testi</span></div>
   <div><b>22</b><span>API route</span></div>
   <div><b>15</b><span>panel ekranı</span></div>
   <div><b>9</b><span>SEP standardı</span></div>
@@ -356,8 +356,27 @@ istiyor. Kullanılanlar, <code>stellar/stellar-dev-skill</code> deposundan:</p>
   <b>Ciddiyet: kritik değil, maliyetli bir taciz.</b> Kayıt ancak teklif kilidi açıkken eklenebiliyor,
   her kayıt gerçek USDC taşımak zorunda ve toplam ödeme tutarıyla sınırlı — yani faturayı bozuk parayla
   dolduran saldırgan aslında faturayı kendisi fonluyor ve kendi sermayesini de kilitliyor. Hırsızlık
-  değil, taciz. Çözümü asgari dilim büyüklüğü ve defter kaydı üst sınırı; ikisi de kontrat değişikliği,
-  dolayısıyla yeniden deploy gerektiriyor. Sessizce yamamak yerine açık iş olarak yazıyoruz.
+  değil, taciz.<br><br>
+  <b>Kapatıldı.</b> <code>fund()</code> artık yapılandırmadaki <code>min_ticket_usdc</code> eşiğini
+  uyguluyor — yalnızca faturayı kapatan son katkı bu eşiğin altına inebiliyor, aksi hâlde eşik
+  faturayı doldurulamaz hâle getirirdi — ve defter <code>MAX_FUNDERS = 32</code> ile sınırlı. Üç test
+  tutuyor: bozuk para reddediliyor, son katkı eşiğin altında hâlâ kabul ediliyor, otuz üçüncü kayıt
+  reddediliyor. Kontratlar bu düzeltmeyle yeniden deploy edildi.
+</div>
+
+<h3>Getiri bileşeninin zincir kaynakları</h3>
+<p>Getiri iki zincir kaynağından, sırayla okunuyor. Önce DeFindex kasasının kendi gerçekleşmiş
+kazancı. Testnet'te kasaya strateji bağlı değil — DeFindex'in yayımladığı stratejiler kendi test
+USDC'lerine bağlı, bizse anchor'ın bastığı Circle testnet USDC'sini tutuyoruz — dolayısıyla orada
+ölçülecek bir şey yok. Adaptör bu durumda bir <b>Blend v2</b> havuzunu okuyor: havuzun
+bToken/underlying indeksi <code>b_rate</code>, referans kurulurken bir kez örnekleniyor ve o
+örnekten bu yana büyüme yıllıklandırılıyor.</p>
+<div class="box">
+  <h4>Neden bu sayı doğru sayı</h4>
+  Getiri bileşeninin temsil ettiği şey fonlayıcının fırsat maliyeti: parası Stellar'da başka nerede
+  ne kazanırdı. Blend havuzunun tedarikçilere ödediği oran tam olarak budur. Örnek adaptörün kendi
+  deposunda tutuluyor ve pencereyi kendisi ölçüyor, yani havuzun örnekten önceki geçmişine dair
+  hiçbir şey varsayılmıyor. Pencere bir saatten kısaysa adaptör sayı üretmek yerine susuyor.
 </div>
 
 <h3>Test</h3>
@@ -366,8 +385,8 @@ istiyor. Kullanılanlar, <code>stellar/stellar-dev-skill</code> deposundan:</p>
   <tr><td class="mono">npm run smoke</td><td>Uçtan uca akış, testnet'e gerçek işlemler: kayıt, onay,
   canlı fiyat, iki fonlayıcı anchor'dan USDC alıp fonluyor, vadede kapanış, oransal dağıtım. Son adımda
   aynı ETTN'i tekrar kaydetmeyi dener ve kontrat reddeder</td></tr>
-  <tr><td class="mono">npm run test:contracts</td><td>29 kontrat testi, devredilebilir alacağın
-  toplam korunumu ve devir sonrası dağıtım dahil</td></tr>
+  <tr><td class="mono">npm run test:contracts</td><td>32 kontrat testi; devredilebilir alacağın
+  toplam korunumu, devir sonrası dağıtım ve fonlama defterinin sınırları dahil</td></tr>
   <tr><td class="mono">npm run test:ubl</td><td>Belge doğrulayıcı</td></tr>
   <tr><td class="mono">npm run test:tranche</td><td>Anchor transfer dilimleyicisi, 1.823 tutar</td></tr>
   <tr><td class="mono">npm run test:sep53</td><td>İmzalı mesajlar, spec'in kendi vektörleriyle</td></tr>
@@ -384,6 +403,8 @@ istiyor. Kullanılanlar, <code>stellar/stellar-dev-skill</code> deposundan:</p>
   söylemiyor. Kur primi riski fiyatlıyor, atamıyor.<br><br>
   <b>Fonlayıcının hakkının hukuki kabı yok.</b> Kontrat temlik değil, ödeme üzerinde oransal katılım
   yaratıyor. Menkul kıymet mevzuatı açısından ne olduğu ülkeye göre değişen açık bir soru.<br><br>
+  <b>Fonlayıcının hakkının hukuki kabı yok.</b> Kontrat temlik değil, ödeme üzerinde oransal katılım
+  yaratıyor.<br><br>
   <b>Uydurma fatura kontrollerimizden geçer.</b> Yapıyı doğruluyoruz, varlığı değil. Kapı
   <code>acknowledge()</code> — faturada yazılı adres imzalamak zorunda. Durdurmadığı şey muvazaa;
   buna karşı bugünkü sürtünme anchor KYC'si, rücu ve whitelist eşiği, hiçbiri kriptografik değil.
@@ -472,7 +493,7 @@ taşımıyor.</p>
   <h4>Bağlantılar</h4>
   Canlı uygulama · <b>payper.live</b><br>
   Depo · <b>github.com/cansarihan/payper</b><br>
-  Fatura kontratı · <b>stellar.expert/explorer/testnet/contract/CC76VPEQ…EJ4R</b><br>
+  Fatura kontratı · <b>stellar.expert/explorer/testnet/contract/CB5U7ZMO…VBKJ</b><br>
   Telefon dinleyicisi · <b>payper.live/listen</b>
 </div>
 </body></html>
