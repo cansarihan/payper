@@ -87,6 +87,11 @@ interface Copy {
   methods: Readonly<Record<"wallet" | "passkey" | "demo", string>>;
   sessionAddress: string;
   passkeyAccount: string;
+  onChainYes: string;
+  onChainNo: string;
+  onChainNoNote: string;
+  activateCta: string;
+  activatedNote: string;
   walletNotNeeded: string;
   noWalletLinked: string;
   walletCancelled: string;
@@ -381,6 +386,12 @@ const en: Copy = {
   },
   sessionAddress: "Session address",
   passkeyAccount: "Passkey account",
+  onChainYes: "on the network",
+  onChainNo: "not on the network yet",
+  onChainNoNote:
+    "An address is only an address until someone funds it — a Stellar account comes into existence with its first payment, which is why the explorer has nothing to show. On testnet friendbot can do it; in production the first deposit would.",
+  activateCta: "Create it on testnet",
+  activatedNote: "Created, with a USDC trustline. The explorer link now resolves.",
   walletNotNeeded: "Your passkey account is ready to use. Nothing needs linking.",
   noWalletLinked: "none linked — not needed",
   walletCancelled: "The wallet picker was closed.",
@@ -751,6 +762,12 @@ const tr: Copy = {
   },
   sessionAddress: "Oturum adresi",
   passkeyAccount: "Passkey hesabı",
+  onChainYes: "ağda var",
+  onChainNo: "henüz ağda yok",
+  onChainNoNote:
+    "Bir adres, biri ona para gönderene kadar yalnızca adrestir — Stellar hesabı ilk ödemeyle var olur, o yüzden gezginin gösterecek bir şeyi yok. Testnet'te bunu friendbot yapabilir; üretimde ilk yatırma yapardı.",
+  activateCta: "Testnet'te oluştur",
+  activatedNote: "Oluşturuldu, USDC trustline'ı ile. Gezgin linki artık açılıyor.",
   walletNotNeeded: "Passkey hesabın kullanıma hazır. Bağlanması gereken bir şey yok.",
   noWalletLinked: "bağlı değil — gerekmiyor",
   walletCancelled: "Cüzdan seçici kapatıldı.",

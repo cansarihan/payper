@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { C, FONT, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
@@ -27,7 +27,9 @@ export function Wallet({
   onSession: (s: Session | null) => void;
 }) {
   const d = t(lang);
-  const [busy, setBusy] = useState<"link" | "unlink" | null>(null);
+  const [busy, setBusy] = useState<"link" | "unlink" | "activate" | null>(null);
+  const [onChain, setOnChain] = useState<boolean | null>(null);
+  const [activated, setActivated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const linked = session?.wallet ?? null;
@@ -36,6 +38,38 @@ export function Wallet({
     `https://stellar.expert/explorer/${
       state.network === "mainnet" ? "public" : "testnet"
     }/account/${address}`;
+
+  // An address the explorer cannot find is worse than no link at all, so the
+  // screen finds out first and says which it is.
+  useEffect(() => {
+    if (!session?.address) return;
+    let alive = true;
+    const horizon = state.network === "mainnet"
+      ? "https://horizon.stellar.org"
+      : "https://horizon-testnet.stellar.org";
+    void fetch(`${horizon}/accounts/${session.address}`)
+      .then((r) => alive && setOnChain(r.ok))
+      .catch(() => alive && setOnChain(false));
+    return () => {
+      alive = false;
+    };
+  }, [session?.address, state.network, activated]);
+
+  async function activate() {
+    setBusy("activate");
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/passkey/activate", { method: "POST" });
+      const json = (await res.json()) as { ok: boolean; error?: string };
+      if (!json.ok) throw new Error(json.error ?? "The account could not be created");
+      setActivated(true);
+      setOnChain(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function link() {
     setBusy("link");
@@ -133,13 +167,54 @@ export function Wallet({
             <Row
               k={d.sessionAddress}
               v={session ? shortKey(session.address, 8, 6) : "—"}
-              href={session ? explorer(session.address) : undefined}
+              href={session && onChain ? explorer(session.address) : undefined}
+              tag={onChain === null ? undefined : onChain ? d.onChainYes : d.onChainNo}
+              tagTone={onChain ? C.green : C.amber}
             />
             <Row k={d.roleLabel} v={session ? d.roles[session.role] : "—"} />
             {session?.credentialId && (
               <Row k="credential" v={shortKey(session.credentialId, 8, 6)} />
             )}
           </div>
+
+          {method === "passkey" && onChain === false && (
+            <div style={{ display: "grid", gap: 10 }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12.5,
+                  lineHeight: 1.6,
+                  color: C.grey,
+                  borderLeft: `2px solid ${C.amber}`,
+                  paddingLeft: 12,
+                }}
+              >
+                {d.onChainNoNote}
+              </p>
+              <button
+                onClick={() => void activate()}
+                disabled={busy !== null}
+                style={{
+                  justifySelf: "start",
+                  border: 0,
+                  borderRadius: 999,
+                  padding: "12px 22px",
+                  background: C.ink,
+                  color: C.white,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                }}
+              >
+                {busy === "activate" ? `${d.loading}…` : d.activateCta}
+              </button>
+            </div>
+          )}
+
+          {activated && (
+            <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: C.green, fontWeight: 600 }}>
+              {d.activatedNote}
+            </p>
+          )}
 
           {method === "passkey" && (
             <p
@@ -320,11 +395,15 @@ function Row({
   v,
   dark,
   href,
+  tag,
+  tagTone,
 }: {
   k: string;
   v: string;
   dark?: boolean;
   href?: string;
+  tag?: string;
+  tagTone?: string;
 }) {
   return (
     <div
@@ -337,7 +416,25 @@ function Row({
         background: dark ? C.panel : C.paper,
       }}
     >
-      <span style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.6 }}>{k}</span>
+      <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.6 }}>{k}</span>
+        {tag && (
+          <span
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 9.5,
+              padding: "2px 7px",
+              borderRadius: 999,
+              background: `${tagTone ?? C.grey}22`,
+              color: tagTone ?? C.grey,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {tag}
+          </span>
+        )}
+      </span>
       {href ? (
         <a
           href={href}
