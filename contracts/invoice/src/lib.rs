@@ -1,19 +1,11 @@
 #![no_std]
-//! Payper — on-chain receivable financing.
+//! Receivable financing: register, acknowledge, price, fund, settle.
 //!
-//! A supplier uploads a term e-invoice, the buyer acknowledges it on chain, and
-//! funders subscribe to a discounted payout that the supplier takes as fiat the
-//! same day. At maturity the buyer pays, and the contract distributes.
+//! Invariant: one ETTN, one financing. The hash is stored under
+//! [`DataKey::Ettn`] and checked before any write.
 //!
-//! The one invariant everything else serves: **an invoice can only be financed
-//! once.** Its ETTN hash is stored under [`DataKey::Ettn`] and a second
-//! registration is refused before anything is written. Selling the same
-//! receivable twice is the expensive fraud in factoring, and here it is a
-//! contract invariant rather than a database row.
-//!
-//! The price is not quoted, it is computed: two of the discount's four
-//! components are read from chain on every call, and the quote says which of
-//! them were live. See [`pricing`].
+//! Two of the discount's four components are read from chain per call; the
+//! quote records which were live. See [`pricing`].
 
 mod events;
 mod pricing;
@@ -63,11 +55,9 @@ impl InvoiceContract {
 
     // ── Registration ────────────────────────────────────────────────────────
 
-    /// Register a term e-invoice. Refuses an ETTN that has been financed before.
+    /// Register a term e-invoice. Refuses a previously financed ETTN.
     ///
-    /// `ettn_hash` is the SHA-256 of the invoice's ETTN and `doc_hash` that of
-    /// the whole document, so what was financed is pinned to exact bytes and a
-    /// later full signature check has something to check against.
+    /// `doc_hash` pins the financed bytes for later signature verification.
     #[allow(clippy::too_many_arguments)]
     pub fn register(
         env: Env,
@@ -83,7 +73,7 @@ impl InvoiceContract {
     ) -> u32 {
         seller.require_auth();
 
-        // First, before anything is written: this is the invariant.
+        // Before any write.
         if env
             .storage()
             .persistent()
@@ -123,8 +113,7 @@ impl InvoiceContract {
         env.storage()
             .persistent()
             .set(&DataKey::Ettn(ettn_hash.clone()), &id);
-        // This entry *is* the no-double-financing guarantee, so it must not be
-        // allowed to drift toward archival.
+        // Carries the uniqueness guarantee; must not drift toward archival.
         env.storage()
             .persistent()
             .extend_ttl(&DataKey::Ettn(ettn_hash.clone()), MAX_TTL - 1, MAX_TTL);
@@ -148,10 +137,9 @@ impl InvoiceContract {
 
     // ── Acknowledgement ─────────────────────────────────────────────────────
 
-    /// The buyer confirms the receivable is real. Funding opens only after this.
+    /// Buyer confirms the receivable. Required before funding opens.
     ///
-    /// Only the address written on the invoice may do it — otherwise a seller
-    /// could vouch for their own paper.
+    /// Restricted to the address on the invoice.
     pub fn acknowledge(env: Env, invoice_id: u32) {
         let mut invoice = load_invoice(&env, invoice_id);
         invoice.buyer.require_auth();
@@ -168,20 +156,18 @@ impl InvoiceContract {
 
     // ── Pricing ─────────────────────────────────────────────────────────────
 
-    /// The live price. Read-only: nothing is written, so a client may poll it.
+    /// Live price. Read-only, safe to poll.
     pub fn quote(env: Env, invoice_id: u32) -> Quote {
         let cfg = load_config(&env);
         let invoice = load_invoice(&env, invoice_id);
         pricing::compute_quote(&env, &cfg, &invoice)
     }
 
-    /// The seller accepts, fixing the discount and payout for this invoice.
+    /// Seller accepts, fixing discount and payout.
     ///
-    /// Funders subscribe against a fixed payout, so a later oracle move cannot
-    /// change what anyone owes. The lock lives in temporary storage with
-    /// `quote_ttl` as its TTL: a price computed from today's rate must not stay
-    /// fundable next week, and letting the ledger expire the entry is a stronger
-    /// guarantee than a timestamp nobody re-checks.
+    /// Funders subscribe against a fixed payout, so later oracle moves cannot
+    /// change what is owed. The lock sits in temporary storage with `quote_ttl`
+    /// as its TTL and expires without a sweep.
     pub fn accept_quote(env: Env, invoice_id: u32) -> Quote {
         let cfg = load_config(&env);
         let mut invoice = load_invoice(&env, invoice_id);
@@ -222,11 +208,10 @@ impl InvoiceContract {
 
     // ── Funding ─────────────────────────────────────────────────────────────
 
-    /// Subscribe `amount` USDC stroops of an acknowledged invoice's payout.
+    /// Subscribe `amount` stroops of an acknowledged invoice's payout.
     ///
-    /// The contribution moves into the treasury so idle capital earns the
-    /// vault's yield while the round fills. Once the payout is fully subscribed
-    /// the contract draws it back out and pays the seller in one step.
+    /// Contributions sit in the treasury while the round fills; on completion
+    /// the payout is drawn back out and paid to the seller.
     pub fn fund(env: Env, invoice_id: u32, funder: Address, amount: i128) {
         let cfg = load_config(&env);
         let mut invoice = load_invoice(&env, invoice_id);
@@ -238,8 +223,7 @@ impl InvoiceContract {
         if invoice.locked_discount_bps == 0 {
             panic_with_error!(&env, Error::NoQuoteAccepted);
         }
-        // No live lock means the accepted price has expired: the seller has to
-        // take a fresh one rather than have funders subscribe at a stale rate.
+        // No live lock: the accepted price has expired.
         if !env
             .storage()
             .temporary()
@@ -258,7 +242,7 @@ impl InvoiceContract {
             panic_with_error!(&env, Error::NotWhitelisted);
         }
 
-        // Into the treasury, signed by the funder at the root of the call.
+        // Signed by the funder at the root of the invocation.
         let treasury = TreasuryClient::new(&env, &cfg.treasury);
         treasury.deposit(&funder, &amount);
 
@@ -285,9 +269,8 @@ impl InvoiceContract {
             if treasury.total_assets() < payout {
                 panic_with_error!(&env, Error::InsufficientLiquidity);
             }
-            // The treasury moves tokens on our behalf, one frame deeper than
-            // the invoker's signature reaches, so the authorization for that
-            // transfer has to be granted here explicitly.
+            // The treasury's transfer runs a frame deeper than the invoker's
+            // signature reaches; authorize it explicitly.
             authorize_treasury_transfer(&env, &cfg, payout);
             treasury.withdraw(&env.current_contract_address(), &payout);
 
@@ -312,8 +295,7 @@ impl InvoiceContract {
 
     // ── Settlement ──────────────────────────────────────────────────────────
 
-    /// At maturity the buyer pays the face value and funders are repaid pro
-    /// rata, each getting their contribution plus its share of the discount.
+    /// Buyer pays face value at maturity; funders are repaid pro rata.
     pub fn repay(env: Env, invoice_id: u32, payer: Address) {
         let cfg = load_config(&env);
         let mut invoice = load_invoice(&env, invoice_id);
@@ -333,8 +315,7 @@ impl InvoiceContract {
         let last = ledger.len().saturating_sub(1);
 
         for (i, f) in ledger.iter().enumerate() {
-            // The final funder takes the remainder, so rounding never leaves
-            // dust stranded in the contract.
+            // Remainder to the last funder, so rounding leaves no dust.
             let share = if i as u32 == last {
                 face - distributed
             } else {
@@ -358,11 +339,10 @@ impl InvoiceContract {
 
     // ── Default and recourse ────────────────────────────────────────────────
 
-    /// Declare a default once the due date plus the grace period has passed.
+    /// Declare a default after due date plus grace period.
     ///
-    /// The receivable is sold with recourse: the first-loss buffer is drained
-    /// back to funders first, and whatever remains is recorded as a claim on
-    /// the seller. The order is fixed in the contract, not in an interface.
+    /// Sold with recourse: the first-loss buffer is drained to funders first,
+    /// the remainder recorded as a claim on the seller.
     pub fn mark_default(env: Env, invoice_id: u32) -> DefaultOutcome {
         let cfg = load_config(&env);
         let mut invoice = load_invoice(&env, invoice_id);
@@ -418,10 +398,7 @@ impl InvoiceContract {
         outcome
     }
 
-    /// Top up the first-loss buffer with platform capital.
-    ///
-    /// Funded by the platform, not by funders: the buffer exists so the first
-    /// slice of a default lands on us rather than on them.
+    /// Top up the first-loss buffer. Platform capital, not funder capital.
     pub fn deposit_first_loss(env: Env, from: Address, amount: i128) {
         let cfg = load_config(&env);
         from.require_auth();
@@ -482,8 +459,7 @@ impl InvoiceContract {
         TreasuryClient::new(&env, &load_config(&env).treasury).total_assets()
     }
 
-    /// The treasury's APY and whether it was readable, so the interface can
-    /// label the number honestly.
+    /// Treasury APY with its provenance.
     pub fn treasury_apy_bps(env: Env) -> (u32, Source) {
         let cfg = load_config(&env);
         let client = TreasuryClient::new(&env, &cfg.treasury);
@@ -496,11 +472,10 @@ impl InvoiceContract {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
-/// Grant the treasury permission to move our tokens for this payout.
+/// Authorize the treasury's token transfer for this payout.
 ///
-/// Without it the transfer the treasury makes on our behalf fails with
-/// `Error(Auth, InvalidAction)`: the funder's signature authorizes the call we
-/// make, not the one the treasury makes one frame deeper.
+/// Without it: `Error(Auth, InvalidAction)` — the funder's signature covers our
+/// call, not the treasury's.
 fn authorize_treasury_transfer(env: &Env, cfg: &Config, amount: i128) {
     env.authorize_as_current_contract(vec![
         env,

@@ -9,11 +9,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 /**
- * Verify a UBL-TR invoice and, unless asked only to inspect it, register it.
+ * Verify a UBL-TR invoice and, unless inspecting only, register it.
  *
- * The ETTN is checked here and again inside the contract: here so the interface
- * can refuse early with a readable reason, there because that is the check that
- * actually binds.
+ * The ETTN is checked here for a readable refusal and again in the contract,
+ * which is the check that binds.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -21,8 +20,7 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get("file");
     const inspectOnly = form.get("inspect") === "1";
-    // Inspecting parses a file the caller already holds and writes nothing;
-    // only registration spends a key, so only registration is the seller's.
+    // Inspection writes nothing; only registration spends a key.
     if (!inspectOnly) await requireRole("seller");
 
     if (!(file instanceof File)) return fail(new Error("Dosya gönderilmedi"), 422);
@@ -78,7 +76,7 @@ export async function POST(req: NextRequest) {
     if (inspectOnly) return ok({ document: parsed, checks, registered: null });
 
     const dueDate = Math.floor(Date.parse(parsed.dueDate) / 1000);
-    // The face value in USDC is the fiat amount at the anchor's current rate.
+    // Face value in USDC at the anchor's current rate.
     const { AnchorClient } = await import("@/lib/anchor/client");
     const anchor = await AnchorClient.create({ log: () => {} });
     const health = await anchor.health();

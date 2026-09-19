@@ -5,12 +5,10 @@ import { buildInvoice, SPECS, type InvoiceSpec } from "@/lib/ubl/generate";
 export const dynamic = "force-dynamic";
 
 /**
- * A sample invoice, minted per session.
+ * Sample invoice, minted per session.
  *
- * An ETTN is single-use, so a file on disk stops being registerable after the
- * first run — which would make the demo work exactly once. Each session gets
- * its own, except the duplicate, which deliberately reuses the primary's so the
- * refusal can be shown.
+ * An ETTN is single-use, so a fixed file would register exactly once. The
+ * duplicate reuses the primary's ETTN so the refusal can be demonstrated.
  */
 declare global {
   // eslint-disable-next-line no-var
@@ -28,8 +26,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: `Bilinmeyen varyant: ${variant}` }, { status: 404 });
   }
 
-  // The duplicate must carry the primary's ETTN for this session, or it proves
-  // nothing.
+  // The duplicate must carry the primary's ETTN for this session.
   const key = `${session}:${variant === "duplicate" ? "primary" : variant}`;
   const existing = issued.get(key);
   const { xml, ettn } = buildInvoice(spec, existing ? { ettn: existing } : undefined);

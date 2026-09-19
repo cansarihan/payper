@@ -37,10 +37,7 @@ export async function fetchLimits(anchor: AnchorClient): Promise<Limits> {
 /**
  * Split an amount into transfers the anchor will accept.
  *
- * The anchor caps each transaction, so a hundred thousand lira is thirty-four
- * transfers, not one. Each part is floored to the asset's decimals rather than
- * rounded: rounding up produced a final part larger than the balance left, and
- * the anchor answered with a 400.
+ * Every part must sit within [min, max] and the parts must sum to the input.
  */
 export function tranche(total: number, min: number, max: number, decimals: number): number[] {
   const scale = 10 ** decimals;
@@ -51,17 +48,12 @@ export function tranche(total: number, min: number, max: number, decimals: numbe
   if (amount <= 0) return [];
   if (amount <= max) return [amount];
 
-  // Split into the fewest parts that all fit under the cap, sized evenly rather
-  // than greedily. Filling parts to the cap and letting a small remainder fall
-  // out the end means that remainder can be below the anchor's floor — and
-  // folding it back into the previous part pushes *that* over the cap, which is
-  // how a 3.016 TRY transfer got refused for exceeding 3.000.
-  // Rounding the division before the ceiling collapses 6.0047 to 6 and hands
-  // back parts above the cap; an epsilon absorbs float error without doing that.
+  // Even split, not greedy: filling to the cap leaves a remainder that can fall
+  // below the floor, and folding it back pushes that part over the cap.
+  // Epsilon absorbs float error; rounding here would collapse 6.0047 to 6.
   const count = Math.ceil(amount / max - 1e-9);
-  // Round the even parts *up*, so the leftover lands on the final one as a
-  // shortfall rather than a surplus. Flooring them pushes the accumulated
-  // remainder onto the last part, which is how it ended up above the cap.
+  // Round up so the leftover lands on the last part as a shortfall, not a
+  // surplus that would exceed the cap.
   const base = Math.ceil((amount / count) * scale - 1e-6) / scale;
   const parts = Array.from({ length: count - 1 }, () => base);
   parts.push(round(amount - base * (count - 1)));
@@ -104,12 +96,7 @@ export async function balanceOf(
   return b ? Number(b.balance) : 0;
 }
 
-/**
- * Fiat in, asset out — the on-ramp.
- *
- * A funder who is short of USDC buys it the same way a buyer settles at
- * maturity: through the anchor, with lira. No pre-seeded balances.
- */
+/** On-ramp: fiat in, asset out. */
 export async function depositFromBank(opts: {
   anchor: AnchorClient;
   signer: Keypair;
@@ -145,11 +132,9 @@ export async function depositFromBank(opts: {
 }
 
 /**
- * Asset in, fiat out — the off-ramp the supplier actually cares about.
+ * Off-ramp: asset in, fiat to a bank account.
  *
- * The USDC is sent to the anchor's treasury with the memo it asked for; the
- * lira lands in the bank account named by `bank`, or the anchor's default when
- * none is on file.
+ * Paid to the anchor's treasury with the memo it returns.
  */
 export async function withdrawToBank(opts: {
   anchor: AnchorClient;

@@ -24,13 +24,7 @@ export const sorobanEnv = (): SorobanEnv => ({
 
 const server = (env: SorobanEnv) => new rpc.Server(env.rpcUrl, { allowHttp: true });
 
-/**
- * A read that costs nothing.
- *
- * Simulation runs the contract without submitting, so every view in the product
- * is a simulate against a throwaway source account. Nothing is signed and no
- * fee is paid, which is what lets the interface poll prices.
- */
+/** Read-only call via simulation. Nothing is signed and no fee is paid. */
 export async function read<T>(
   contractId: string,
   method: string,
@@ -38,8 +32,7 @@ export async function read<T>(
   env = sorobanEnv(),
 ): Promise<T> {
   const srv = server(env);
-  // Any account works as a simulation source; this one is a constant so a read
-  // never depends on which keys the deployment happens to hold.
+  // Constant simulation source, so reads do not depend on deployment keys.
   const account = new Account(
     "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
     "0",
@@ -61,7 +54,7 @@ export async function read<T>(
   return (retval ? scValToNative(retval) : undefined) as T;
 }
 
-/** A write: prepare, sign, submit, wait for the ledger to close on it. */
+/** Prepare, sign, submit, await inclusion. */
 export async function invoke<T = unknown>(
   contractId: string,
   method: string,
@@ -72,8 +65,7 @@ export async function invoke<T = unknown>(
   const srv = server(env);
   const account = await srv.getAccount(signer.publicKey());
   const built = new TransactionBuilder(account, {
-    // Soroban fees are dominated by resource cost, not the base fee; a generous
-    // ceiling avoids a retry loop on a busy ledger.
+    // Resource cost dominates; a high ceiling avoids retries.
     fee: (Number(BASE_FEE) * 10_000).toString(),
     networkPassphrase: env.networkPassphrase,
   })
@@ -123,12 +115,11 @@ export class SorobanCallError extends Error {
 // ── error attribution ───────────────────────────────────────────────────────
 
 /**
- * Name the error a host failure carries.
+ * Name the error behind a host failure.
  *
- * A failure inside a contract we call — the token, say — is escalated with
- * *its* code, which collides with our own enum: the token's #10 is a balance
- * problem, ours is treasury liquidity. So attribute by the diagnostic text
- * first and only fall back to the number.
+ * Sub-contract errors escalate with their own code, which collides with ours —
+ * the token's #10 is a balance problem, ours is treasury liquidity — so match
+ * the diagnostic text before falling back to the number.
  */
 export function contractErrorName(message: string): string | undefined {
   for (const [needle, name] of TOKEN_ERRORS) {
@@ -202,12 +193,8 @@ export const i128 = (n: bigint | number) => {
   );
 };
 
-/**
- * A Rust enum variant carrying one value.
- *
- * `nativeToScVal` renders these as a map, which the contract rejects; the wire
- * form is a vector whose first element is the variant name.
- */
+/** Enum variant with a payload. `nativeToScVal` renders these as a map, which
+ *  the contract rejects; the wire form is a vector. */
 export const enumVariant = (variant: string, value: xdr.ScVal) =>
   xdr.ScVal.scvVec([xdr.ScVal.scvSymbol(variant), value]);
 

@@ -1,13 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 
 /**
- * Sample UBL-TR invoices.
+ * Sample UBL-TR invoices: real structure, fake seal.
  *
- * Real structure, fake seal: the elements, the ETTN's UUID form, the amounts
- * and the signature block's skeleton are all as an integrator would emit them;
- * the certificate and signature value are not, and would not verify against
- * GİB. A genuinely sealed invoice passes the same structural checks — the only
- * difference is that its certificate is real.
+ * The certificate and signature value would not verify against GİB. A genuinely
+ * sealed invoice passes the same structural checks.
  */
 export interface InvoiceSpec {
   key: "primary" | "secondary" | "duplicate";
@@ -51,9 +48,8 @@ export const SPECS: InvoiceSpec[] = [
     buyerTaxId: "3250456789",
     amount: "2940.00",
     tenorDays: 90,
-    // A *different* document carrying the same ETTN, which is the fraud worth
-    // demonstrating: byte-identical copies would leave it ambiguous whether the
-    // contract caught the ETTN or the document hash.
+    // A different document with the same ETTN; an identical copy would leave it
+    // ambiguous whether the ETTN or the document hash was caught.
     note: "Yeniden düzenlenmiştir — aynı ETTN · red testi",
   },
 ];
@@ -61,10 +57,7 @@ export const SPECS: InvoiceSpec[] = [
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const b64 = (s: string) => Buffer.from(s).toString("base64");
 
-/**
- * One generator for both the script and the API, so the files on disk and the
- * ones the interface serves cannot drift apart.
- */
+/** Shared by the script and the API so the two cannot drift apart. */
 export function buildInvoice(spec: InvoiceSpec, opts?: { ettn?: string; issuedAt?: Date }): {
   xml: string;
   ettn: string;

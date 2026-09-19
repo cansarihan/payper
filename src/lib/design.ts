@@ -37,13 +37,7 @@ export const trPct = (bps: number) => `%${tr(bps / 100, 2)}`;
 export const shortKey = (key: string, head = 4, tail = 4) =>
   key.length > head + tail ? `${key.slice(0, head)}…${key.slice(-tail)}` : key;
 
-/**
- * The anchor's mid rate, or null when it has not been read.
- *
- * Deliberately no fallback: every fiat figure on screen derives from this, and
- * a plausible constant standing in for a live rate is exactly what this product
- * claims not to do.
- */
+/** Anchor mid rate, or null. No fallback: every fiat figure derives from it. */
 export const liveRate = (anchor: { rates: { mid_rate: string } | null } | null): number | null => {
   const rate = Number(anchor?.rates?.mid_rate);
   return Number.isFinite(rate) && rate > 0 ? rate : null;

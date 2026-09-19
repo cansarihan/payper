@@ -4,10 +4,9 @@ import { createHash } from "node:crypto";
 /**
  * UBL-TR e-invoice verification.
  *
- * Turkish e-invoices are UBL-TR, a localised profile of OASIS UBL 2.1 — the
- * same standard the EU's EN 16931 and PEPPOL build on. Everything read here is
- * a standard UBL element, so the parser is not Turkey-specific: what is local
- * is the XAdES signature profile and treating `cbc:UUID` as the ETTN.
+ * UBL-TR is a localised profile of OASIS UBL 2.1. Every element read here is
+ * standard UBL; what is local is the XAdES profile and reading `cbc:UUID` as
+ * the ETTN.
  */
 export interface ParsedInvoice {
   ettn: string;
@@ -61,7 +60,7 @@ export const sha256Hex = (data: string | Buffer) =>
 
 export const hexToBytes32 = (hex: string) => Buffer.from(hex, "hex");
 
-/** Fiat amounts are stored as integer minor units; floats do not belong in money. */
+/** Fiat as integer minor units. */
 export function toMinorUnits(amount: string, decimals = 2): string {
   const cleaned = amount.trim().replace(",", ".");
   if (!/^-?\d+(\.\d+)?$/.test(cleaned)) {
@@ -115,8 +114,7 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
   const issueDate = text(invoice.IssueDate);
   if (!issueDate) throw new UblParseError("Düzenleme tarihi (cbc:IssueDate) bulunamadı", "issueDate");
 
-  // Integrators disagree about where the due date goes: some fill cbc:DueDate,
-  // others only PaymentMeans/PaymentDueDate. Both are standard, so read both.
+  // Integrators fill either cbc:DueDate or PaymentMeans/PaymentDueDate.
   const means = first(invoice.PaymentMeans);
   const dueDate = text(invoice.DueDate) ?? text(means?.PaymentDueDate);
   if (!dueDate) {
@@ -153,7 +151,7 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
   return {
     ettn,
     ettnHash: sha256Hex(ettn),
-    // The whole document, so what was financed is pinned to exact bytes.
+    // Pins the financed bytes.
     docHash: sha256Hex(bytes),
     invoiceNumber,
     issueDate,
@@ -169,17 +167,12 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
 }
 
 /**
- * The XAdES block, checked for structure rather than cryptography.
+ * Structural check of the XAdES block. Does **not** verify against GİB's
+ * certificate chain.
  *
- * Read off the raw text on purpose: the parser strips namespace prefixes, so
- * `ds:SignatureValue` and `xades:QualifyingProperties` are indistinguishable
- * from any other element by the time it is done.
- *
- * What this does **not** do is verify the signature against GİB's certificate
- * chain. Getting access to those takes weeks and was out of scope. That is not
- * a shortcut so much as a deferred step: the full document hash goes on chain,
- * so a complete verification can be done later against a document proven not to
- * have changed.
+ * Read from the raw text because the parser strips namespace prefixes. The full
+ * document hash goes on chain, so signature verification can be completed later
+ * against a document proven unchanged.
  */
 export function checkSignature(raw: string): SignatureCheck {
   const notes: string[] = [];

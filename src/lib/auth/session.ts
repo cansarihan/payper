@@ -9,12 +9,8 @@ const COOKIE = "payper_session";
 const MAX_AGE = 12 * 60 * 60;
 
 /**
- * The key the session cookie is signed with.
- *
- * On globalThis because Next bundles route handlers separately — a module-level
- * constant would give each route its own secret, and every cookie issued by one
- * would be rejected by the next. Unset in the environment it is random per
- * process, so a restart signs everyone out; a deployment must pin it.
+ * Session signing key. On globalThis so every route handler shares it.
+ * Random per process when unset, so a deployment must pin `SESSION_SECRET`.
  */
 declare global {
   // eslint-disable-next-line no-var

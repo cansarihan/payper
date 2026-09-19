@@ -22,12 +22,9 @@ const CLI_NAME: Record<Actor, string> = {
 const cache = new Map<Actor, Keypair>();
 
 /**
- * The keys the demo signs with.
+ * Demo signing keys, server-held so one machine can play four parties.
  *
- * One machine plays four parties on stage, so these are server-held. They come
- * from the environment in a deployment and from the local Stellar CLI during
- * development, which is where they were created — that way nothing has to be
- * pasted into a file that might get committed.
+ * From the environment in a deployment, from the local Stellar CLI otherwise.
  */
 export function keypair(actor: Actor): Keypair {
   const hit = cache.get(actor);

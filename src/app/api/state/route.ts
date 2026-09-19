@@ -5,13 +5,7 @@ import { fail, json } from "@/lib/server/respond";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Everything the interface renders, in one round trip.
- *
- * The client holds no chain logic at all: it reads this and draws. The anchor
- * snapshot and the contract config depend on nothing else here, so they run
- * alongside the invoice scan rather than behind it.
- */
+/** Everything the interface renders, in one round trip. */
 export async function GET() {
   try {
     const [invoices, treasury, anchor, cfg] = await Promise.all([
@@ -21,8 +15,7 @@ export async function GET() {
       config().catch(() => null),
     ]);
 
-    // The invoice the operator is most likely looking at: the furthest along
-    // that still has something to do, else the newest.
+    // Furthest along that still has something to do, else the newest.
     const priority: Record<string, number> = {
       acknowledged: 0,
       registered: 1,

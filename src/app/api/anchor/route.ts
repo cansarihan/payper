@@ -21,12 +21,10 @@ export const maxDuration = 300;
 /**
  * The fiat rail, both directions.
  *
- *   off — the supplier sells the USDC it was paid and lira lands in its bank
- *   on  — the buyer pays lira at maturity and the contract's USDC appears
+ *   off — supplier sells USDC, lira lands in the bank
+ *   on  — buyer pays lira, USDC reaches the contract
  *
- * The SEP trace is returned rather than streamed: each leg is a handful of
- * requests, and the screen shows them as a completed trace so a judge can read
- * SEP-1 → 10 → 38 → 6 happening for real.
+ * Returns the SEP trace so the interface can show the requests that ran.
  */
 export async function POST(req: NextRequest) {
   const log: SepLog[] = [];

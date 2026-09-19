@@ -12,13 +12,10 @@ type Logger = (e: SepLog) => void;
 const short = (k: string) => `${k.slice(0, 4)}…${k.slice(-4)}`;
 
 /**
- * The anchor, spoken to over the SEPs it actually implements.
+ * SEP client: discovery, auth, firm quotes, transfers.
  *
- * SEP-6 rather than SEP-24, for two reasons. The competition's anchor says so
- * in its own documentation — *"This anchor speaks SEP-6 (programmatic), not
- * SEP-24"* — and SEP-6 is the better fit regardless: it is programmatic, so the
- * discount breakdown stays on our screen. A SEP-24 popup hosted by the anchor
- * could not show it, and that breakdown is the product.
+ * SEP-6 rather than SEP-24 — the anchor implements SEP-6, and programmatic
+ * transfer keeps the discount breakdown in our own interface.
  */
 export class AnchorClient {
   private constructor(
@@ -38,13 +35,7 @@ export class AnchorClient {
     return new AnchorClient(config, log);
   }
 
-  /**
-   * SEP-10: the anchor hands over a transaction to sign, and a signature on it
-   * proves the account is ours.
-   *
-   * The challenge is checked against the anchor's own SIGNING_KEY before it is
-   * signed — otherwise anything that could reach us could have us sign anything.
-   */
+  /** SEP-10. The challenge is validated before it is signed. */
   async authenticate(signer: Keypair): Promise<string> {
     this.log({ tag: "GET", msg: `/auth?account=${short(signer.publicKey())}` });
     const res = await fetch(
@@ -58,10 +49,8 @@ export class AnchorClient {
     };
 
     const passphrase = network_passphrase ?? Networks.TESTNET;
-    // The SDK's own reader, rather than checking one signature by hand: it also
-    // validates the sequence number, the time bounds, the home domain and the
-    // operation shape. Anything that could reach us could otherwise hand us a
-    // transaction to sign.
+    // Validates sequence, time bounds, home domain and operation shape, not
+    // just the server signature.
     const { tx } = WebAuth.readChallengeTx(
       transaction,
       this.config.signingKey,
@@ -85,7 +74,7 @@ export class AnchorClient {
     return token;
   }
 
-  /** SEP-38 names assets by scheme, not bare code and issuer. */
+  /** SEP-38 asset identifier. */
   private stellarAsset(): string {
     return `stellar:${this.config.assetCode}:${this.config.assetIssuer}`;
   }
@@ -96,7 +85,7 @@ export class AnchorClient {
     return (await res.json()) as Record<string, unknown>;
   }
 
-  /** The anchor's live rates and per-transaction limits. */
+  /** Live rates and per-transaction limits. */
   async health(): Promise<{
     rates?: { pair: string; mid_rate: string; buy_rate: string; sell_rate: string; spread_bps: number; source: string };
     limits?: { min_onramp_try: string; max_onramp_try: string; min_offramp_usdc: string };
@@ -106,12 +95,7 @@ export class AnchorClient {
     return res.ok ? ((await res.json()) as never) : null;
   }
 
-  /**
-   * SEP-38: a firm rate, held for a few minutes.
-   *
-   * Without one the anchor would convert at whatever the rate is when the
-   * transfer lands, and the payout we showed the seller would be a guess.
-   */
+  /** SEP-38 firm quote, so the payout shown is the payout paid. */
   async quote(opts: {
     jwt: string;
     direction: "sell_asset" | "sell_fiat";
@@ -138,7 +122,7 @@ export class AnchorClient {
     return q;
   }
 
-  /** SEP-12: the sandbox approves automatically; a real anchor would not. */
+  /** SEP-12. Auto-approved in the sandbox. */
   async ensureCustomer(jwt: string, account: string): Promise<string | undefined> {
     if (!this.config.kycServer) return undefined;
     const res = await fetch(`${this.config.kycServer}/customer`, {
@@ -152,7 +136,7 @@ export class AnchorClient {
     return body.id;
   }
 
-  /** SEP-6 withdraw: sell the asset, receive fiat in a bank account. */
+  /** SEP-6 withdraw: asset out, fiat to a bank account. */
   async startWithdraw(opts: {
     jwt: string;
     amountAsset: string;
@@ -190,7 +174,7 @@ export class AnchorClient {
     return body;
   }
 
-  /** SEP-6 deposit: send fiat, receive the asset on chain. */
+  /** SEP-6 deposit: fiat in, asset on chain. */
   async startDeposit(opts: { jwt: string; account: string; amountFiat: string; quoteId?: string }) {
     const params = new URLSearchParams({
       asset_code: this.config.assetCode,
@@ -222,7 +206,7 @@ export class AnchorClient {
     return body;
   }
 
-  /** The sandbox's stand-in for a bank transfer actually arriving. */
+  /** Sandbox stand-in for an arriving bank transfer. */
   async simulateBankTransfer(jwt: string, id: string, amount: string) {
     this.log({ tag: "POST", msg: `/sep6/tx/${id}/simulate-bank-transfer { "amount": "${amount}" }` });
     const res = await fetch(`${this.config.transferServer}/tx/${id}/simulate-bank-transfer`, {
@@ -244,7 +228,7 @@ export class AnchorClient {
     return body.transaction;
   }
 
-  /** Poll until the anchor reaches a terminal state, or give up loudly. */
+  /** Poll to a terminal state. */
   async waitForStatus(jwt: string, id: string, want: string[], timeoutMs = 60_000) {
     const deadline = Date.now() + timeoutMs;
     for (;;) {

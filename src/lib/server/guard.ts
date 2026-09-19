@@ -2,18 +2,15 @@ import { ROLE_LABEL, type Session, type SessionRole } from "@/lib/auth/roles";
 import { readSession } from "@/lib/auth/session";
 
 /**
- * Who may ask the server to sign.
+ * Access control for routes that sign with server-held keys.
  *
- * Every mutating route spends a key the server holds, so an unguarded route is
- * a faucet: anyone who can reach the deployment could register invoices, fund
- * with the funders' keys, or move platform capital. These guards are the
- * boundary; they throw, and `fail()` turns that into the right status.
+ * These throw; `fail()` maps them to a status.
  */
 export class AuthError extends Error {
   constructor(
     message: string,
     readonly status: number,
-    /** The role the caller would need, so the interface can offer the way out. */
+    /** Role the caller would need. */
     readonly needsRole?: SessionRole,
   ) {
     super(message);
@@ -27,18 +24,11 @@ export async function requireSession(): Promise<Session> {
   return session;
 }
 
-/**
- * A session in one of the roles the action belongs to.
- *
- * The role is not decoration: the buyer acknowledges, the seller accepts a
- * quote, a funder funds. Letting any signed-in party call any of them would let
- * a funder acknowledge an invoice on the buyer's behalf.
- */
+/** Require a session in one of the roles that owns the action. */
 export async function requireRole(...roles: SessionRole[]): Promise<Session> {
   const session = await requireSession();
   if (!roles.includes(session.role)) {
-    // Name the parties, not the enum: "this step belongs to the buyer" is
-    // something a first-time user can act on.
+    // Name the party, not the enum.
     const wanted = roles.map((r) => ROLE_LABEL[r]).join(" ya da ");
     throw new AuthError(
       `Bu adımı ${wanted} yapar. Şu an ${ROLE_LABEL[session.role]} olarak giriş yaptın.`,
@@ -50,11 +40,8 @@ export async function requireRole(...roles: SessionRole[]): Promise<Session> {
 }
 
 /**
- * Platform operations — declaring a default, capitalising the buffer.
- *
- * Not user actions, so a user session is not enough. The token is mandatory in
- * production: unset, these refuse rather than fall open, because falling open
- * is how a demo deployment becomes someone's piggy bank.
+ * Platform operations. Token required in production; unset, they refuse rather
+ * than fall open.
  */
 export function requireOperator(req: Request): void {
   const expected = process.env.PAYPER_OPERATOR_TOKEN;
@@ -76,12 +63,7 @@ const timingEqual = (a: string, b: string) => {
   return diff === 0;
 };
 
-/**
- * A fixed-window counter, per key.
- *
- * One process, in memory — enough to stop a loop from minting a thousand
- * challenges or burning testnet keys, which is the actual exposure here.
- */
+/** Fixed-window counter, in process memory. */
 declare global {
   // eslint-disable-next-line no-var
   var __payperRate: Map<string, { count: number; resetAt: number }> | undefined;
@@ -104,6 +86,6 @@ export function rateLimit(key: string, limit: number, windowMs: number): void {
   }
 }
 
-/** Caller identity for rate limiting: the proxy's client address, else the peer. */
+/** Rate-limit key: proxy client address, else the peer. */
 export const clientKey = (req: Request, scope: string) =>
   `${scope}:${req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local"}`;

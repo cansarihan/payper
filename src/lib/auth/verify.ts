@@ -9,15 +9,10 @@ export type SignatureReading =
   | "raw-expected";
 
 /**
- * Accept a wallet's signature without trusting the wallet's framing.
+ * Verify a login signature across the framings wallets use.
  *
- * Wallets disagree about what they sign. Freighter implements SEP-53 and hashes
- * a prefixed message; others sign the bytes as given. Rather than guess, try the
- * readings in order of likelihood and report which one matched.
- *
- * The payload the client claims to have signed is still checked against the
- * challenge we issued, so a wallet cannot be talked into signing different text
- * and have it accepted here.
+ * The claimed payload must still decode to the issued challenge, so text signed
+ * under a different prompt is refused.
  */
 export function verifyLoginSignature(opts: {
   address: string;
@@ -31,7 +26,7 @@ export function verifyLoginSignature(opts: {
   if (opts.payload) {
     const asUtf8 = Buffer.from(opts.payload, "utf8");
     const asBase64 = Buffer.from(opts.payload, "base64");
-    // A payload that decodes to the challenge was base64; otherwise take it as text.
+    // base64 if it decodes to the challenge, else plain text.
     decoded = asBase64.toString("utf8") === expected ? asBase64 : asUtf8;
     if (decoded.toString("utf8") !== expected) {
       return {

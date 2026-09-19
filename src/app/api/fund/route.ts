@@ -11,13 +11,7 @@ import { fail, ok } from "@/lib/server/respond";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-/**
- * Put a funder's money behind an invoice.
- *
- * If they are short, the USDC comes in through the anchor's on-ramp — the same
- * rail the supplier and buyer use. A funder is not a special case with a
- * pre-seeded balance.
- */
+/** Fund an invoice, on-ramping through the anchor if the funder is short. */
 export async function POST(req: NextRequest) {
   try {
     rateLimit(clientKey(req, "fund"), 30, 60_000);
@@ -35,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const requested =
       body.amountUsdc !== undefined ? BigInt(Math.round(body.amountUsdc * 1e7)) : remaining;
-    // The contract refuses more than the round needs, so cap before asking.
+    // The contract refuses more than the round needs.
     const amount = requested > remaining ? remaining : requested;
 
     const kp = keypair(role);
@@ -68,7 +62,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Tickets above the configured threshold are reserved for licensed funders.
+    // Above the threshold a funder must be licensed.
     const cfg = await config();
     if (amount > BigInt(cfg.whitelist_threshold as bigint) && !(await isWhitelisted(kp.publicKey()))) {
       await setWhitelist(kp.publicKey(), true);

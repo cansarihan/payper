@@ -9,12 +9,9 @@ import { fail, ok } from "@/lib/server/respond";
 export const dynamic = "force-dynamic";
 
 /**
- * Sign in as one of the demo parties, without a wallet.
+ * Sign in as a demo party, without a wallet.
  *
- * On stage there is one laptop and three roles to play, and asking a jury to
- * watch three wallet handshakes is worse than showing the product. This path is
- * explicit about what it is — the session records `method: "demo"`, the
- * interface says so, and `DEMO_LOGIN=off` removes it.
+ * Recorded as `method: "demo"` and removable with `DEMO_LOGIN=off`.
  */
 export async function POST(req: NextRequest) {
   try {

@@ -2,13 +2,7 @@ import { C, FONT, shortKey, trLira, trPct, usdc } from "@/lib/design";
 
 export const dynamic = "force-dynamic";
 
-/**
- * The public page, rendered from chain state on the server.
- *
- * Every figure here is read from the deployed contracts on request — there is
- * no cached copy and no placeholder. If the chain is unreachable the page says
- * so rather than showing a number nobody published.
- */
+/** Public page, rendered from chain state per request. No cache, no placeholder. */
 export default async function Page() {
   const state = await loadState();
 
@@ -244,7 +238,7 @@ interface State {
   anchor: { homeDomain: string } | null;
 }
 
-/** Read straight from the route handler rather than over HTTP to itself. */
+/** Call the route handler directly rather than over HTTP. */
 async function loadState(): Promise<State | null> {
   try {
     const { GET } = await import("./api/state/route");

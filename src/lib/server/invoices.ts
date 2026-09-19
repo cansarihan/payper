@@ -48,7 +48,7 @@ export interface InvoiceView {
   createdAt: number;
 }
 
-/** A quote with its bigints flattened, because JSON cannot carry them. */
+/** Quote with bigints flattened for JSON. */
 export interface QuoteView {
   invoiceId: number;
   days: number;
@@ -117,12 +117,7 @@ export async function getInvoice(id: number): Promise<InvoiceView> {
   return decodeInvoice(await read<Record<string, unknown>>(CONTRACT(), "get_invoice", [u32(id)]));
 }
 
-/**
- * The whole book, newest first.
- *
- * A sequential scan: ids are dense, so this reads each one. Fine for a demo
- * ledger and the wrong shape for a real one, where an indexer would serve it.
- */
+/** The book, newest first. Sequential scan; a real ledger wants an indexer. */
 export async function listInvoices(): Promise<InvoiceView[]> {
   const count = await invoiceCount();
   const ids = Array.from({ length: count }, (_, i) => count - i);

@@ -23,13 +23,10 @@ const ON_STEPS: [string, string, string][] = [
 ];
 
 /**
- * The fiat rail, both directions, with the trace it produced.
+ * The fiat rail, both directions, with the SEP trace it produced.
  *
- * Nothing about the anchor is hard-coded here. The domain, asset, rate, limits
- * and treasury address on screen all come from its own stellar.toml and health
- * endpoint — which is the point: pointing at a different anchor changes one
- * environment variable, not this file. The terminal shows the actual requests
- * so a reader can follow SEP-1 → 10 → 38 → 6 rather than take it on trust.
+ * Domain, asset, rates, limits and treasury address are read from the anchor's
+ * stellar.toml and health endpoint, not hard-coded here.
  */
 export function Anchor({ state, onDone }: { state: AppState; onDone: () => void }) {
   const [tab, setTab] = useState<"off" | "on">("off");

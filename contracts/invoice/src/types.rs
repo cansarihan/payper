@@ -1,9 +1,6 @@
 use soroban_sdk::{contracterror, contracttype, Address, BytesN, Env, Symbol, Vec};
 
-/// Where a number in a quote came from.
-///
-/// Carried in the quote itself rather than inferred, because a price presented
-/// as live while quietly using a constant is worse than a constant.
+/// Provenance of a quote component.
 #[contracttype]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Source {
@@ -31,9 +28,9 @@ pub struct Invoice {
     pub id: u32,
     pub seller: Address,
     pub buyer: Address,
-    /// SHA-256 of the invoice's ETTN. The uniqueness guarantee hangs on this.
+    /// SHA-256 of the ETTN; carries the uniqueness guarantee.
     pub ettn_hash: BytesN<32>,
-    /// SHA-256 of the whole document, so the financed bytes are pinned.
+    /// SHA-256 of the document.
     pub doc_hash: BytesN<32>,
     pub seller_tax_id: Symbol,
     pub buyer_tax_id: Symbol,
@@ -50,7 +47,7 @@ pub struct Invoice {
     pub created_at: u64,
 }
 
-/// A price, with every component's provenance attached.
+/// A price and the provenance of each component.
 #[contracttype]
 #[derive(Clone)]
 pub struct Quote {
@@ -67,7 +64,7 @@ pub struct Quote {
     pub total_discount_bps: u32,
     pub payout_fiat: i128,
     pub payout_usdc: i128,
-    /// The inputs behind fx_risk_bps, so the interface can show its working.
+    /// Inputs behind `fx_risk_bps`.
     pub apy_bps: u32,
     pub fx_drift_bps: u32,
     pub fx_range_bps: u32,
@@ -82,7 +79,7 @@ pub struct Funding {
     pub at: u64,
 }
 
-/// What a default paid out, and what is still claimed.
+/// Default outcome: absorbed by the buffer, and claimed from the seller.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct DefaultOutcome {
@@ -109,23 +106,20 @@ pub struct Config {
     pub platform_fee_bps: u32,
     /// Used when the vault's APY cannot be read.
     pub fallback_apy_bps: u32,
-    /// Used when the oracle has no usable history. Expressed per annum and
-    /// scaled to the tenor, so a fallback quote stays comparable to a live one
-    /// instead of charging a 30-day invoice the same as a 120-day one.
+    /// Per annum, scaled to the tenor. Used when the oracle has no history.
     pub fallback_fx_annual_bps: u32,
-    /// Lower bound: currency risk is never priced at zero.
+    /// Lower bound on the FX premium.
     pub fx_floor_bps: u32,
-    /// Sanity bound against a malfunctioning feed, not a pricing dial.
+    /// Upper bound; guards against a malfunctioning feed.
     pub fx_cap_bps: u32,
     /// Contributions strictly above this (USDC stroops) require a licensed funder.
     pub whitelist_threshold: i128,
     /// How long after the due date before a default may be declared.
     pub grace_period: u64,
-    /// How long an accepted quote stays fundable, in seconds.
+    /// Seconds an accepted quote stays fundable.
     ///
-    /// Sized to the product, not to an FX quote: a round fills from several
-    /// funders and no crowd forms in ten minutes. A day is short enough that
-    /// the rate cannot drift materially against a tenor-length premium.
+    /// Sized to a funding round, not an FX quote: long enough to fill from
+    /// several funders, short enough that the rate cannot drift materially.
     pub quote_ttl: u64,
 }
 
@@ -134,15 +128,14 @@ pub enum DataKey {
     Config,
     NextId,
     Invoice(u32),
-    /// ETTN hash -> invoice id. Presence of this key is what makes an ETTN used.
+    /// ETTN hash -> invoice id. Presence marks the ETTN as used.
     Ettn(BytesN<32>),
     /// Per-invoice funder ledger.
     Funders(u32),
     /// Pooled first-loss buffer, in USDC stroops.
     FirstLoss,
     Whitelist(Address),
-    /// An accepted quote's validity window. Temporary on purpose: the point is
-    /// that it disappears on its own.
+    /// Accepted quote's validity window. Temporary so it expires unattended.
     QuoteLock(u32),
 }
 
@@ -166,10 +159,8 @@ pub enum Error {
     QuoteExpired = 14,
 }
 
-/// The treasury the pool's capital sits in.
-///
-/// The invoice contract knows this interface and nothing else, so the vault
-/// behind it can be swapped — or fail — without the flow changing shape.
+/// Treasury interface. The invoice contract knows nothing beyond this, so the
+/// backing vault can be swapped or fail without changing the flow.
 #[soroban_sdk::contractclient(name = "TreasuryClient")]
 pub trait TreasuryAdapter {
     fn apy_bps(env: Env) -> u32;
