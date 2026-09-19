@@ -1195,6 +1195,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "payper-treasury-defindex"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "payper-treasury-local"
 version = "0.1.0"
 dependencies = [

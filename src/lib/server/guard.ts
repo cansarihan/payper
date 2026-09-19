@@ -29,9 +29,9 @@ export async function requireRole(...roles: SessionRole[]): Promise<Session> {
   const session = await requireSession();
   if (!roles.includes(session.role)) {
     // Name the party, not the enum.
-    const wanted = roles.map((r) => ROLE_LABEL[r]).join(" ya da ");
+    const wanted = roles.map((r) => ROLE_LABEL[r]).join(" or ");
     throw new AuthError(
-      `Bu adımı ${wanted} yapar. Şu an ${ROLE_LABEL[session.role]} olarak giriş yaptın.`,
+      `This step belongs to the ${wanted}. You are signed in as the ${ROLE_LABEL[session.role]}.`,
       403,
       roles[0],
     );

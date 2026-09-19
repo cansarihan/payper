@@ -25,10 +25,13 @@ export interface Session {
   issuedAt: number;
 }
 
+/** Party names for server-side messages. The interface reads its own from the
+ * dictionary, because it knows which language is on screen and the server does
+ * not. */
 export const ROLE_LABEL: Record<SessionRole, string> = {
-  seller: "KOBİ",
-  buyer: "Alıcı",
-  funder: "Fonlayıcı",
+  seller: "supplier",
+  buyer: "buyer",
+  funder: "funder",
 };
 
 /** Landing screen per role. */

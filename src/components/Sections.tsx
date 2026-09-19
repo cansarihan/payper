@@ -655,8 +655,10 @@ export function Track({ d }: { d: Copy }) {
           {d.track.map(([tag, title, body, proof], i) => (
             <div
               key={tag}
-              className={["reveal", "reveal-2", "reveal-3"][i % 3]}
+              className="track-card"
               style={{
+                position: "relative",
+                overflow: "hidden",
                 borderRadius: 20,
                 padding: "30px 28px 26px",
                 background: "linear-gradient(180deg,#fafafa,#f1f1f1)",
@@ -664,12 +666,45 @@ export function Track({ d }: { d: Copy }) {
                 display: "grid",
                 gridTemplateRows: "auto auto 1fr auto",
                 gap: 14,
+                animationDelay: `${i * 0.08}s`,
               }}
             >
               <span
+                className="track-rail"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: 4,
+                  background: `linear-gradient(90deg,${tone[i % 3]},${tone[i % 3]}00)`,
+                  animationDelay: `${i * 0.08}s`,
+                }}
+              />
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  right: 20,
+                  top: 18,
+                  fontFamily: FONT.mono,
+                  fontSize: 42,
+                  fontWeight: 700,
+                  color: "rgba(10,10,10,.05)",
+                  lineHeight: 1,
+                  userSelect: "none",
+                }}
+              >
+                0{i + 1}
+              </span>
+
+              <span
                 style={{
                   justifySelf: "start",
-                  padding: "5px 11px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7,
+                  padding: "5px 11px 5px 8px",
                   borderRadius: 999,
                   background: tone[i % 3],
                   color: toneFg[i % 3],
@@ -677,16 +712,33 @@ export function Track({ d }: { d: Copy }) {
                   fontSize: 10,
                   fontWeight: 800,
                   letterSpacing: ".08em",
+                  animation: "popIn .5s cubic-bezier(.2,.8,.2,1) both",
+                  animationDelay: `${0.15 + i * 0.08}s`,
                 }}
               >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path
+                    className="track-tick"
+                    d="M2.5 6.8 L5.2 9.4 L10.5 3.6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ animationDelay: `${0.25 + i * 0.08}s` }}
+                  />
+                </svg>
                 {tag}
               </span>
+
               <div style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-.025em", lineHeight: 1.15 }}>
                 {title}
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#5a5a5a" }}>{body}</p>
               <div
                 style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "start",
                   fontFamily: FONT.mono,
                   fontSize: 11,
                   lineHeight: 1.6,
@@ -696,7 +748,19 @@ export function Track({ d }: { d: Copy }) {
                   overflowWrap: "anywhere",
                 }}
               >
-                {proof}
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: tone[i % 3],
+                    marginTop: 6,
+                    flex: "none",
+                    animation: "blink 2.4s infinite",
+                    animationDelay: `${i * 0.4}s`,
+                  }}
+                />
+                <span style={{ minWidth: 0 }}>{proof}</span>
               </div>
             </div>
           ))}

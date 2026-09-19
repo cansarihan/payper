@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { ROLE_LABEL, type SessionRole } from "@/lib/auth/roles";
+import { type SessionRole } from "@/lib/auth/roles";
 import { C } from "@/lib/design";
-import type { Lang } from "@/lib/i18n/dictionary";
+import { t, type Lang } from "@/lib/i18n/dictionary";
 
 /**
  * Shown when an action belongs to a party the session is not signed in as.
@@ -23,6 +23,7 @@ export function RoleSwitch({
   message: string;
   onSwitched: () => void;
 }) {
+  const d = t(lang);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
@@ -75,8 +76,8 @@ export function RoleSwitch({
         {busy
           ? "…"
           : lang === "tr"
-            ? `${ROLE_LABEL[needsRole]} olarak devam et →`
-            : `Continue as ${ROLE_LABEL[needsRole]} →`}
+            ? `${d.roles[needsRole]} olarak devam et →`
+            : `Continue as ${d.roles[needsRole].toLowerCase()} →`}
       </button>
       {failed && <div style={{ fontSize: 11.5, color: C.coral, fontWeight: 600 }}>{failed}</div>}
     </div>

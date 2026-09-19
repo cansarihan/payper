@@ -137,3 +137,16 @@ button:not(:disabled) { cursor: pointer; }
 @media (max-width: 1000px) {
   .src-split, .stack-split { grid-template-columns: minmax(0, 1fr); }
 }
+
+@keyframes railGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes tickDraw { from { stroke-dashoffset: 26; } to { stroke-dashoffset: 0; } }
+@keyframes liftIn { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
+.track-card { animation: liftIn .8s cubic-bezier(.2,.8,.2,1) both; animation-timeline: view(); animation-range: entry 5% entry 50%; transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s; }
+.track-card:hover { transform: translateY(-6px); box-shadow: 0 26px 60px rgba(10,10,10,.12); }
+.track-rail { transform-origin: left; animation: railGrow 1s cubic-bezier(.2,.8,.2,1) both; animation-timeline: view(); animation-range: entry 10% entry 60%; }
+.track-tick { stroke-dasharray: 26; animation: tickDraw .9s cubic-bezier(.2,.8,.2,1) both; animation-timeline: view(); animation-range: entry 20% entry 65%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .track-card, .track-rail, .track-tick { animation: none !important; opacity: 1; transform: none; stroke-dashoffset: 0; }
+}

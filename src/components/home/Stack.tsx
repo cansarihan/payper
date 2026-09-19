@@ -100,19 +100,39 @@ export function Stack({ lang }: { lang: Lang }) {
                       {top && (
                         <>
                           <polygon points="70,140 280,35 490,140 280,245" fill="rgba(0,0,0,.14)" />
-                          <text
-                            x="280"
-                            y="150"
-                            textAnchor="middle"
-                            transform="rotate(-26.6 280 140)"
-                            fill={C.ink}
-                            fontFamily="Urbanist,sans-serif"
-                            fontWeight="800"
-                            fontSize="30"
-                            letterSpacing="-0.5"
-                          >
-                            payper
-                          </text>
+                          {/* The horizontal lockup, laid on the face at the
+                              same angle the layer labels use. */}
+                          <g transform="rotate(-26.6 280 140)">
+                            <g transform="translate(207.5,121.7) scale(.31)">
+                              <path
+                                d="M8 42 C26 22 38 62 56 42 C74 22 86 62 104 42"
+                                fill="none"
+                                stroke={C.ink}
+                                strokeWidth="13"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M8 76 C26 56 38 96 56 76 C74 56 86 96 104 76"
+                                fill="none"
+                                stroke={C.ink}
+                                strokeWidth="13"
+                                strokeLinecap="round"
+                                strokeOpacity=".5"
+                              />
+                            </g>
+                            <text
+                              x="252.5"
+                              y="140"
+                              dominantBaseline="middle"
+                              fill={C.ink}
+                              fontFamily="Urbanist,sans-serif"
+                              fontWeight="800"
+                              fontSize="30"
+                              letterSpacing="-1.65"
+                            >
+                              payper
+                            </text>
+                          </g>
                         </>
                       )}
                       <text

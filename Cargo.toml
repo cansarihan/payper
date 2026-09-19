@@ -4,6 +4,7 @@ members = [
     "contracts/invoice",
     "contracts/treasury_local",
     "contracts/fx_oracle",
+    "contracts/treasury_defindex",
 ]
 
 [workspace.dependencies]

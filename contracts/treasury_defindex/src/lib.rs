@@ -1,0 +1,279 @@
+#![no_std]
+//! Treasury backed by a DeFindex vault.
+//!
+//! The invoice contract knows four functions — `apy_bps`, `deposit`,
+//! `withdraw`, `total_assets` — and cannot tell which treasury is behind them.
+//! This one holds the position in a DeFindex vault: contributions are deposited
+//! for vault shares, a payout burns the shares it needs, and the yield reported
+//! to pricing is the vault's own realised rate rather than a parameter.
+//!
+//! Shares, not amounts, are what the vault moves, so every asset figure here is
+//! converted through the vault's own share price. Rounding is deliberately
+//! against this contract on withdrawal: asking for one share too many leaves
+//! dust behind, asking for one too few leaves the payout short.
+
+mod vault;
+
+use soroban_sdk::{
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    contract, contracterror, contractimpl, contracttype, panic_with_error, symbol_short, token,
+    vec, Address, Env, IntoVal,
+};
+
+use crate::vault::VaultClient;
+
+#[contracttype]
+pub enum DataKey {
+    Admin,
+    /// The DeFindex vault this treasury holds its position in.
+    Vault,
+    /// The asset the vault is denominated in. Must be the vault's first asset.
+    Token,
+    /// Only this address may draw funds out.
+    Controller,
+}
+
+#[contracterror]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[repr(u32)]
+pub enum Error {
+    AlreadyInitialized = 1,
+    NotInitialized = 2,
+    InvalidAmount = 3,
+    InsufficientFunds = 4,
+    /// The vault reports no assets, so a share price cannot be formed.
+    VaultEmpty = 5,
+    /// The vault has not earned anything measurable yet.
+    NoYieldYet = 6,
+}
+
+/// One year in seconds, for annualising a realised gain.
+const YEAR: u64 = 31_536_000;
+const BPS: i128 = 10_000;
+
+#[contract]
+pub struct DefindexTreasury;
+
+#[contractimpl]
+impl DefindexTreasury {
+    pub fn init(env: Env, admin: Address, vault: Address, token: Address) {
+        if env.storage().instance().has(&DataKey::Vault) {
+            panic_with_error!(&env, Error::AlreadyInitialized);
+        }
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Admin, &admin);
+        env.storage().instance().set(&DataKey::Vault, &vault);
+        env.storage().instance().set(&DataKey::Token, &token);
+        env.storage().instance().set(&DataKey::Controller, &admin);
+    }
+
+    /// Hand withdrawal rights to the invoice contract.
+    pub fn set_controller(env: Env, controller: Address) {
+        admin(&env).require_auth();
+        env.storage()
+            .instance()
+            .set(&DataKey::Controller, &controller);
+    }
+
+    /// Point at a different vault. The position in the old one has to be
+    /// withdrawn first; this does not move it.
+    pub fn set_vault(env: Env, vault: Address) {
+        admin(&env).require_auth();
+        env.storage().instance().set(&DataKey::Vault, &vault);
+    }
+
+    pub fn vault(env: Env) -> Address {
+        stored(&env, DataKey::Vault)
+    }
+
+    /// The vault's realised rate, annualised.
+    ///
+    /// `report()` returns what each strategy has gained against the balance it
+    /// was last measured at. This deliberately refuses rather than substituting
+    /// a parameter when there is nothing to measure: pricing reads it with
+    /// `try_apy_bps` and labels a failed read `Fallback`, so a refusal is
+    /// reported honestly while a substituted number would arrive wearing the
+    /// live badge.
+    pub fn apy_bps(env: Env) -> u32 {
+        let client = VaultClient::new(&env, &stored::<Address>(&env, DataKey::Vault));
+        let reports = match client.try_report() {
+            Ok(Ok(r)) => r,
+            _ => panic_with_error!(&env, Error::NoYieldYet),
+        };
+
+        let mut base: i128 = 0;
+        let mut gains: i128 = 0;
+        for report in reports.iter() {
+            base += report.prev_balance;
+            gains += report.gains_or_losses;
+        }
+        if base <= 0 || gains <= 0 {
+            panic_with_error!(&env, Error::NoYieldYet);
+        }
+
+        // The report carries no timestamp, so the rate is measured from this
+        // contract's first deposit. Without that anchor the only honest reading
+        // is the raw return, un-annualised.
+        let elapsed = elapsed_seconds(&env);
+        let period_bps = (gains * BPS) / base;
+        let annual = if elapsed >= YEAR || elapsed == 0 {
+            period_bps
+        } else {
+            (period_bps * YEAR as i128) / elapsed as i128
+        };
+        if annual <= 0 {
+            panic_with_error!(&env, Error::NoYieldYet);
+        }
+        annual.min(u32::MAX as i128) as u32
+    }
+
+    /// Take `amount` from `from` and put it into the vault.
+    ///
+    /// The vault credits shares to whoever it pulled the asset from, so the
+    /// asset is pulled here first and deposited by this contract: the position
+    /// has to belong to the treasury, not to the funder who contributed it.
+    pub fn deposit(env: Env, from: Address, amount: i128) {
+        from.require_auth();
+        if amount <= 0 {
+            panic_with_error!(&env, Error::InvalidAmount);
+        }
+        let this = env.current_contract_address();
+        let token_addr: Address = stored(&env, DataKey::Token);
+        token::Client::new(&env, &token_addr).transfer(&from, &this, &amount);
+
+        if !env.storage().instance().has(&DataKey::Admin) {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
+        mark_start(&env);
+
+        let vault_addr: Address = stored(&env, DataKey::Vault);
+        // The vault pulls the asset with a plain `transfer` one frame deeper
+        // than this call, so this contract has to authorise that invocation
+        // explicitly — an allowance would not be consulted.
+        authorize_vault_pull(&env, &token_addr, &vault_addr, amount);
+        VaultClient::new(&env, &vault_addr).deposit(
+            &vec![&env, amount],
+            &vec![&env, amount],
+            &this,
+            &true,
+        );
+    }
+
+    /// Burn the shares that `amount` is worth and send the asset to `to`.
+    pub fn withdraw(env: Env, to: Address, amount: i128) {
+        controller(&env).require_auth();
+        if amount <= 0 {
+            panic_with_error!(&env, Error::InvalidAmount);
+        }
+
+        let this = env.current_contract_address();
+        let vault_addr: Address = stored(&env, DataKey::Vault);
+        let client = VaultClient::new(&env, &vault_addr);
+
+        let managed = total_managed(&client);
+        let supply = client.total_supply();
+        if managed <= 0 || supply <= 0 {
+            panic_with_error!(&env, Error::VaultEmpty);
+        }
+
+        // Round up: a share short leaves the payout short, and the payout is
+        // what a funder was promised.
+        let shares = (amount * supply + managed - 1) / managed;
+        if shares > client.balance(&this) {
+            panic_with_error!(&env, Error::InsufficientFunds);
+        }
+
+        client.withdraw(&shares, &vec![&env, amount], &this);
+
+        let token_client = token::Client::new(&env, &stored::<Address>(&env, DataKey::Token));
+        if token_client.balance(&this) < amount {
+            panic_with_error!(&env, Error::InsufficientFunds);
+        }
+        token_client.transfer(&this, &to, &amount);
+    }
+
+    /// What this treasury's shares are worth, plus anything not yet deposited.
+    pub fn total_assets(env: Env) -> i128 {
+        let this = env.current_contract_address();
+        let idle = token::Client::new(&env, &stored::<Address>(&env, DataKey::Token)).balance(&this);
+
+        let client = VaultClient::new(&env, &stored::<Address>(&env, DataKey::Vault));
+        let supply = match client.try_total_supply() {
+            Ok(Ok(s)) => s,
+            _ => return idle,
+        };
+        if supply <= 0 {
+            return idle;
+        }
+        let managed = match client.try_fetch_total_managed_funds() {
+            Ok(Ok(funds)) => funds.iter().map(|f| f.total_amount).sum::<i128>(),
+            _ => return idle,
+        };
+        let shares = match client.try_balance(&this) {
+            Ok(Ok(b)) => b,
+            _ => return idle,
+        };
+        idle + (shares * managed) / supply
+    }
+}
+
+/// Let the vault move `amount` out of this contract, and nothing else.
+fn authorize_vault_pull(env: &Env, token: &Address, vault: &Address, amount: i128) {
+    env.authorize_as_current_contract(vec![
+        env,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: token.clone(),
+                fn_name: symbol_short!("transfer"),
+                args: (env.current_contract_address(), vault.clone(), amount).into_val(env),
+            },
+            sub_invocations: vec![env],
+        }),
+    ]);
+}
+
+fn total_managed(client: &VaultClient) -> i128 {
+    client
+        .fetch_total_managed_funds()
+        .iter()
+        .map(|f| f.total_amount)
+        .sum()
+}
+
+/// When this treasury first held a position, for annualising the vault's gain.
+fn mark_start(env: &Env) {
+    if !env.storage().instance().has(&DataKey::Controller) {
+        return;
+    }
+    let key = symbol_start();
+    if !env.storage().instance().has(&key) {
+        env.storage().instance().set(&key, &env.ledger().timestamp());
+    }
+}
+
+fn elapsed_seconds(env: &Env) -> u64 {
+    let started: u64 = env.storage().instance().get(&symbol_start()).unwrap_or(0);
+    if started == 0 {
+        return 0;
+    }
+    env.ledger().timestamp().saturating_sub(started)
+}
+
+fn symbol_start() -> soroban_sdk::Symbol {
+    soroban_sdk::symbol_short!("start")
+}
+
+fn admin(env: &Env) -> Address {
+    stored(env, DataKey::Admin)
+}
+
+fn controller(env: &Env) -> Address {
+    stored(env, DataKey::Controller)
+}
+
+fn stored<T: soroban_sdk::TryFromVal<Env, soroban_sdk::Val>>(env: &Env, key: DataKey) -> T {
+    env.storage()
+        .instance()
+        .get(&key)
+        .unwrap_or_else(|| panic_with_error!(env, Error::NotInitialized))
+}

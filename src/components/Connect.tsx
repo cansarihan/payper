@@ -173,7 +173,7 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: r.colour }} />
-                    <span style={{ fontSize: 13.5, fontWeight: 700 }}>{ROLE_LABEL[r.id]}</span>
+                    <span style={{ fontSize: 13.5, fontWeight: 700 }}>{d.roles[r.id]}</span>
                   </span>
                   <span style={{ fontSize: 11.5, opacity: 0.55 }}>{lang === "tr" ? r.tr : r.en}</span>
                 </button>

@@ -30,6 +30,7 @@ interface Copy {
   days: string;
   annual: string;
 
+  roles: Readonly<Record<"seller" | "buyer" | "funder", string>>;
   nav: readonly string[];
   acct: readonly (readonly [string, string])[];
   ledgerLabel: string;
@@ -169,6 +170,7 @@ const en: Copy = {
 
   days: "days",
   annual: "annual",
+  roles: { seller: "Supplier", buyer: "Buyer", funder: "Funder" },
   nav: ["Overview", "Upload invoice", "Buyer approval", "Quote", "Anchor", "Funding board"],
   acct: [
     ["Wallet", "signing key"],
@@ -393,6 +395,7 @@ const tr: Copy = {
 
   days: "gün",
   annual: "yıllık",
+  roles: { seller: "KOBİ", buyer: "Alıcı", funder: "Fonlayıcı" },
   nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama panosu"],
   acct: [
     ["Cüzdan", "imza anahtarı"],
