@@ -581,6 +581,33 @@ composability we did not have to build.
 
 ---
 
+## Stellar skill files used
+
+The submission asks which official skill files from `skills.stellar.org` were used. These, from
+[`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill):
+
+| Path | What it was used for |
+|---|---|
+| `skills/standards/SKILL.md` | The SEP/CAP routing map. Confirmed SEP-6 over SEP-24 for an API-first fiat rail, and SEP-12 for the KYC leg. It is also where SEP-46 (contract metadata in Wasm) and SEP-55 (contract build verification) came from — both listed under open work below |
+| `skills/smart-contracts/SKILL.md` | Build and platform constraints. Our release profile, `crate-type`, `wasm32v1-none` target and `#[contractevent]` usage were checked against it line by line and already matched |
+| `skills/smart-contracts/security.md` | The contract security checklist, run against `contracts/invoice`. Findings below |
+
+**What the security review found.** Every privileged entry point authorises from stored config,
+`init` refuses a second call, storage keys are typed, arithmetic is checked (`overflow-checks = true`),
+error codes are appended rather than renumbered, and events cover state changes. One item did not
+pass: *"loops and footprints bounded on attacker-shaped input."*
+
+`fund()` accepts any `amount > 0`, and the funding ledger it appends to is an unbounded `Vec`.
+`repay()` iterates that ledger to distribute pro rata, and `transfer_claim()` rebuilds it. Enough
+entries and either call exceeds the transaction resource budget, which would strand the invoice.
+
+The attack is bounded and expensive rather than critical: entries can only be added while a quote
+lock is live, every entry must carry real USDC, and the total is capped at the payout — so an
+attacker filling an invoice in dust is funding it themselves, and is locking their own capital
+alongside everyone else's. It is griefing, not theft. The fix is a minimum ticket size and a cap on
+ledger entries, which is a contract change and therefore a redeploy; it is listed under open work
+rather than quietly patched.
+
 ## Honest limitations
 
 **The signature is checked structurally, not cryptographically.** `ds:SignedInfo`,

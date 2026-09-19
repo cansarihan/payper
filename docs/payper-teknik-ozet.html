@@ -329,14 +329,35 @@ ekleniyor, sonuç taban ve tavana kıstırılıyor.</p>
 </table>
 
 <h3>Kullanılan Stellar skill dosyaları</h3>
+<p>Başvuru, geliştirme sırasında kullanılan resmî skill dosyalarının yol vererek belirtilmesini
+istiyor. Kullanılanlar, <code>stellar/stellar-dev-skill</code> deposundan:</p>
+<table>
+  <tr><th style="width:52mm">Yol</th><th>Ne için kullanıldı</th></tr>
+  <tr><td class="mono">skills/standards/<br>SKILL.md</td><td>SEP/CAP yönlendirme haritası. API öncelikli
+  fiat rayı için SEP-24 yerine SEP-6, KYC bacağı için SEP-12 buradan doğrulandı. SEP-46 (wasm içinde
+  kontrat metadatası) ve SEP-55 (kontrat derleme doğrulaması) da buradan çıktı</td></tr>
+  <tr><td class="mono">skills/smart-contracts/<br>SKILL.md</td><td>Derleme ve platform kısıtları.
+  <code>[profile.release]</code> ayarlarımız, <code>crate-type</code>, <code>wasm32v1-none</code> hedefi
+  ve <code>#[contractevent]</code> kullanımımız satır satır karşılaştırıldı; hepsi zaten uyumluydu</td></tr>
+  <tr><td class="mono">skills/smart-contracts/<br>security.md</td><td>Kontrat güvenlik kontrol listesi,
+  <code>contracts/invoice</code> üzerinde çalıştırıldı</td></tr>
+</table>
+
 <div class="box warn">
-  <h4>Doldurulması gereken alan</h4>
-  Başvuru, geliştirme sırasında kullanılan <code>skills.stellar.org</code> skill dosyalarının
-  <b>yol vererek</b> belirtilmesini istiyor (örn. <code>skills/standards/SKILL.md</code>). Bu proje
-  SEP metinleri, DeFindex dokümantasyonu ve Soroban SDK kaynağından doğrudan çalışıldı; resmî skill
-  dosyaları yüklenmedi. Formda kullanılmayan dosya adı yazmak yanlış beyan olur — ya alan dürüstçe
-  "doğrudan SEP spesifikasyonları ve protokol dokümantasyonu" diye doldurulmalı, ya da teslimden önce
-  ilgili skill dosyaları gerçekten okunup öyle atıf verilmeli.
+  <h4>Güvenlik denetiminin bulduğu tek madde</h4>
+  Yetkili giriş noktalarının hepsi saklı yapılandırmadan yetki alıyor, <code>init</code> ikinci çağrıyı
+  reddediyor, depolama anahtarları tipli, aritmetik kontrollü (<code>overflow-checks = true</code>),
+  hata kodları yeniden numaralandırılmadan ekleniyor, olaylar durum değişikliklerini kapsıyor.
+  Geçmeyen tek madde: <b>"döngüler ve footprint'ler saldırgan biçimli girdide sınırlı olmalı."</b><br><br>
+  <code>fund()</code> sıfırdan büyük her tutarı kabul ediyor ve eklediği fonlama defteri sınırsız bir
+  <code>Vec</code>. <code>repay()</code> bu defteri oransal dağıtım için dolaşıyor,
+  <code>transfer_claim()</code> ise yeniden kuruyor. Yeterince kayıt birikirse ikisi de işlem kaynak
+  bütçesini aşar ve fatura kilitlenir.<br><br>
+  <b>Ciddiyet: kritik değil, maliyetli bir taciz.</b> Kayıt ancak teklif kilidi açıkken eklenebiliyor,
+  her kayıt gerçek USDC taşımak zorunda ve toplam ödeme tutarıyla sınırlı — yani faturayı bozuk parayla
+  dolduran saldırgan aslında faturayı kendisi fonluyor ve kendi sermayesini de kilitliyor. Hırsızlık
+  değil, taciz. Çözümü asgari dilim büyüklüğü ve defter kaydı üst sınırı; ikisi de kontrat değişikliği,
+  dolayısıyla yeniden deploy gerektiriyor. Sessizce yamamak yerine açık iş olarak yazıyoruz.
 </div>
 
 <h3>Test</h3>
