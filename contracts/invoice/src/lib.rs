@@ -31,6 +31,13 @@ const LEDGERS_PER_MINUTE: u64 = 12;
 /// The network's maximum entry lifetime.
 const MAX_TTL: u32 = 3_110_400;
 
+/// Ledger entries one invoice may carry.
+///
+/// `repay()` walks this list and `transfer_claim()` rebuilds it, so its length
+/// is the footprint of every later call. Capping it is what keeps an invoice
+/// repayable no matter how its funding was shaped.
+const MAX_FUNDERS: u32 = 32;
+
 #[contract]
 pub struct InvoiceContract;
 
@@ -237,6 +244,11 @@ impl InvoiceContract {
             panic_with_error!(&env, Error::InvalidAmount);
         }
         let remaining = invoice.locked_payout_usdc - invoice.funded_amount;
+        // A contribution below the floor is allowed only when it is the last
+        // one: refusing it there would leave an invoice that can never fill.
+        if amount < cfg.min_ticket_usdc && amount < remaining {
+            panic_with_error!(&env, Error::TicketTooSmall);
+        }
         if amount > remaining {
             panic_with_error!(&env, Error::Oversubscribed);
         }
@@ -250,6 +262,9 @@ impl InvoiceContract {
 
         invoice.funded_amount += amount;
         let mut ledger = funders_of(&env, invoice_id);
+        if ledger.len() >= MAX_FUNDERS {
+            panic_with_error!(&env, Error::TooManyFunders);
+        }
         ledger.push_back(Funding {
             funder: funder.clone(),
             amount,

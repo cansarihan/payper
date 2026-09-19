@@ -114,6 +114,13 @@ pub struct Config {
     pub fx_cap_bps: u32,
     /// Contributions strictly above this (USDC stroops) require a licensed funder.
     pub whitelist_threshold: i128,
+    /// Smallest contribution accepted, in USDC stroops.
+    ///
+    /// The funding ledger is walked on repayment and rebuilt on a claim
+    /// transfer, so its length is a resource cost every later caller pays. A
+    /// floor here, together with `MAX_FUNDERS`, is what keeps that walk bounded
+    /// when the entries are shaped by someone who wants it unbounded.
+    pub min_ticket_usdc: i128,
     /// How long after the due date before a default may be declared.
     pub grace_period: u64,
     /// Seconds an accepted quote stays fundable.
@@ -161,6 +168,10 @@ pub enum Error {
     NoClaimToTransfer = 15,
     /// A claim can only move while the invoice is still outstanding.
     ClaimNotTransferable = 16,
+    /// Below `min_ticket_usdc`.
+    TicketTooSmall = 17,
+    /// The invoice already holds `MAX_FUNDERS` ledger entries.
+    TooManyFunders = 18,
 }
 
 /// Treasury interface. The invoice contract knows nothing beyond this, so the

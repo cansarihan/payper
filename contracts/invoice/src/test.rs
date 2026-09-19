@@ -94,6 +94,7 @@ fn setup() -> Fixture {
         fx_floor_bps: 50,
         fx_cap_bps: 2500,
         whitelist_threshold: 15 * USDC,
+        min_ticket_usdc: USDC / 10,
         grace_period: 3 * DAY,
         quote_ttl: 24 * 3600,
     });
@@ -685,6 +686,7 @@ fn build(env: &Env, admin: &Address, oracle: Option<Address>) -> Fixture {
         fx_floor_bps: 50,
         fx_cap_bps: 2500,
         whitelist_threshold: 15 * USDC,
+        min_ticket_usdc: USDC / 10,
         grace_period: 3 * DAY,
         quote_ttl: 24 * 3600,
     });
@@ -813,4 +815,69 @@ fn a_settled_claim_cannot_move() {
 
     f.client
         .transfer_claim(&id, &f.funder_a, &f.funder_b, &1);
+}
+
+// ── the funding ledger stays walkable ───────────────────────────────────────
+//
+// `repay()` walks the ledger and `transfer_claim()` rebuilds it, so its length
+// is a cost every later caller pays. These two guards are what keep an invoice
+// repayable when its funding is shaped by someone who would rather it were not.
+
+/// Dust is refused, so the ledger cannot be padded a stroop at a time.
+#[test]
+fn a_contribution_below_the_floor_is_refused() {
+    let f = setup();
+    let id = register(&f, 40);
+    f.client.acknowledge(&id);
+    f.client.accept_quote(&id);
+
+    let err = f
+        .client
+        .try_fund(&id, &f.funder_a, &1)
+        .unwrap_err()
+        .unwrap();
+    assert_eq!(err, Error::TicketTooSmall.into());
+}
+
+/// The floor never strands an invoice: the last contribution may be smaller
+/// than it, because refusing there would leave the invoice unable to fill.
+#[test]
+fn the_floor_does_not_strand_the_final_contribution() {
+    let f = setup();
+    let id = register(&f, 41);
+    f.client.acknowledge(&id);
+    let payout = f.client.accept_quote(&id).payout_usdc;
+    f.client.set_whitelist(&f.funder_a, &true);
+    f.client.set_whitelist(&f.funder_b, &true);
+
+    let floor = f.client.config().min_ticket_usdc;
+    f.client.fund(&id, &f.funder_a, &(payout - floor / 2));
+    f.client.fund(&id, &f.funder_b, &(floor / 2));
+
+    assert_eq!(f.client.get_invoice(&id).status, Status::Funded);
+}
+
+/// The ledger is capped, so the walk on repayment is bounded no matter what.
+#[test]
+fn the_ledger_cannot_grow_without_bound() {
+    let f = setup();
+    let id = register(&f, 42);
+    f.client.acknowledge(&id);
+    let payout = f.client.accept_quote(&id).payout_usdc;
+    f.client.set_whitelist(&f.funder_a, &true);
+
+    let floor = f.client.config().min_ticket_usdc;
+    assert!(payout / floor > 32, "the invoice must allow more than the cap");
+
+    for _ in 0..32 {
+        f.client.fund(&id, &f.funder_a, &floor);
+    }
+    assert_eq!(f.client.funder_count(&id), 32);
+
+    let err = f
+        .client
+        .try_fund(&id, &f.funder_a, &floor)
+        .unwrap_err()
+        .unwrap();
+    assert_eq!(err, Error::TooManyFunders.into());
 }

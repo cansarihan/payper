@@ -436,6 +436,14 @@
                     },
                     {
                       "key": {
+                        "symbol": "min_ticket_usdc"
+                      },
+                      "val": {
+                        "i128": "1000000"
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "oracle"
                       },
                       "val": {
@@ -1175,6 +1183,14 @@
                             },
                             "val": {
                               "u64": "259200"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "min_ticket_usdc"
+                            },
+                            "val": {
+                              "i128": "1000000"
                             }
                           },
                           {
