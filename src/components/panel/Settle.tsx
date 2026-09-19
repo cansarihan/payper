@@ -127,7 +127,7 @@ export function Settle({
         </div>
       )}
 
-      <div className="anchor-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
+      <div data-tour="se-split" className="anchor-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 16 }}>
           <div style={{ background: C.white, borderRadius: 28, padding: 26, display: "grid", gap: 18 }}>
             {!invoice ? (

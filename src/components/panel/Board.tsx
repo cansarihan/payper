@@ -189,7 +189,7 @@ export function Board({
         </div>
       </div>
 
-      <div className="quote-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
+      <div data-tour="bo-split" className="quote-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
         {/* the crowd */}
         <div style={{ background: C.ink, color: C.white, borderRadius: 28, padding: 24, display: "grid", gap: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>

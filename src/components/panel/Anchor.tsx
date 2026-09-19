@@ -103,7 +103,7 @@ export function Anchor({
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,auto)", gap: 8 }}>
+        <div data-tour="an-facts" style={{ display: "grid", gridTemplateColumns: "repeat(2,auto)", gap: 8 }}>
           <Fact k="HOME_DOMAIN" v={home} />
           <Fact k="ASSET" v={`${anchor?.assetCode ?? "—"} · ${shortKey(anchor?.assetIssuer ?? "", 4, 4)}`} />
           <Fact
@@ -155,7 +155,7 @@ export function Anchor({
         ))}
       </div>
 
-      <div className="anchor-split" style={{ display: "grid", gap: 20, alignItems: "start" }}>
+      <div data-tour="an-split" className="anchor-split" style={{ display: "grid", gap: 20, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ background: C.white, color: C.ink, borderRadius: 24, padding: 24 }}>
             <div

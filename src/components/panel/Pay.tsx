@@ -202,7 +202,7 @@ export function Pay({
         ))}
       </div>
 
-      <div className="pay-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
+      <div data-tour="pay-split" className="pay-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
         <div style={{ background: C.white, borderRadius: 28, padding: 26, display: "grid", gap: 20 }}>
           <div style={{ display: "grid", gap: 8 }}>
             <label style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".05em", opacity: 0.55 }}>

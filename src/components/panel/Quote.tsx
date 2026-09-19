@@ -170,7 +170,7 @@ export function Quote({
         </div>
       )}
 
-      <div className="quote-split" style={{ display: "grid", gap: 20, alignItems: "start" }}>
+      <div data-tour="q-split" className="quote-split" style={{ display: "grid", gap: 20, alignItems: "start" }}>
         <div style={{ background: C.white, borderRadius: 28, padding: 24 }}>
           {/* the stacked share bar */}
           <div

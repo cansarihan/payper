@@ -138,7 +138,7 @@ export function Upload({
         </div>
       )}
 
-      <div className="up-split" style={{ display: "grid", gap: 20, alignItems: "start" }}>
+      <div data-tour="up-split" className="up-split" style={{ display: "grid", gap: 20, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 16 }}>
           <div
             onDragOver={(e) => {

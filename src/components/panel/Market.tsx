@@ -124,7 +124,7 @@ export function Market({
         ))}
       </div>
 
-      <div className="anchor-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
+      <div data-tour="mk-split" className="anchor-split" style={{ display: "grid", gap: 16, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 16 }}>
           <div style={{ background: C.white, color: C.ink, borderRadius: 28, padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 14 }}>{d.segmentTitle}</div>

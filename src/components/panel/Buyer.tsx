@@ -106,7 +106,7 @@ export function Buyer({
         </div>
       )}
 
-      <div style={{ background: C.white, borderRadius: 28, padding: 26, display: "grid", gap: 22 }}>
+      <div data-tour="bu-card" style={{ background: C.white, borderRadius: 28, padding: 26, display: "grid", gap: 22 }}>
         <div
           style={{
             display: "grid",

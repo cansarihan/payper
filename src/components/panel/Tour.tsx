@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 import { C, FONT } from "@/lib/design";
 import type { Lang } from "@/lib/i18n/dictionary";
@@ -9,20 +9,31 @@ import type { Screen } from "./Shell";
 
 interface Stop {
   screen: Screen;
+  /** `data-tour` value of the element to light up. Absent means the whole screen. */
+  target?: string;
   title: string;
   body: string;
-  /** What on this screen came off the chain, so nothing looks staged. */
+  /** What here came off the chain, so nothing looks staged. */
   live: string;
 }
 
+interface Box {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
 /**
- * A guided walk through the product, for someone seeing it for the first time.
+ * A guided walk that points at things.
  *
- * Eight screens in a fixed order is obvious once you know the product and
- * opaque when you do not, so this drives the navigation and says, at each stop,
- * what to look at and which figures were read from chain. It shows the real
- * screens against the real ledger — there is no rehearsed path and no
- * substitute data, which is the only version worth putting in front of a jury.
+ * The earlier version only changed screens and described them from a bar at the
+ * bottom, which left the reader hunting for whatever was being talked about.
+ * This one dims the page and cuts a hole around the element in question, so the
+ * sentence and the thing it describes are never more than a glance apart.
+ *
+ * Several stops can share a screen; the navigation only moves when the stops on
+ * the current one are spent.
  */
 export function Tour({
   lang,
@@ -36,183 +47,273 @@ export function Tour({
   onClose: () => void;
 }) {
   const [at, setAt] = useState(0);
+  const [box, setBox] = useState<Box | null>(null);
   const stops = lang === "tr" ? tr(state) : en(state);
   const stop = stops[at];
 
+  const back = useCallback(() => setAt((i) => Math.max(0, i - 1)), []);
+  const next = useCallback(
+    () => setAt((i) => (i >= stops.length - 1 ? i : i + 1)),
+    [stops.length],
+  );
+
   useEffect(() => {
     onGo(stop.screen);
-    window.scrollTo(0, 0);
-  }, [at, stop.screen, onGo]);
+  }, [stop.screen, onGo]);
 
-  // Arrow keys and Escape: a walkthrough nobody can drive from the keyboard is
-  // a slideshow.
+  // The target may not exist the instant the screen switches, so the measure
+  // retries for a few frames before giving up and lighting the whole page.
+  useLayoutEffect(() => {
+    let alive = true;
+    let tries = 0;
+
+    const measure = () => {
+      if (!alive) return;
+      if (!stop.target) {
+        setBox(null);
+        return;
+      }
+      const el = document.querySelector<HTMLElement>(`[data-tour="${stop.target}"]`);
+      if (!el) {
+        if (tries++ < 30) requestAnimationFrame(measure);
+        else setBox(null);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const pad = 10;
+      setBox({
+        top: r.top - pad,
+        left: r.left - pad,
+        width: r.width + pad * 2,
+        height: r.height + pad * 2,
+      });
+    };
+
+    // Bring the target into view first; measuring before the scroll settles
+    // would box the wrong place.
+    const el = stop.target
+      ? document.querySelector<HTMLElement>(`[data-tour="${stop.target}"]`)
+      : null;
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    const t = window.setTimeout(measure, el ? 340 : 60);
+
+    const onMove = () => measure();
+    window.addEventListener("resize", onMove);
+    window.addEventListener("scroll", onMove, true);
+    return () => {
+      alive = false;
+      window.clearTimeout(t);
+      window.removeEventListener("resize", onMove);
+      window.removeEventListener("scroll", onMove, true);
+    };
+  }, [at, stop.target]);
+
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") setAt((i) => Math.min(stops.length - 1, i + 1));
-      if (e.key === "ArrowLeft") setAt((i) => Math.max(0, i - 1));
+      if (e.key === "ArrowRight" || e.key === "Enter") next();
+      if (e.key === "ArrowLeft") back();
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [stops.length, onClose]);
+  }, [next, back, onClose]);
 
   const last = at === stops.length - 1;
+  const onScreen = stops.filter((s) => s.screen === stop.screen);
+  const indexHere = onScreen.indexOf(stop) + 1;
+
+  // The card goes under the highlight when there is room, over it otherwise.
+  const below = box ? box.top + box.height + 16 : 0;
+  const fitsBelow = box ? below + 230 < window.innerHeight : false;
 
   return (
-    <div
-      role="dialog"
-      aria-label={lang === "tr" ? "Ürün turu" : "Product tour"}
-      style={{
-        position: "fixed",
-        left: "50%",
-        bottom: 20,
-        transform: "translateX(-50%)",
-        zIndex: 70,
-        width: "min(720px, calc(100vw - 32px))",
-        background: C.ink,
-        color: C.white,
-        borderRadius: 24,
-        padding: "18px 20px",
-        boxShadow: "0 24px 70px rgba(0,0,0,.4)",
-        animation: "popIn .3s cubic-bezier(.2,.8,.2,1) both",
-      }}
-    >
+    <>
+      {/* The dim. A single element with an enormous spread gives a hole with
+          no seams, which four panels around the target would not. */}
       <div
+        onClick={next}
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 10,
+          position: "fixed",
+          zIndex: 90,
+          pointerEvents: "auto",
+          top: box ? box.top : 0,
+          left: box ? box.left : 0,
+          width: box ? box.width : 0,
+          height: box ? box.height : 0,
+          borderRadius: box ? 20 : 0,
+          boxShadow: `0 0 0 9999px rgba(8,10,9,${box ? 0.62 : 0.5})`,
+          border: box ? `2px solid ${C.mint}` : "none",
+          transition: "all .35s cubic-bezier(.2,.8,.2,1)",
+        }}
+      />
+
+      <div
+        role="dialog"
+        aria-label={lang === "tr" ? "Ürün turu" : "Product tour"}
+        style={{
+          position: "fixed",
+          zIndex: 91,
+          left: box
+            ? Math.max(16, Math.min(box.left, window.innerWidth - 440))
+            : "50%",
+          top: box ? (fitsBelow ? below : Math.max(16, box.top - 236)) : "auto",
+          bottom: box ? "auto" : 24,
+          transform: box ? "none" : "translateX(-50%)",
+          width: "min(420px, calc(100vw - 32px))",
+          background: C.ink,
+          color: C.white,
+          borderRadius: 22,
+          padding: "16px 18px",
+          boxShadow: "0 30px 80px rgba(0,0,0,.5)",
+          animation: "popIn .28s cubic-bezier(.2,.8,.2,1) both",
+          transition: "left .35s cubic-bezier(.2,.8,.2,1), top .35s cubic-bezier(.2,.8,.2,1)",
         }}
       >
-        <span
+        <div
           style={{
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            gap: 8,
-            fontFamily: FONT.mono,
-            fontSize: 11,
-            color: C.mint,
+            gap: 12,
+            marginBottom: 9,
           }}
         >
           <span
             style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: C.mint,
-              animation: "pulse 2s infinite",
-            }}
-          />
-          {at + 1} / {stops.length}
-        </span>
-        <button
-          onClick={onClose}
-          style={{
-            border: 0,
-            background: "rgba(255,255,255,.1)",
-            color: C.white,
-            borderRadius: 999,
-            padding: "6px 14px",
-            fontSize: 11.5,
-            fontWeight: 600,
-          }}
-        >
-          {lang === "tr" ? "Turu kapat" : "Close tour"}
-        </button>
-      </div>
-
-      <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-.02em", marginBottom: 5 }}>
-        {stop.title}
-      </div>
-      <p style={{ fontSize: 13, lineHeight: 1.55, margin: "0 0 10px", color: "#DDD" }}>{stop.body}</p>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "start",
-          gap: 8,
-          padding: "10px 12px",
-          borderRadius: 12,
-          background: C.panel,
-          fontFamily: FONT.mono,
-          fontSize: 11,
-          color: C.mint,
-          lineHeight: 1.5,
-          marginBottom: 12,
-          overflowWrap: "anywhere",
-        }}
-      >
-        <span aria-hidden>◉</span>
-        <span>{stop.live}</span>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ display: "flex", gap: 4, flex: 1 }}>
-          {stops.map((s, i) => (
-            <button
-              key={s.screen + i}
-              onClick={() => setAt(i)}
-              aria-label={`${i + 1}`}
-              style={{
-                flex: 1,
-                height: 4,
-                border: 0,
-                padding: 0,
-                borderRadius: 999,
-                background: i <= at ? C.mint : "rgba(255,255,255,.18)",
-                transition: "background .3s",
-              }}
-            />
-          ))}
-        </div>
-        <button
-          onClick={() => setAt((i) => Math.max(0, i - 1))}
-          disabled={at === 0}
-          style={{
-            border: "1px solid rgba(255,255,255,.2)",
-            background: "transparent",
-            color: at === 0 ? "rgba(255,255,255,.3)" : C.white,
-            borderRadius: 999,
-            padding: "9px 16px",
-            fontSize: 12.5,
-            fontWeight: 600,
-          }}
-        >
-          ←
-        </button>
-        <button
-          onClick={() => (last ? onClose() : setAt((i) => i + 1))}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            border: 0,
-            borderRadius: 999,
-            padding: "9px 10px 9px 18px",
-            background: C.mint,
-            color: C.ink,
-            fontSize: 12.5,
-            fontWeight: 700,
-          }}
-        >
-          {last ? (lang === "tr" ? "Bitir" : "Finish") : lang === "tr" ? "Sıradaki" : "Next"}
-          <span
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: "50%",
-              background: C.ink,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: FONT.mono,
+              fontSize: 10.5,
               color: C.mint,
-              display: "grid",
-              placeItems: "center",
             }}
           >
-            {last ? "✓" : "→"}
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: C.mint,
+                animation: "pulse 2s infinite",
+              }}
+            />
+            {at + 1}/{stops.length}
+            {onScreen.length > 1 && (
+              <span style={{ color: "rgba(255,255,255,.4)" }}>
+                · {indexHere}/{onScreen.length}
+              </span>
+            )}
           </span>
-        </button>
+          <button
+            onClick={onClose}
+            style={{
+              border: 0,
+              background: "rgba(255,255,255,.1)",
+              color: C.white,
+              borderRadius: 999,
+              padding: "5px 12px",
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            {lang === "tr" ? "Kapat" : "Close"}
+          </button>
+        </div>
+
+        <div style={{ fontSize: 15.5, fontWeight: 700, letterSpacing: "-.02em", marginBottom: 5 }}>
+          {stop.title}
+        </div>
+        <p style={{ fontSize: 12.5, lineHeight: 1.55, margin: "0 0 9px", color: "#DDD" }}>
+          {stop.body}
+        </p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "start",
+            gap: 7,
+            padding: "9px 11px",
+            borderRadius: 11,
+            background: C.panel,
+            fontFamily: FONT.mono,
+            fontSize: 10,
+            color: C.mint,
+            lineHeight: 1.5,
+            marginBottom: 11,
+            overflowWrap: "anywhere",
+          }}
+        >
+          <span aria-hidden>◉</span>
+          <span>{stop.live}</span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", gap: 3, flex: 1 }}>
+            {stops.map((s, i) => (
+              <button
+                key={s.screen + i}
+                onClick={() => setAt(i)}
+                aria-label={`${i + 1}`}
+                style={{
+                  flex: 1,
+                  height: 3,
+                  border: 0,
+                  padding: 0,
+                  borderRadius: 999,
+                  background: i <= at ? C.mint : "rgba(255,255,255,.18)",
+                  transition: "background .3s",
+                }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={back}
+            disabled={at === 0}
+            style={{
+              border: "1px solid rgba(255,255,255,.2)",
+              background: "transparent",
+              color: at === 0 ? "rgba(255,255,255,.3)" : C.white,
+              borderRadius: 999,
+              padding: "8px 14px",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            ←
+          </button>
+          <button
+            onClick={() => (last ? onClose() : next())}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              border: 0,
+              borderRadius: 999,
+              padding: "8px 9px 8px 16px",
+              background: C.mint,
+              color: C.ink,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            {last ? (lang === "tr" ? "Bitir" : "Finish") : lang === "tr" ? "Sıradaki" : "Next"}
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: C.ink,
+                color: C.mint,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 11,
+              }}
+            >
+              {last ? "✓" : "→"}
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -222,56 +323,93 @@ const pct = (bps: number | undefined) => `%${((bps ?? 0) / 100).toFixed(2)}`;
 const en = (s: AppState | null): Stop[] => [
   {
     screen: "overview",
-    title: "Overview · the book as it stands",
-    body: "The mint half is the supplier's position, the black half the treasury and what is awaiting a decision. No figure here is a constant; every one was read from the contract on this request.",
-    live: `treasury ${usdc(s?.treasury.assets)} USDC · APY ${pct(s?.treasury.apyBps)} (${s?.treasury.apySource ?? "—"}) · ${s?.invoices.length ?? 0} invoices`,
+    target: "ov-score",
+    title: "The score, and where it comes from",
+    body: "Not a decoration. Repayments earn, defaults cost, and an unblemished but empty book sits at the base — all counted from the invoices the contract holds. The two pills beside it say which feed the price is reading.",
+    live: `${s?.invoices.length ?? 0} invoices on chain · treasury ${s?.treasury.mode ?? "—"}`,
+  },
+  {
+    screen: "overview",
+    target: "ov-kpi",
+    title: "Money that has moved, money that has not",
+    body: "On the left, what actually reached a bank account. On the right, what is still out at maturity. Both derived from the payouts the contract recorded, not from a ledger we keep beside it.",
+    live: `treasury ${usdc(s?.treasury.assets)} USDC`,
+  },
+  {
+    screen: "overview",
+    target: "ov-cards",
+    title: "Six figures, each one a screen",
+    body: "Financed volume, the average discount, what is open, how many wallets are funding, defaults, and how many ETTNs the contract has locked. Any card opens the screen behind it, and the menu on each will export the book as CSV.",
+    live: "every value counted from state.invoices at this request",
+  },
+  {
+    screen: "overview",
+    target: "ov-book",
+    title: "The book itself",
+    body: "Every invoice with its status, filtered by the pills above. A row opens the step it is waiting on — which is how you move through the product without needing to know its order.",
+    live: "id · buyer tax number · ETTN · amount · due · discount · status",
   },
   {
     screen: "upload",
-    title: "1 · Upload · ETTN uniqueness",
-    body: "A real UBL-TR e-invoice goes in. Mandatory fields, the structure of the XAdES signature block and the document's SHA-256 are all checked. The point is the ETTN: the contract refuses a second registration of the same one, before anything else runs.",
-    live: "register() writes on chain · the DataKey::Ettn record has its TTL extended to the maximum",
+    target: "up-split",
+    title: "1 · The document, and the one thing that matters in it",
+    body: "A real UBL-TR e-invoice goes in. Mandatory fields, the XAdES signature block's structure and the document's SHA-256 are checked here. The ETTN is the point: the contract refuses a second registration of the same one before anything else runs.",
+    live: "register() writes the ETTN hash · DataKey::Ettn TTL extended to the maximum",
   },
   {
     screen: "buyer",
-    title: "2 · Buyer acknowledgement · the lock",
-    body: "Nobody but the address written on the invoice can confirm it — the contract compares them. Without this the invoice cannot be funded, because the buyer is the party who makes the receivable real.",
+    target: "bu-card",
+    title: "2 · The acknowledgement is the lock",
+    body: "Only the address written on the invoice can confirm it — the contract compares them. Without this the invoice cannot be funded, because the buyer is the party who makes the receivable real to a stranger.",
     live: "acknowledge() · only invoice.buyer passes require_auth",
   },
   {
     screen: "quote",
-    title: "3 · The discount · the heart of it",
-    body: "Four components, each returned with its provenance. The currency premium is measured from the feed's own history rather than assumed. A component that fell back to a parameter says so, and cannot be presented as live.",
+    target: "q-split",
+    title: "3 · Four components, and where each came from",
+    body: "The currency premium is measured from the feed's own history rather than assumed: thirty closes are read, the lira's actual move across the window is projected onto the tenor, and half the peak-to-trough range is added as a volatility allowance. A component that fell back to a parameter says so.",
     live: `quote() → ${pct(s?.activeQuote?.totalDiscountBps)} · fx ${s?.activeQuote?.fxSource ?? "—"} · yield ${s?.activeQuote?.yieldSource ?? "—"}`,
   },
   {
     screen: "anchor",
-    title: "4 · The lira bridge · SEP-6, both ways",
-    body: "The terminal on the right shows the real requests. The domain, the rate and every endpoint in the boxes above were discovered from the anchor's own stellar.toml at run time — none of it is hard-coded.",
-    live: `${s?.anchor?.homeDomain ?? "anchor"} · SEP-38 sell ${s?.anchor?.rates?.sell_rate ?? "—"} · first loss ${usdc(s?.treasury.firstLoss)} USDC`,
+    target: "an-facts",
+    title: "4 · Nothing here is written in our code",
+    body: "The domain, the asset, the rate and the transfer server were all discovered from the anchor's own stellar.toml when this page loaded. Moving to a different anchor is one domain change — which is the whole reason to speak a standard rather than an API.",
+    live: `${s?.anchor?.homeDomain ?? "anchor"} · SEP-1 discovery at run time`,
+  },
+  {
+    screen: "anchor",
+    target: "an-split",
+    title: "4 · The rail, and its receipts",
+    body: "Run the flow and the terminal on the right fills with the real requests, status codes and all. Each transfer that results carries the anchor's own id and a link to the Stellar transaction it produced. Below that are the same requests as commands you can paste into a terminal yourself.",
+    live: `SEP-38 sell ${s?.anchor?.rates?.sell_rate ?? "—"} · first loss ${usdc(s?.treasury.firstLoss)} USDC`,
   },
   {
     screen: "pay",
-    title: "5 · Pay by sound",
-    body: "A payment with no camera, no pairing and no data connection: 4-bit symbols become sixteen tones at 90 ms each, closed by a CRC-8. The receiver runs a 4096-point FFT and locks on the preamble. The frame test round-trips 2,000 random payloads byte for byte.",
-    live: "encoder and decoder both run in the browser · the QR is a SEP-7 URI, generated locally",
+    target: "pay-split",
+    title: "5 · A payment with no camera and no data",
+    body: "The request is encoded as eight tones and played out loud; a phone in the room hears it, checks the CRC and acts on it. Scan the QR with a phone to open the listener. The sound carries a request, never an authorisation — anyone can replay it, so the server is what decides.",
+    live: "encoder and decoder both in the browser · the QR is a SEP-7 URI",
   },
   {
     screen: "board",
-    title: "6 · The funding board · the crowd",
-    body: "How many people funded the invoice is set in the largest type, because that is the number worth remembering. Capital sits in the DeFindex vault while the round fills.",
-    live: `fund() deposits into the vault · ${s?.activeFunders.length ?? 0} funders read from chain`,
+    target: "bo-split",
+    title: "6 · The crowd is the number to remember",
+    body: "How many wallets funded the invoice is set in the largest type on the screen, because that is what a factoring company cannot do: let two hundred people each put in fifty dollars. Capital sits in the DeFindex vault while the round fills.",
+    live: `${s?.activeFunders.length ?? 0} funders read from chain`,
   },
   {
     screen: "settle",
-    title: "7 · Settlement, and the default waterfall",
-    body: "At maturity the buyer pays and the contract distributes pro rata. If they do not, the same contract drains the first-loss buffer to funders first and records the remainder as a claim on the supplier. Declaring it early is refused on chain, not here.",
+    target: "se-split",
+    title: "7 · Both ways this can end",
+    body: "At maturity the buyer pays and the contract distributes pro rata. If they do not, the same contract drains the first-loss buffer to funders first and records the remainder as a claim on the supplier. Declaring a default early is refused on chain, not here.",
     live: `grace ${s?.limits.gracePeriodDays ?? "—"} days after the due date · mark_default() returns the split`,
   },
   {
     screen: "market",
-    title: "Market · who pays, and what they pay today",
-    body: "The factoring assumptions are sliders you set, and the comparison recomputes against the live quote. Turkey's policy rate is 37% — discounting a receivable below it would be pricing under the cost of money.",
+    target: "mk-split",
+    title: "Is it actually cheaper?",
+    body: "The factoring assumptions are sliders you set, and the comparison recomputes against the live quote. If you think a factor is cheaper than we claim, type your number and watch the conclusion move — that is a better argument than a slide.",
     live: "the comparison runs on a real invoice in state and the live discount",
   },
 ];
@@ -279,56 +417,93 @@ const en = (s: AppState | null): Stop[] => [
 const tr = (s: AppState | null): Stop[] => [
   {
     screen: "overview",
-    title: "Genel bakış · defterin şu anki hâli",
-    body: "Yeşil yarı tedarikçinin durumu, siyah yarı hazine ve karar bekleyenler. Buradaki hiçbir sayı sabit değil; hepsi bu istekte kontrattan okundu.",
-    live: `hazine ${usdc(s?.treasury.assets)} USDC · APY ${pct(s?.treasury.apyBps)} (${s?.treasury.apySource ?? "—"}) · ${s?.invoices.length ?? 0} fatura`,
+    target: "ov-score",
+    title: "Skor ve nereden geldiği",
+    body: "Süs değil. Ödemeler kazandırıyor, temerrütler kaybettiriyor, lekesiz ama boş bir defter tabanda oturuyor — hepsi kontratın tuttuğu faturalardan sayılıyor. Yanındaki iki pill, fiyatın hangi beslemeyi okuduğunu söylüyor.",
+    live: `zincirde ${s?.invoices.length ?? 0} fatura · hazine ${s?.treasury.mode ?? "—"}`,
+  },
+  {
+    screen: "overview",
+    target: "ov-kpi",
+    title: "Hareket eden para, etmeyen para",
+    body: "Solda gerçekten bir banka hesabına ulaşan tutar. Sağda vadede hâlâ açıkta olan. İkisi de kontratın kaydettiği ödemelerden türetiliyor, yanında tuttuğumuz bir defterden değil.",
+    live: `hazine ${usdc(s?.treasury.assets)} USDC`,
+  },
+  {
+    screen: "overview",
+    target: "ov-cards",
+    title: "Altı rakam, her biri bir ekran",
+    body: "Finanse edilen hacim, ortalama iskonto, açıktakiler, kaç cüzdanın fonladığı, temerrütler ve kontratın kilitlediği ETTN sayısı. Her kart arkasındaki ekranı açıyor, üstündeki menü de defteri CSV olarak indiriyor.",
+    live: "her değer bu istekte state.invoices'tan sayıldı",
+  },
+  {
+    screen: "overview",
+    target: "ov-book",
+    title: "Defterin kendisi",
+    body: "Her fatura durumuyla birlikte, üstteki pill'lerle filtreleniyor. Bir satır beklediği adımı açıyor — ürünün sırasını bilmeden içinde dolaşmanın yolu bu.",
+    live: "id · alıcı VKN · ETTN · tutar · vade · iskonto · durum",
   },
   {
     screen: "upload",
-    title: "1 · Fatura yükleme · ETTN tekilliği",
-    body: "Gerçek bir UBL-TR e-faturası giriyor. Zorunlu alanlar, XAdES imza bloğunun yapısı ve belgenin SHA-256'sı kontrol ediliyor. Asıl mesele ETTN: kontrat aynısının ikinci kaydını, başka hiçbir şey çalışmadan reddediyor.",
-    live: "register() zincire yazıyor · DataKey::Ettn kaydının TTL'i maksimuma çekiliyor",
+    target: "up-split",
+    title: "1 · Belge ve içindeki tek önemli şey",
+    body: "Gerçek bir UBL-TR e-faturası giriyor. Zorunlu alanlar, XAdES imza bloğunun yapısı ve belgenin SHA-256'sı burada kontrol ediliyor. Asıl mesele ETTN: kontrat aynısının ikinci kaydını, başka hiçbir şey çalışmadan reddediyor.",
+    live: "register() ETTN hash'ini yazıyor · DataKey::Ettn TTL'i maksimuma çekiliyor",
   },
   {
     screen: "buyer",
-    title: "2 · Alıcı onayı · ürünün kilidi",
-    body: "Faturada yazılı adres dışında kimse onaylayamıyor — kontrat ikisini karşılaştırıyor. Bu onay olmadan fatura fonlanamıyor, çünkü alacağı gerçek kılan taraf alıcı.",
+    target: "bu-card",
+    title: "2 · Kilit, alıcının onayı",
+    body: "Faturada yazılı adres dışında kimse onaylayamıyor — kontrat ikisini karşılaştırıyor. Bu onay olmadan fatura fonlanamıyor, çünkü alacağı bir yabancı için gerçek kılan taraf alıcı.",
     live: "acknowledge() · require_auth'u yalnız invoice.buyer geçebilir",
   },
   {
     screen: "quote",
-    title: "3 · İskonto · işin kalbi",
-    body: "Dört bileşen, her biri kaynağıyla dönüyor. Kur primi varsayılmıyor, beslemenin kendi geçmişinden ölçülüyor. Yedeğe düşen bir bileşen bunu söylüyor ve canlı diye sunulamıyor.",
+    target: "q-split",
+    title: "3 · Dört bileşen ve her birinin kaynağı",
+    body: "Kur primi varsayılmıyor, beslemenin kendi geçmişinden ölçülüyor: otuz kapanış okunuyor, liranın o pencerede fiilen ettiği hareket vadeye projekte ediliyor, tepe-dip bandının yarısı oynaklık payı olarak ekleniyor. Yedeğe düşen bir bileşen bunu söylüyor.",
     live: `quote() → ${pct(s?.activeQuote?.totalDiscountBps)} · kur ${s?.activeQuote?.fxSource ?? "—"} · getiri ${s?.activeQuote?.yieldSource ?? "—"}`,
   },
   {
     screen: "anchor",
-    title: "4 · TL köprüsü · çift yönlü SEP-6",
-    body: "Sağdaki terminal gerçek istekleri gösteriyor. Üstteki kutulardaki alan adı, kur ve tüm uç noktalar kodda sabit değil — anchor'ın kendi stellar.toml'undan çalışma anında keşfedildi.",
-    live: `${s?.anchor?.homeDomain ?? "anchor"} · SEP-38 satış ${s?.anchor?.rates?.sell_rate ?? "—"} · ilk zarar ${usdc(s?.treasury.firstLoss)} USDC`,
+    target: "an-facts",
+    title: "4 · Buradaki hiçbir şey kodumuzda yazılı değil",
+    body: "Alan adı, varlık, kur ve transfer sunucusu — hepsi bu sayfa yüklenirken anchor'ın kendi stellar.toml'undan keşfedildi. Başka bir anchor'a geçmek tek bir alan adı değişikliği; bir API yerine standart konuşmanın bütün sebebi bu.",
+    live: `${s?.anchor?.homeDomain ?? "anchor"} · çalışma anında SEP-1 keşfi`,
+  },
+  {
+    screen: "anchor",
+    target: "an-split",
+    title: "4 · Kanal ve makbuzları",
+    body: "Akışı çalıştır, sağdaki terminal gerçek isteklerle dolsun — durum kodlarıyla birlikte. Oluşan her transfer anchor'ın kendi id'sini ve ürettiği Stellar işlemine giden bir link taşıyor. Altında da aynı istekler, terminale yapıştırabileceğin komutlar hâlinde.",
+    live: `SEP-38 satış ${s?.anchor?.rates?.sell_rate ?? "—"} · ilk zarar ${usdc(s?.treasury.firstLoss)} USDC`,
   },
   {
     screen: "pay",
-    title: "5 · Sesle ödeme",
-    body: "Kamerasız, eşleşmesiz, veri bağlantısız bir ödeme: 4-bit semboller 90 ms'lik on altı tona dönüşüyor, sonunu CRC-8 kapatıyor. Alıcı tarafta 4096 noktalı FFT senkron dizisine kilitleniyor. Çerçeve testi 2.000 rastgele yükü birebir geri döndürüyor.",
-    live: "kodlayıcı da çözücü de tarayıcıda çalışıyor · QR yerelde üretilen bir SEP-7 URI'si",
+    target: "pay-split",
+    title: "5 · Kamerasız ve veri bağlantısız bir ödeme",
+    body: "İstek sekiz tona kodlanıp yüksek sesle çalınıyor; odadaki telefon duyuyor, CRC'sini doğruluyor ve işleme koyuyor. QR'ı telefonla okutunca dinleyici açılıyor. Ses bir istek taşıyor, yetki değil — kaydedip tekrar çalan herkes aynısını yapabilir, o yüzden kararı sunucu veriyor.",
+    live: "kodlayıcı da çözücü de tarayıcıda · QR bir SEP-7 URI'si",
   },
   {
     screen: "board",
-    title: "6 · Fonlama panosu · kalabalık",
-    body: "Faturayı kaç kişinin fonladığı en büyük puntoda, çünkü akılda kalması gereken sayı bu. Tur dolarken sermaye DeFindex vault'unda duruyor.",
-    live: `fund() vault'a yatırıyor · ${s?.activeFunders.length ?? 0} fonlayıcı zincirden okundu`,
+    target: "bo-split",
+    title: "6 · Akılda kalması gereken sayı kalabalık",
+    body: "Faturayı kaç cüzdanın fonladığı ekrandaki en büyük puntoda, çünkü bir faktoring şirketinin yapamadığı şey bu: iki yüz kişinin ellişer dolar koyması. Tur dolarken sermaye DeFindex vault'unda duruyor.",
+    live: `zincirden ${s?.activeFunders.length ?? 0} fonlayıcı okundu`,
   },
   {
     screen: "settle",
-    title: "7 · Kapanış ve temerrüt şelalesi",
-    body: "Vadede alıcı ödüyor ve kontrat oransal dağıtıyor. Ödemezse aynı kontrat önce ilk zarar tamponunu fonlayıcılara boşaltıyor, kalanı tedarikçiden rücu alacağı olarak kaydediyor. Erken ilan burada değil, zincirde reddediliyor.",
+    target: "se-split",
+    title: "7 · Bunun iki bitiş yolu",
+    body: "Vadede alıcı ödüyor ve kontrat oransal dağıtıyor. Ödemezse aynı kontrat önce ilk zarar tamponunu fonlayıcılara boşaltıyor, kalanı tedarikçiden rücu alacağı olarak kaydediyor. Temerrüdü erken ilan etmek burada değil, zincirde reddediliyor.",
     live: `vadeden sonra ${s?.limits.gracePeriodDays ?? "—"} gün ek süre · mark_default() dağılımı döndürüyor`,
   },
   {
     screen: "market",
-    title: "Pazar · kim ödüyor, bugün neye ödüyor",
-    body: "Faktoring varsayımlarını kaydırıcılarla sen giriyorsun; karşılaştırma canlı teklife göre yeniden hesaplanıyor. TCMB politika faizi %37 — bir alacağı bunun altında iskonto etmek paranın maliyetinin altında fiyatlamak olurdu.",
+    target: "mk-split",
+    title: "Gerçekten daha mı ucuz?",
+    body: "Faktoring varsayımları senin ayarladığın kaydırıcılar ve karşılaştırma canlı teklife göre yeniden hesaplanıyor. Faktoringin iddia ettiğimizden ucuz olduğunu düşünüyorsan kendi sayını gir ve sonucun nasıl kaydığını gör — bu bir slayttan daha iyi bir argüman.",
     live: "karşılaştırma state'teki gerçek faturadan ve canlı iskontodan hesaplanıyor",
   },
 ];

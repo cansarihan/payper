@@ -53,8 +53,14 @@ const MIN_ABOVE_FLOOR = 4.5;
 const MIN_CONTRAST_DB = 2;
 /** A burst shorter than this is noise. */
 const MIN_BURST_MS = CHIRP_MS * 0.3;
-/** Longer than this is not one of our tones. */
-const MAX_BURST_MS = CHIRP_MS * 2.6;
+/**
+ * Longer than this is not one of our tones at all.
+ *
+ * Between one tone and this, a burst is assumed to be several tones whose
+ * guards the room filled in, and is split rather than thrown away — reverb
+ * merging two symbols was what cost the preamble a symbol and with it the lock.
+ */
+const MAX_BURST_MS = CHIRP_SLOT_MS * 5;
 /** Bursts kept in the window: two frames' worth. */
 const HISTORY = (PREAMBLE.length + FRAME_SYMBOLS) * 2;
 
@@ -266,30 +272,41 @@ export class ChirpDecoder {
     const span = endedAt - startedAt;
     if (span < MIN_BURST_MS || span > MAX_BURST_MS) return;
 
-    // The middle of the burst, where the tone is steady and the fades are not.
-    const from = Math.floor(reads.length * 0.2);
-    const to = Math.ceil(reads.length * 0.8);
-    const middle = reads.slice(from, Math.max(from + 1, to));
+    // How many symbols this stretch of sound is carrying. A room with any
+    // reverb fills the guard between two tones, and the two then arrive as one
+    // long burst; dividing by the slot recovers both instead of losing one.
+    const parts = Math.max(1, Math.round(span / CHIRP_SLOT_MS));
 
-    const votes = new Map<number, number>();
-    for (const r of middle) {
-      if (r.symbol === null) continue;
-      votes.set(r.symbol, (votes.get(r.symbol) ?? 0) + r.aboveFloor);
-    }
-    let symbol = -1;
-    let bestScore = 0;
-    let total = 0;
-    for (const [s, score] of votes) {
-      total += score;
-      if (score > bestScore) {
-        bestScore = score;
-        symbol = s;
+    for (let k = 0; k < parts; k++) {
+      const from = startedAt + (span * k) / parts;
+      const to = startedAt + (span * (k + 1)) / parts;
+      // Trim the edges of each part: the fades and whatever the guard let
+      // through sit there, the steady tone sits in the middle.
+      const inset = (to - from) * 0.2;
+      const slice = reads.filter((r) => r.at >= from + inset && r.at <= to - inset);
+      const used = slice.length > 0 ? slice : reads.filter((r) => r.at >= from && r.at <= to);
+      if (used.length === 0) continue;
+
+      const votes = new Map<number, number>();
+      for (const r of used) {
+        if (r.symbol === null) continue;
+        votes.set(r.symbol, (votes.get(r.symbol) ?? 0) + r.aboveFloor);
       }
-    }
-    if (symbol < 0 || total <= 0) return;
+      let symbol = -1;
+      let bestScore = 0;
+      let total = 0;
+      for (const [sym, score] of votes) {
+        total += score;
+        if (score > bestScore) {
+          bestScore = score;
+          symbol = sym;
+        }
+      }
+      if (symbol < 0 || total <= 0) continue;
 
-    this.bursts.push({ symbol, startedAt, endedAt, quality: bestScore / total });
-    if (this.bursts.length > HISTORY) this.bursts.shift();
+      this.bursts.push({ symbol, startedAt: from, endedAt: to, quality: bestScore / total });
+      if (this.bursts.length > HISTORY) this.bursts.shift();
+    }
 
     this.tryDecode();
   }

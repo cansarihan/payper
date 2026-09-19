@@ -32,6 +32,7 @@ export function Overview({
       <div className="ov-top" style={{ gap: 28, padding: "24px 30px 30px" }}>
         <div style={{ display: "grid", gap: 22, alignContent: "start", minWidth: 0 }}>
           <div
+            data-tour="ov-score"
             style={{
               display: "grid",
               gridTemplateColumns: "auto minmax(0,1fr)",
@@ -91,7 +92,10 @@ export function Overview({
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 14 }}>
+          <div
+            data-tour="ov-kpi"
+            style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 14 }}
+          >
             <SettledCard label={d.kpiSettled} value={m.settledToday} onOpen={() => onGo("anchor")} />
             <SettledCard label={d.kpiPending} value={m.pendingAtMaturity} onOpen={() => onGo("board")} />
           </div>
@@ -113,6 +117,7 @@ export function Overview({
         </div>
 
         <div
+          data-tour="ov-cards"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(3,minmax(0,1fr))",
@@ -584,7 +589,7 @@ export function Overview({
           </div>
         </div>
 
-        <div style={{ borderRadius: 24, background: C.panel, overflow: "hidden" }}>
+        <div data-tour="ov-book" style={{ borderRadius: 24, background: C.panel, overflow: "hidden" }}>
           <div
             style={{
               display: "flex",
