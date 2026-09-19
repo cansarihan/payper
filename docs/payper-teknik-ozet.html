@@ -1,0 +1,409 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Urbanist', sans-serif; color: #0A0A0A; font-size: 10.2pt; line-height: 1.55; margin: 0; }
+  h1 { font-size: 30pt; font-weight: 600; letter-spacing: -.035em; line-height: 1.02; margin: 0 0 6pt; }
+  h2 { font-size: 16pt; font-weight: 700; letter-spacing: -.02em; margin: 20pt 0 7pt; padding-top: 9pt; border-top: 2px solid #0A0A0A; break-after: avoid; }
+  h3 { font-size: 11.5pt; font-weight: 700; margin: 13pt 0 5pt; break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+  li { margin-bottom: 3pt; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 8.4pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9pt; break-inside: avoid; }
+  th { text-align: left; font-weight: 700; border-bottom: 1.5px solid #0A0A0A; padding: 5pt 6pt 4pt; }
+  td { border-bottom: 1px solid #E4E4E0; padding: 5pt 6pt; vertical-align: top; }
+  .cover { background: #0A0A0A; color: #fff; margin: -18mm -16mm 0; padding: 40mm 16mm 22mm; break-after: page; }
+  .cover h1 { color: #fff; font-size: 40pt; }
+  .cover .mint { color: #3DE29C; }
+  .cover p { color: rgba(255,255,255,.72); font-size: 11.5pt; max-width: 135mm; }
+  .meta { margin-top: 16mm; display: flex; gap: 14mm; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 8.6pt; color: rgba(255,255,255,.55); }
+  .box { background: #F4F5F3; border-left: 3px solid #3DE29C; padding: 8pt 11pt; margin: 8pt 0 11pt; break-inside: avoid; }
+  .box.warn { border-left-color: #F5A524; }
+  .box.copy { background: #fff; border: 1px solid #D8D8D4; border-left: 3px solid #1E7CFF; }
+  .box h4 { margin: 0 0 4pt; font-size: 9.4pt; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #6A6A6A; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9pt; }
+  .card { border: 1px solid #E4E4E0; border-radius: 7pt; padding: 8pt 10pt; break-inside: avoid; }
+  .card b { display: block; font-size: 9.6pt; margin-bottom: 2pt; }
+  .card span { font-size: 8.8pt; color: #5A5A5A; }
+  .kpi { display: flex; gap: 8pt; flex-wrap: wrap; margin: 8pt 0 12pt; }
+  .kpi div { flex: 1 1 26mm; border: 1px solid #E4E4E0; border-radius: 7pt; padding: 7pt 9pt; }
+  .kpi b { display: block; font-size: 15pt; font-weight: 700; letter-spacing: -.02em; }
+  .kpi span { font-size: 8pt; color: #6A6A6A; }
+  .arch { font-family: 'JetBrains Mono', monospace; font-size: 7.6pt; line-height: 1.45; background: #0A0A0A; color: #E8E8E8; padding: 10pt 12pt; border-radius: 7pt; white-space: pre; overflow: hidden; break-inside: avoid; }
+  .arch .m { color: #3DE29C; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 7.4pt; font-weight: 600; padding: 1.5pt 5pt; border-radius: 3pt; background: #EDEDEA; margin-right: 3pt; }
+  .page { break-before: page; }
+  a { color: #1A8F63; text-decoration: none; }
+</style></head><body>
+<div class="cover">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;letter-spacing:.14em;color:#3DE29C;margin-bottom:10mm">
+    RISE IN × STELLAR PRO HACKATHON 2026 · GENESIS TRACK
+  </div>
+  <h1>payper<br><span class="mint">teknik özet ve teslim dosyası</span></h1>
+  <p>Türkiye'nin işletme sermayesi, her yerden fonlanabilir. Alıcısı zincir üstünde onaylamış bir
+  e-fatura, USDC tutan herkesin saniyeler içinde ve elli dolardan başlayarak fonlayabildiği bir
+  enstrümana dönüşüyor. Tedarikçiye aynı gün lira geçiyor; fonlayıcı hiçbir Türk bankasına
+  dokunmuyor.</p>
+  <div class="meta">
+    <span>payper.live</span>
+    <span>github.com/cansarihan/payper</span>
+    <span>Stellar testnet · protokol 28</span>
+    <span>Can Sarıhan · Berk Çiçek</span>
+  </div>
+</div>
+
+<h2>1 · Anlatısal "Neden"</h2>
+
+<h3>Ne inşa ediyoruz</h3>
+<p>Zincir üstü alacak finansmanı. Tedarikçi vadeli e-faturasını yüklüyor, alıcı zincir üstünde
+onaylıyor, fatura fonlanabilir bir enstrümana dönüşüyor. İskonto oranı zincirden okunan verilerle
+hesaplanıyor, para SEP-6 anchor üzerinden lira olarak bankaya iniyor, vadede alıcı ödüyor ve kontrat
+fonlayıcılara oransal dağıtıyor.</p>
+
+<h3>Hangi sorunu çözüyor</h3>
+<p>Türk KOBİ'si malı gönderiyor, maaşı ödüyor, parayı üç ay sonra alıyor. Bu açığı faktoring
+kapatıyor — Türkiye'de 2025'te <b>1,875 trilyon ₺</b> hacim, yaklaşık <b>95.000 müşteri</b>, çoğunluğu
+KOBİ. Yani talep kanıtlanmış bir pazar.</p>
+<p><b>Bağlayıcı kısıt talep değil, arz.</b> Türkiye'de faktoring sermayesi banka sermayesidir; bir
+faktoring şirketi ancak kendi bilançosunun ve banka limitlerinin izin verdiği kadar avans verebilir.
+Aynı riski aynı fiyata seve seve alacak yurt dışındaki bir fonlayıcı oraya ulaşamıyor — sırf mevzuat
+yüzünden değil, muhabir bankacılığı, kur dönüşümünü ve mutabakatı ekonomik kılacak bilet
+büyüklüğünün altında altyapı hiç yok.</p>
+
+<h3>Hedef kullanıcılar</h3>
+<table>
+  <tr><th style="width:24mm">Taraf</th><th>Kim</th><th>Ne kazanıyor</th></tr>
+  <tr><td><b>Tedarikçi</b></td><td>Tek bir büyük kurumsal alıcıya vadeli fatura kesen KOBİ. Perakende,
+  otomotiv yan sanayi, inşaat malzemesi. Fatura 50.000–500.000 ₺, vade 30–120 gün.</td>
+  <td>Parayı doksan gün sonra değil bugün, TL olarak banka hesabında alıyor.</td></tr>
+  <tr><td><b>Alıcı</b></td><td>Faturayı ödeyen kurumsal firma.</td>
+  <td>Vadesi değişmiyor, ek maliyeti yok; tek imzayla tedarik zincirini güçlendiriyor.</td></tr>
+  <tr><td><b>Fonlayıcı</b></td><td>USDC tutan herhangi biri. Türk banka hesabı, TL hesabı ve
+  yerleşiklik gerekmiyor.</td>
+  <td>Onaylanmış bir alacağa dayalı, kripto piyasasıyla ilintisiz getiri. Elli dolardan başlayarak.</td></tr>
+</table>
+
+<h3>Değer önerisi</h3>
+<div class="grid2">
+  <div class="card"><b>Havuzu açıyoruz</b><span>Faktoring şirketinin tavanı bilançosudur.
+  Burada fonlayıcı, USDC tutan herkes — beş saniyede, elli dolarlık biletle.</span></div>
+  <div class="card"><b>Fiyat doğrulanabilir</b><span>İskonto bizim söylediğimiz sayı değil,
+  <code>quote()</code>'un döndürdüğü hesap. Fonlayıcı kontratı kendi çağırır, aynı sonucu alır.</span></div>
+  <div class="card"><b>Para ile vaat aynı işlemde</b><span><code>fund()</code> USDC'yi taşırken
+  alacağı da yazıyor. <code>repay()</code> biz olmadan çalışıyor.</span></div>
+  <div class="card"><b>Bir ETTN, bir finansman</b><span>Kimlik vergi idaresinden geliyor;
+  tekillik miras alınıyor. İkinci kayıt kontratça reddediliyor.</span></div>
+</div>
+
+<div class="box warn">
+  <h4>Dürüst çerçeve</h4>
+  Tekillik kontrolü manşet değil, hijyen maddesidir. Türkiye'de lisanslı kurumlar için KKB'nin Fatura
+  Kayıt Sistemi zaten bu işi yapıyor. Bizim kontratımızın kattığı şey, <b>o perimetrenin dışından gelen
+  sermayeye aynı garantiyi üyelik gerektirmeden vermesi</b> — ki ürünün bütün amacı dışarıdan sermaye
+  getirmek.
+</div>
+
+<h2 class="page">2 · MVP · teslim kalemleri</h2>
+<table>
+  <tr><th style="width:52mm">İstenen</th><th>Durum</th></tr>
+  <tr><td>Herkese açık GitHub deposu</td><td><code>github.com/cansarihan/payper</code> — açık, iki
+  ortak yazar</td></tr>
+  <tr><td>İyi yapılandırılmış README</td><td>Beş dakikada değerlendirme bölümüyle başlıyor; mimari,
+  tasarım kararları, teknik zorluklar ve <b>Honest limitations</b> bölümü dahil</td></tr>
+  <tr><td>Stellar Testnet'te akıllı sözleşme</td><td>Dört kontrat deploy edildi, aşağıda adresleriyle</td></tr>
+  <tr><td>Ön uç / uygulama URL'si</td><td><code>payper.live</code> — kendi sunucumuz, Cloudflare Tunnel</td></tr>
+  <tr><td>Çalışır canlı demo</td><td>Jüri panele girip fatura yükleyebiliyor, teklif alabiliyor,
+  fonlayabiliyor, kapatabiliyor. Her adım testnet'e gerçek işlem yazıyor</td></tr>
+  <tr><td>Belgelenmiş kontrat kimlikleri</td><td>README'de <b>Deployed artifacts</b> tablosu, hepsi
+  stellar.expert linkli</td></tr>
+  <tr><td>Soroban SDK</td><td>27.0.6, <code>wasm32v1-none</code>, protokol 28</td></tr>
+</table>
+
+<h3>Deploy edilmiş kontratlar · Stellar testnet</h3>
+<table>
+  <tr><th style="width:38mm">Kontrat</th><th>Adres</th></tr>
+  <tr><td>Fatura kontratı</td><td class="mono">CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB</td></tr>
+  <tr><td>Hazine adaptörü</td><td class="mono">CD4ZFOAZ7HZMGN7YX7TIW6M45QGFGH2RI56YDZAPSIFT3TYH65Q5SDNF</td></tr>
+  <tr><td>DeFindex vault</td><td class="mono">CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP</td></tr>
+  <tr><td>Hazine, yerel yedek</td><td class="mono">CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI</td></tr>
+  <tr><td>TRY/USD beslemesi</td><td class="mono">CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC</td></tr>
+  <tr><td>USDC (SAC)</td><td class="mono">CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA</td></tr>
+  <tr><td>Anchor</td><td class="mono">tr-mock-anchor.fly.dev</td></tr>
+</table>
+
+<div class="kpi">
+  <div><b>2.262</b><span>satır Rust · 9 dosya</span></div>
+  <div><b>15.416</b><span>satır TS/TSX · 82 dosya</span></div>
+  <div><b>22</b><span>kontrat testi</span></div>
+  <div><b>20</b><span>API route</span></div>
+  <div><b>14</b><span>panel ekranı</span></div>
+  <div><b>7</b><span>SEP standardı</span></div>
+</div>
+<h2 class="page">3 · Teknik dokümantasyon</h2>
+
+<h3>Genel mimari</h3>
+<div class="arch">┌─ TARAYICI ────────────────────────────────────────────────────────────────┐
+│  Next.js 15 App Router · React 19 · Urbanist/JetBrains Mono                │
+│  <span class="m">payper.live/</span>        pazarlama · scroll ile sürülen bölümler                 │
+│  <span class="m">payper.live/app</span>     panel · 14 ekran · TR/EN                               │
+│  <span class="m">payper.live/listen</span>  telefon · mikrofon + FFT ile sesli ödeme               │
+│  Stellar Wallets Kit 2.6 · WebAuthn · Web Audio · qrcode                   │
+└────────────────────────────┬──────────────────────────────────────────────┘
+                             │  fetch · httpOnly oturum çerezi
+┌─ SUNUCU (Node, tek kalıcı süreç) ─────────────────────────────────────────┐
+│  20 route handler — anahtarların kullanıldığı tek yer                      │
+│  guard.ts       rol kapısı · operatör kapısı · sabit pencere rate limit    │
+│  lib/ubl        UBL-TR ayrıştırma · XAdES yapısal kontrol · belge hash     │
+│  lib/anchor     SEP-1 keşif · SEP-10 · SEP-12 · SEP-38 · SEP-6 · dilimleme │
+│  lib/soroban    okuma/yazma · i128 kodlama · hata atfı                     │
+│  lib/auth       oturum · challenge · SEP-53 · passkey türetimi             │
+└──────────┬─────────────────────────────────────┬──────────────────────────┘
+           │ Soroban RPC                         │ HTTPS
+┌─ STELLAR TESTNET ──────────────┐   ┌─ ANCHOR ──────────────────────────────┐
+│  invoice                       │   │  tr-mock-anchor.fly.dev               │
+│   register · acknowledge       │   │  stellar.toml → uç noktalar           │
+│   quote · accept_quote         │   │  SEP-6 withdraw  → USDC'den TL'ye     │
+│   fund · repay · mark_default  │   │  SEP-6 deposit   → TL'den USDC'ye     │
+│   deposit_first_loss           │   │  SEP-38 kesin teklif · SEP-12 KYC     │
+│        │                │      │   └───────────────────────────────────────┘
+│        ▼                ▼      │
+│  treasury_defindex   fx_oracle │
+│   → DeFindex vault    SEP-40   │
+│     (paltalabs)       30 ECB   │
+│                       kapanışı │
+└────────────────────────────────┘</div>
+
+<h3>Ana bileşenler ve sorumlulukları</h3>
+<table>
+  <tr><th style="width:42mm">Bileşen</th><th>Sorumluluk</th></tr>
+  <tr><td class="mono">contracts/invoice</td><td>ETTN tekilliği, kayıt, onay, fiyatlama, teklif kilidi,
+  fonlama, kapanış, temerrüt ve rücu, whitelist, ilk zarar tamponu</td></tr>
+  <tr><td class="mono">contracts/treasury_defindex</td><td>Hazineyi DeFindex vault'u ile destekler;
+  pozisyonu vault payı olarak tutar, vault'un gerçekleşmiş oranını raporlar</td></tr>
+  <tr><td class="mono">contracts/treasury_local</td><td>Aynı adaptör arayüzünün düz USDC karşılığı —
+  vault erişilemezse ürün yine çalışsın diye</td></tr>
+  <tr><td class="mono">contracts/fx_oracle</td><td>SEP-40 biçimli TRY/USD beslemesi, 30 gerçek ECB
+  kapanışıyla tohumlanmış</td></tr>
+  <tr><td class="mono">src/lib/ubl</td><td>UBL-TR ayrıştırma, XAdES yapısal kontrolü, belge hash'i</td></tr>
+  <tr><td class="mono">src/lib/anchor</td><td>SEP-1 keşif, SEP-10 kimlik, SEP-38 teklif, SEP-6 transfer,
+  anchor limitlerine göre dilimleme</td></tr>
+  <tr><td class="mono">src/lib/chirp*.ts</td><td>Sesli ödeme çerçevesi: 16 ton, 5 sembollük senkron
+  dizisi, CRC-8; alıcıda 4096 noktalı FFT ve yuva örnekleme</td></tr>
+  <tr><td class="mono">src/lib/server/guard.ts</td><td>Rol tabanlı erişim, operatör kapısı, rate limit</td></tr>
+</table>
+
+<h3>Stellar entegrasyonları ve protokoller</h3>
+<table>
+  <tr><th style="width:30mm">Teknoloji</th><th>Nerede kullanılıyor</th></tr>
+  <tr><td><b>Soroban</b> SDK 27.0.6</td><td>Dört kontrat, <code>wasm32v1-none</code>, protokol 28.
+  Üç depolama katmanı da kullanılıyor: <code>instance</code> yapılandırma, <code>persistent</code> ETTN
+  kaydı (TTL maksimuma çekilir), <code>temporary</code> teklif kilidi (kendiliğinden düşer)</td></tr>
+  <tr><td><b>DeFindex</b></td><td>Hazine, kendi factory'leri üzerinden açılmış bir vault. Katkı vault
+  payına dönüşüyor, ödeme payı yakıyor</td></tr>
+  <tr><td><b>Reflector</b> · SEP-40</td><td>Kur beslemesi bu oracle arayüzüyle, yapılandırılabilir bir
+  adresten okunuyor</td></tr>
+  <tr><td><b>SEP-1</b></td><td>Anchor keşfi. Tüm uç noktalar çalışma anında okunuyor</td></tr>
+  <tr><td><b>SEP-6</b></td><td>Programatik yatırma ve çekme, çift yönlü</td></tr>
+  <tr><td><b>SEP-10</b></td><td>Challenge kimlik doğrulama, imzadan önce doğrulanıyor</td></tr>
+  <tr><td><b>SEP-12</b></td><td>Müşteri kaydı</td></tr>
+  <tr><td><b>SEP-38</b></td><td>Kesin teklif — gösterilen ödeme, ödenen ödeme olsun diye</td></tr>
+  <tr><td><b>SEP-7</b></td><td>QR'daki ödeme URI'si; tonların taşıdığı isteği herhangi bir cüzdan okuyabilsin</td></tr>
+  <tr><td><b>SEP-53</b></td><td>Cüzdan girişi için imzalı mesajlar; spec'in kendi test vektörleriyle doğrulanıyor</td></tr>
+</table>
+
+<h3>Kullanılan teknoloji yığını</h3>
+<p>
+<span class="tag">Rust</span><span class="tag">soroban-sdk 27.0.6</span><span class="tag">wasm32v1-none</span>
+<span class="tag">TypeScript 6</span><span class="tag">Next.js 15 App Router</span><span class="tag">React 19</span>
+<span class="tag">@stellar/stellar-sdk 17</span><span class="tag">Stellar Wallets Kit 2.6</span>
+<span class="tag">@simplewebauthn 14</span><span class="tag">fast-xml-parser</span><span class="tag">qrcode</span>
+<span class="tag">Web Audio API</span><span class="tag">WebAuthn</span><span class="tag">Urbanist</span>
+<span class="tag">JetBrains Mono</span><span class="tag">Debian 13</span><span class="tag">systemd</span>
+<span class="tag">Cloudflare Tunnel</span><span class="tag">tsx</span>
+</p>
+<h3 class="page">Fiyatlama · projenin kalbi</h3>
+<p>İskonto dört bileşenden oluşuyor, ikisi her çağrıda zincirden okunuyor. Her bileşen kaynağını da
+döndürüyor — yedeğe düşen bir sayı canlı diye sunulamıyor.</p>
+<table>
+  <tr><th style="width:34mm">Bileşen</th><th style="width:44mm">Kaynak</th><th>Canlı deploymentte</th></tr>
+  <tr><td>Fonlama getirisi</td><td>Hazine APY'si, vadeye ölçekli</td><td><code>fallback</code> · 195 bps</td></tr>
+  <tr><td>Kur riski</td><td>TRY/USD beslemesinde gözlenen hareket</td><td><b>live</b> · 723 bps
+  (29 günlük pencerede 203 bps sapma, 201 bps bant)</td></tr>
+  <tr><td>Kredi primi</td><td>Parametre</td><td>120 bps</td></tr>
+  <tr><td>Platform ücreti</td><td>Parametre</td><td>50 bps</td></tr>
+  <tr><td><b>Toplam</b></td><td></td><td><b>1.088 bps · 89 günde %10,88 · yıllık ~%44,6</b></td></tr>
+</table>
+<p>Kur primi varsayılan bir katsayı değil: oracle'dan 30 gerçek kapanış okunuyor, liranın o pencerede
+fiilen ne kadar değer kaybettiği ölçülüp vadeye projekte ediliyor, bandın yarısı oynaklık payı olarak
+ekleniyor, sonuç taban ve tavana kıstırılıyor.</p>
+
+<h3>Önemli tasarım kararları ve ödünleşmeler</h3>
+<table>
+  <tr><th style="width:44mm">Karar</th><th>Gerekçe ve ödünleşme</th></tr>
+  <tr><td><b>SEP-24 değil SEP-6</b></td><td>Programatik transfer, iskonto kırılımının bizim arayüzümüzde
+  kalmasını sağlıyor — ve o kırılım ürünün kendisi. Anchor'ın barındırdığı bir SEP-24 akışı onu
+  gösteremezdi. Ödünleşme: KYC ve banka adımlarını biz sürüyoruz.</td></tr>
+  <tr><td><b>Hazine adaptörün arkasında</b></td><td>Fatura kontratı dört fonksiyon biliyor
+  (<code>apy_bps</code>, <code>deposit</code>, <code>withdraw</code>, <code>total_assets</code>), ardındakini
+  bilmiyor. İki uygulama var: DeFindex vault'u ve düz USDC. Tek <code>set_config</code> ile değişiyor.
+  Ödünleşme: bir katman dolaylılık ve teklif başına ek bir kontratlar-arası çağrı.</td></tr>
+  <tr><td><b>Kendi vault'umuz</b></td><td>DeFindex'in yayımlanmış testnet vault'u, anchor'ımızın ihraç
+  ettiğinden farklı bir USDC ile çalışıyor; ikisi birbirinin yerine geçmiyor. Ürünü vault'un etrafında
+  yeniden tanımlamak yerine kendi USDC'mizle factory üzerinden vault açtık. Entegrasyon çift yönlü
+  gerçek. Olmayan şey: bu varlık için strateji yok, yani vault parayı tutuyor ama kazanmıyor.
+  <b>Bilinçli takas: hiçbir şey raporlamayan gerçek bir entegrasyon, arkasında pozisyon olmayan bir
+  sayıya yeğlenir.</b></td></tr>
+  <tr><td><b>Teklifler süresini kendi doluyor</b></td><td>Kilit <code>temporary</code> depolamaya
+  <code>quote_ttl</code> TTL'iyle yazılıyor; süpürme işi ya da kimsenin kontrol etmesi gereken bir zaman
+  damgası yok. Pencere 24 saat: birkaç fonlayıcıdan dolan bir tura göre ölçülendi, SEP-38'in on dakikalık
+  kur geçerliliğine göre değil.</td></tr>
+  <tr><td><b>Kaynak etiketleri</b></td><td>Her fiyat bileşeni <code>Source</code> döndürüyor. Ölçemediğinde
+  adaptör bilerek hata veriyor ki fatura kontratı <code>fallback</code> etiketlesin — parametre bir sayının
+  canlı rozetiyle gelmesindense.</td></tr>
+</table>
+
+<h3>Teknik zorluklar ve çözümleri</h3>
+<table>
+  <tr><th style="width:44mm">Zorluk</th><th>Çözüm</th></tr>
+  <tr><td><b>Kontratlar arası yetkilendirme</b></td><td>Hazine, token'ı fatura kontratının bir kare
+  derinliğinde taşıyor. <code>env.authorize_as_current_contract()</code> ile yalnız o alt çağrı,
+  yalnız o tutar için yetkilendiriliyor.</td></tr>
+  <tr><td><b>DeFindex vault'u <code>transfer_from</code> değil <code>transfer</code> kullanıyor</b></td>
+  <td>İlk adaptör allowance veriyordu ve <code>Auth, InvalidAction</code> ile geri dönüyordu. Vault'un
+  çekişini aynı <code>authorize_as_current_contract</code> kalıbıyla açıkça yetkilendirdik. Yatırma ve
+  çekme testnet'te gerçek parayla doğrulandı.</td></tr>
+  <tr><td><b>Anchor transfer limitleri</b></td><td>Anchor tek transferde 3.000 ₺ üst sınır ve 50 ₺ alt
+  sınır koyuyor. Dilimleyici iki kez kırıldı: açgözlü doldurma alt sınırın altında artık bırakıyordu,
+  eşit bölme ise artığı son parçaya yığıp üst sınırı aşıyordu. Parçaları yukarı yuvarlayıp eksiği sona
+  bırakan sürüm 1.823 farklı tutarda tarandı, hepsi geçiyor.</td></tr>
+  <tr><td><b>SEP-38 ile SEP-6 varlık adlandırması</b></td><td>SEP-38 <code>stellar:USDC:ISSUER</code>
+  ve <code>iso4217:TRY</code> istiyor; SEP-6'nın exchange uçları ise çıplak <code>USDC</code> ama fiat
+  için yine <code>iso4217:TRY</code>. Üç ayrı 400 hatasıyla bulundu, istemcide kalıcı olarak ayrıldı.</td></tr>
+  <tr><td><b>Token hatalarının atfı</b></td><td>Alt kontratların hata kodları bizimkilerle çakışıyor.
+  Hata adı önce tanı metninden çözülüyor, ancak sonra koda düşülüyor.</td></tr>
+  <tr><td><b>iOS'ta sesli ödeme</b></td><td>iPhone hiç sembol yakalamıyordu. İki sebep: AudioContext
+  <code>getUserMedia</code>'dan sonra yaratılıyordu ve iOS kullanıcı hareketi iznini <code>await</code>
+  üzerinden taşımadığı için context <code>suspended</code> kalıyordu; ayrıca sabit eşik telefonun
+  yükselttiği gürültü tabanına takılıyordu. Context artık ilk <code>await</code>'ten önce yaratılıp
+  resume ediliyor, eşik ise tonlar arası kovalardan ölçülen gürültü tabanına göre uyarlanıyor.</td></tr>
+  <tr><td><b>Next.js route handler yalıtımı</b></td><td>Route handler'lar ayrı bundle'lanıyor; modül
+  düzeyindeki durum paylaşılmıyor. Challenge deposu, rate limiter ve oturum sırrı
+  <code>globalThis</code> üzerinde tutuluyor — bu yüzden dağıtım tek kalıcı süreç gerektiriyor.</td></tr>
+</table>
+
+<h3>Test</h3>
+<table>
+  <tr><th style="width:44mm">Komut</th><th>Kapsam</th></tr>
+  <tr><td class="mono">npm run smoke</td><td>Uçtan uca akış, testnet'e gerçek işlemler. Son adımda aynı
+  ETTN'i tekrar kaydetmeyi dener ve kontrat reddeder</td></tr>
+  <tr><td class="mono">npm run test:contracts</td><td>22 kontrat testi</td></tr>
+  <tr><td class="mono">npm run test:ubl</td><td>Belge doğrulayıcı</td></tr>
+  <tr><td class="mono">npm run test:tranche</td><td>Anchor transfer dilimleyicisi, 1.823 tutar</td></tr>
+  <tr><td class="mono">npm run test:sep53</td><td>İmzalı mesajlar, spec'in kendi vektörleriyle</td></tr>
+  <tr><td class="mono">npm run test:auth</td><td>Giriş, saldırgan tarafından</td></tr>
+  <tr><td class="mono">npm run test:chirp</td><td>Sesli ödeme çerçevesi, 2.000 rastgele yük</td></tr>
+</table>
+
+<h3>Dürüst sınırlılıklar</h3>
+<p>README'de gömülü değil, kendi bölümünde duruyor. Jüri sormadan biz söylüyoruz.</p>
+<div class="box warn">
+  <h4>Kapanmamış üç açık</h4>
+  <b>Kur riskini henüz kimse taşımıyor.</b> <code>repay()</code> sabit <code>face_usdc</code> çekiyor,
+  alıcı ise sabit lira borçlu. Doksan günde ikisi uyuşmayı bırakıyor ve kontrat farkı kimin soğurduğunu
+  söylemiyor. Kur primi riski fiyatlıyor, atamıyor.<br><br>
+  <b>Fonlayıcının hakkının hukuki kabı yok.</b> Kontrat temlik değil, ödeme üzerinde oransal katılım
+  yaratıyor. Menkul kıymet mevzuatı açısından ne olduğu ülkeye göre değişen açık bir soru.<br><br>
+  <b>Uydurma fatura kontrollerimizden geçer.</b> Yapıyı doğruluyoruz, varlığı değil. Kapı
+  <code>acknowledge()</code> — faturada yazılı adres imzalamak zorunda. Durdurmadığı şey muvazaa;
+  buna karşı bugünkü sürtünme anchor KYC'si, rücu ve whitelist eşiği, hiçbiri kriptografik değil.
+</div>
+<p>Ayrıca: imza yapısal olarak kontrol ediliyor, GİB sertifika zincirine karşı değil; banka bacağı
+sandbox; testnet beslemesini biz yayımlıyoruz; demo girişi anahtarı sunucuda tutuyor;
+<b>fonlama işlemleri her durumda sunucudaki anahtarla imzalanıyor</b> — yani telefonda Freighter
+gerekmiyor, ama bu aynı zamanda gerçek bir üründe değişmesi gereken bir şey.</p>
+<h2 class="page">4 · Sunum</h2>
+<p>Resmi Stellar Pro Hackathon sunum şablonu kullanılacak; yapısı bozulmayacak. Aşağıdaki metinler
+şablonun ilgili slaytlarına doğrudan yapıştırılabilir.</p>
+
+<div class="box copy">
+  <h4>Tek cümlelik konumlandırma</h4>
+  Türkiye'nin işletme sermayesi, her yerden fonlanabilir. Alıcısı zincir üstünde onaylamış bir
+  e-fatura, USDC tutan herkesin saniyeler içinde ve elli dolardan başlayarak fonlayabildiği bir
+  enstrümana dönüşüyor.
+</div>
+
+<div class="box copy">
+  <h4>Problem</h4>
+  Türk KOBİ'si malı gönderiyor, maaşı ödüyor, parayı üç ay sonra alıyor. Bu açığı kapatan faktoring
+  pazarı 2025'te 1,875 trilyon ₺ ve ~95.000 müşteri — talep kanıtlanmış. Bağlayıcı kısıt arz: faktoring
+  sermayesi Türk bankalarının bilançosunda kilitli ve dışarıdaki sermayenin oraya ulaşacak altyapısı yok.
+</div>
+
+<div class="box copy">
+  <h4>Çözüm</h4>
+  Alıcının zincir üstündeki onayı alacağı gerçek kılıyor. İskonto dört bileşenden hesaplanıyor, ikisi
+  her çağrıda zincirden okunuyor ve her biri kaynağını söylüyor. Sermaye DeFindex vault'unda tur dolarken
+  bekliyor, ödeme SEP-6 ile lira olarak bankaya iniyor, vadede kontrat fonlayıcılara oransal dağıtıyor.
+</div>
+
+<div class="box copy">
+  <h4>"Neden blockchain" sorusuna cevap</h4>
+  Faktoringdeki tekillik kontrolünü bir veritabanı da yapar — Türkiye'de KKB zaten yapıyor. Zincirin
+  yaptığı üç şey var: <b>(1)</b> fonlayıcı kitlesini açıyor — faktoring şirketinin tavanı bilançosudur,
+  burada USDC tutan herkes elli dolarla fonlayabiliyor; <b>(2)</b> fiyat bize sorulmadan doğrulanabiliyor,
+  fonlayıcı <code>quote()</code>'u kendi çağırıyor; <b>(3)</b> vadede ödeyen biz değiliz, <code>repay()</code>
+  biz batsak da çalışıyor. UBL ayrıştırma, KYC ve banka bacağı klasik yazılım — oraya zincir sokmadık.
+</div>
+
+<div class="box copy">
+  <h4>Demo akışı · 3 dakika</h4>
+  1 · Fatura yükle — ETTN zincire yazılıyor, aynı ETTN'li ikinci belge reddediliyor<br>
+  2 · Alıcı onaylıyor — yalnız faturadaki adres çağırabiliyor<br>
+  3 · Teklif — dört bileşen, kur <code>live</code>, 29 günlük pencere ve sapma ekranda<br>
+  4 · Fonlama — katkı DeFindex vault'una giriyor, vault payı alınıyor<br>
+  5 · <b>Sesle ödeme</b> — laptop tonları çalıyor, telefon QR ile <code>/listen</code>'a girip duyuyor,
+  CRC doğrulanıyor, telefondan fonluyor<br>
+  6 · Anchor — SEP izi istek istek görünüyor, TL banka hesabına iniyor<br>
+  7 · Kapanış — alıcı ödüyor, oransal dağıtım; ya da temerrüt şelalesi
+</div>
+
+<h3>Rekabet konumu · SCF verisi</h3>
+<p>557 fonlanmış SCF projesi, toplam 55,1 milyon dolar. Kategori yoğunluğu:</p>
+<table>
+  <tr><th style="width:52mm">Kategori</th><th>Fonlanmış proje</th><th>Dağıtılan</th><th>Turlar</th></tr>
+  <tr><td>Remittance / kur dönüşümü</td><td>39</td><td>$4,81M</td><td>2'den 43'e, kesintisiz</td></tr>
+  <tr><td><b>Fatura / alacak finansmanı</b></td><td><b>4</b></td><td>$553k</td><td>16 · 26–29 · <b>37 · 37</b></td></tr>
+</table>
+<p>Alan doğrulanmış ama kalabalıklaşmamış; iki proje aynı turda (37) fonlanmış, yani SCF'in yeni ilgi
+alanı. Dördü de — Airswift, BorderDollar, Rivool Finance, Indentura — devlet tarafından verilen bir
+kimliğe bağlanmıyor, fiyat bileşenlerini kaynağıyla etiketlemiyor ve çift yönlü yerel para kanalı
+taşımıyor.</p>
+
+<h3>Ekip ve bileşen sahipliği</h3>
+<table>
+  <tr><th style="width:34mm">Kişi</th><th>Üstlendiği</th></tr>
+  <tr><td><b>Berk Çiçek</b></td><td>Kontratlar, UBL doğrulayıcı, README</td></tr>
+  <tr><td><b>Can Sarıhan</b></td><td>Anchor entegrasyonu, kimlik, API katmanı, panel ekranları</td></tr>
+</table>
+
+<h3>Hackathondan sonra</h3>
+<ul>
+  <li>Kur riskinin taşıyıcısını modelle: ya alıcı lira cinsinden yükümlü kalıp platform hedge eder,
+  ya da fonlayıcının alacağı liraya endekslenir</li>
+  <li>GİB doğrulaması — belge hash'i zaten zincirde, doğrulama sonradan eklenebilir</li>
+  <li>VKN ↔ adres bağı, muvazaayı kriptografik olarak da zorlaştırmak için</li>
+  <li>Getiri üreten bir strateji: bu varlık için bir DeFindex stratejisi ya da likiditesi olan bir USDC'ye geçiş</li>
+  <li>Soroban akıllı hesabı ile passkey imzasını zincire taşımak (secp256r1)</li>
+  <li>Fatura listelemesi için indeksleyici; sıralı tarama demo defteri için doğru, gerçeği için değil</li>
+</ul>
+
+<div class="box">
+  <h4>Bağlantılar</h4>
+  Canlı uygulama · <b>payper.live</b><br>
+  Depo · <b>github.com/cansarihan/payper</b><br>
+  Fatura kontratı · <b>stellar.expert/explorer/testnet/contract/CCKQOROL…OYCNB</b><br>
+  Telefon dinleyicisi · <b>payper.live/listen</b>
+</div>
+</body></html>
