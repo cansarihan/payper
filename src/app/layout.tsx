@@ -4,16 +4,16 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 const DESCRIPTION =
-  "Türk KOBİ'si vadeli e-faturasını yükler, alıcı zincir üstünde onaylar, para bugün TL olarak banka hesabına geçer. Soroban ve SEP-6 anchor üzerine kurulu.";
+  "A supplier uploads a term e-invoice, the buyer acknowledges it on chain, and the money arrives the same day as fiat in a bank account. Built on Soroban with a SEP-6 anchor.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.PUBLIC_SITE_URL ?? "https://payper.live"),
-  title: "Payper · zincir üstü alacak finansmanı",
+  title: "Payper · on-chain receivable financing",
   description: DESCRIPTION,
   openGraph: {
-    title: "Payper · zincir üstü alacak finansmanı",
+    title: "Payper · on-chain receivable financing",
     description: DESCRIPTION,
-    locale: "tr_TR",
+    locale: "en",
     type: "website",
   },
 };
@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="tr">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

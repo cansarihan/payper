@@ -1,0 +1,363 @@
+# Payper
+
+**On-chain receivable financing for Turkish SMEs.** A supplier uploads a term
+e-invoice, the buyer acknowledges it on chain, and the supplier is paid today in
+Turkish lira. At maturity the buyer pays and the contract distributes to funders.
+
+Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
+
+**Live:** [payper.live](https://payper.live) · **Contract:**
+[`CCKQOROL…OYCNB`](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB)
+
+---
+
+## Evaluating this in five minutes
+
+```bash
+npm install
+npm run build && npm start        # http://localhost:3000
+npm run smoke                     # the whole flow against testnet
+npm run test:contracts            # 22 contract tests
+npm run test:ubl                  # document validator
+npm run test:tranche              # anchor transfer splitter
+npm run test:sep53                # signed messages, against the spec's vectors
+npm run test:auth                 # login, from the attacker's side
+```
+
+`npm run smoke` is the one to run. It registers an invoice, has the buyer
+acknowledge it, reads a live price, funds it from two funders who buy USDC
+through the anchor first, settles at maturity, distributes pro rata, and then
+tries to register the same ETTN again — which the contract refuses. Every step
+is a real transaction on testnet.
+
+What to look for, in order:
+
+| | Where | What it shows |
+|---|---|---|
+| 1 | `npm run smoke`, final step | The same ETTN is refused. This is the product's one invariant |
+| 2 | `npm run smoke`, step 3 | Both pricing components report `live` — read from chain, not configured |
+| 3 | Dashboard → Anchor | The SEP trace, request by request, with the status the anchor returned |
+| 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB) | The transactions the run just wrote |
+
+Known limitations are in [Honest limitations](#honest-limitations), not buried.
+
+---
+
+## The problem
+
+A Turkish SME issues an invoice with 60 to 120 days of terms. The goods have
+shipped and the wages are paid, but the money arrives in three months. The gap
+is closed by factoring: a bank or factor advances the cash and takes a discount.
+
+That market is large and established. Turkey had **4,016,059 active enterprises
+in 2025, of which 99.6% are SMEs** (TÜİK), and the factoring sector turned over
+**1.875 trillion TRY across roughly 95,000 customers in 2025**, mostly SMEs. This
+is not a market that needs convincing — it is one that already pays.
+
+What it does not have is a price anyone can check. Factoring cost is
+**interest + commission + 5% BSMV**, quoted per deal at a desk. There is no
+published rate and no reference to compare against.
+
+Two structural problems follow:
+
+1. **The same receivable can be sold twice.** The expensive fraud in factoring
+   is financing one invoice at two institutions. Preventing it depends on each
+   factor's own records.
+2. **The discount is asserted, not derived.** The customer has no way to tell
+   what part of the rate is the cost of money, what part is currency risk, and
+   what part is margin.
+
+## What Payper does
+
+**One ETTN, one financing.** The ETTN is the universally unique identifier on
+every Turkish e-invoice. Its hash is written to the contract at registration,
+and a second registration is refused before anything else happens — not by a
+database row, but by a contract invariant.
+
+**The price is computed, not quoted.** Four components, two of them read from
+chain on every call:
+
+| Component | Source | On the live deployment |
+|---|---|---|
+| Funding yield | Treasury strategy APY, scaled to tenor | **live** · 195 bps |
+| Currency risk | Observed move in the TRY/USD feed | **live** · 723 bps |
+| Credit premium | Parameter | 120 bps |
+| Platform fee | Parameter | 50 bps |
+
+That is 10.88% over 89 days, about 44.6% annualised. Each component carries its
+provenance, so a number that fell back to a parameter cannot be presented as
+live — the interface labels it.
+
+**The money reaches a bank account.** The supplier's USDC is sold for lira
+through a SEP-6 anchor and the buyer settles in lira at maturity. Both
+directions run against a real anchor.
+
+## Who it is for
+
+Suppliers invoicing a single large corporate buyer — organised retail, automotive
+sub-industry, construction materials. Invoices of 50,000 to 500,000 TRY on 30 to
+120 day terms.
+
+The buyer's acknowledgement is the lock: it is what makes the receivable real to
+a funder, and it is also the distribution channel. One corporate buyer brings
+its suppliers with it.
+
+## Where this sits in the Stellar ecosystem
+
+Receivables financing on Stellar is an established category, not an empty one.
+The Stellar Community Fund has backed four projects in it:
+
+| Project | SCF round | Awarded |
+|---|---|---|
+| Airswift | 16 | $150,000 |
+| BorderDollar | 26, 29 | $133,000 |
+| Indentura | 37 | $120,000 |
+| Rivool Finance | 37 | $150,000 |
+
+Roughly $553,000 across rounds 16 to 37. The category is validated; the question
+is what is different here.
+
+Payper binds financing to a **national e-invoice identifier**. The ETTN is issued
+by the Turkish Revenue Administration and is unique per document, so uniqueness
+is inherited from the tax system rather than maintained by the platform. The
+published descriptions of the projects above centre on tokenising and
+fractionalising receivables; none describes enforcing single-financing against a
+government-issued document identifier.
+
+The second difference is pricing. Payper derives the discount from live on-chain
+inputs and labels the provenance of each component, rather than setting a rate.
+
+---
+
+## Architecture
+
+```
+                    ┌─────────────────────────────────────┐
+  UBL-TR e-invoice  │  Next.js — route handlers hold the  │
+  ────────────────► │  keys; the client holds no chain    │
+                    │  logic and renders /api/state       │
+                    └──────────┬──────────────┬───────────┘
+                               │              │
+                  ┌────────────▼───┐   ┌──────▼──────────────┐
+                  │  Soroban       │   │  SEP client         │
+                  │                │   │  1 · 10 · 12 · 38   │
+                  │  invoice ──────┼──►│  · 6                │
+                  │   │            │   │                     │
+                  │   ├─ treasury  │   │  discovery at run   │
+                  │   └─ fx_oracle │   │  time from          │
+                  └────────────────┘   │  stellar.toml       │
+                                       └──────┬──────────────┘
+                                              │
+                                       ┌──────▼──────┐
+                                       │  Anchor     │
+                                       │  TRY ⇄ USDC │
+                                       └──────┬──────┘
+                                              │
+                                       ┌──────▼──────┐
+                                       │  Bank, IBAN │
+                                       └─────────────┘
+```
+
+### Components
+
+| Component | Responsibility |
+|---|---|
+| `contracts/invoice` | ETTN uniqueness, registration, acknowledgement, pricing, the quote lock, funding, settlement, default and recourse, whitelist, first-loss buffer |
+| `contracts/treasury_local` | Treasury behind an adapter interface; holds pooled capital and releases the payout |
+| `contracts/fx_oracle` | SEP-40 shaped TRY/USD feed for testnet |
+| `src/lib/ubl` | UBL-TR parsing, XAdES structural check, document hash |
+| `src/lib/anchor` | SEP-1 discovery, SEP-10 auth, SEP-38 quotes, SEP-6 transfers, transfer splitting |
+| `src/lib/soroban` | Contract reads and writes, i128 encoding, error attribution |
+| `src/lib/auth` | Sessions, login challenges, SEP-53 verification |
+| `src/lib/server/guard.ts` | Role-based access, operator gate, rate limiting |
+| `src/app/api` | Route handlers — the only place keys are used |
+
+### Stellar integrations
+
+| | Where it is used |
+|---|---|
+| **Soroban** SDK 27.0.6, protocol 28 | Four contracts, `wasm32v1-none` |
+| **SEP-1** | Anchor discovery. Every endpoint is read at run time |
+| **SEP-6** | Programmatic deposit and withdrawal, both directions |
+| **SEP-10** | Challenge authentication, validated before signing |
+| **SEP-12** | Customer registration |
+| **SEP-38** | Firm quotes, so the payout shown is the payout paid |
+| **SEP-40** | Oracle interface implemented by `fx_oracle` |
+| **SEP-53** | Signed messages for wallet login |
+
+The anchor integration is load-bearing rather than decorative. Without it the
+supplier cannot be paid in lira and the buyer cannot settle, which is the
+product's entire proposition. Without the treasury, `fund()` cannot complete and
+the yield component of the price has no source.
+
+---
+
+## Design decisions and trade-offs
+
+**SEP-6 rather than SEP-24.** The anchor implements SEP-6, and programmatic
+transfer is the better fit regardless: the discount breakdown stays in our own
+interface. A SEP-24 flow hosted by the anchor could not show it, and that
+breakdown is the product. The trade-off is that KYC and the bank steps are ours
+to drive.
+
+**The treasury sits behind an adapter.** The invoice contract knows four
+functions — `apy_bps`, `deposit`, `withdraw`, `total_assets` — and nothing about
+what implements them. A vault can be swapped in, or fail, without the flow
+changing shape; the yield component falls back to a parameter and the interface
+labels it. The trade-off is one layer of indirection and an extra cross-contract
+call per quote.
+
+**Accepted quotes expire, and the ledger does it.** `accept_quote` fixes the
+discount because funders subscribe against a fixed payout. The lock is written to
+*temporary* storage with `quote_ttl` as its TTL, so it disappears without a sweep
+or a timestamp anyone has to re-check. The window is 24 hours: sized to a funding
+round filling from several funders, not to SEP-38's ten-minute rate validity.
+
+**Currency risk is never priced at zero.** A quiet feed still pays the floor; a
+collapsing one is capped. The fallback is expressed per annum and scaled to the
+tenor, so a 30-day invoice is not charged what a 120-day one is.
+
+**Recourse is deliberately simple.** On default the first-loss buffer is drained
+to funders pro rata and the remainder is recorded as a claim on the seller. Risk
+tranches and credit scoring were left out: there is no data to score with, and a
+score produced without data is not honest. The credit premium is labelled a
+parameter for the same reason.
+
+**No chain logic in the client.** Every read and write goes through a route
+handler, and keys exist only there. The trade-off is that demo sign-in holds
+keys server-side; this is deliberate, marked in the session and the interface,
+and removable with `DEMO_LOGIN=off`.
+
+---
+
+## Technical challenges
+
+**Reflector carries no TRY on testnet.** Its testnet deployment publishes EUR,
+GBP, CHF, CAD, MXN, ARS, BRL, THB and XAU. On mainnet TRY exists but the readable
+history is about two hours, which cannot price a ninety-day receivable. We built
+a mirror exposing the same SEP-40 surface, seeded with real ECB USD/TRY daily
+closes. On mainnet the oracle address changes and nothing else does.
+
+**Cross-contract authorization.** The treasury moves tokens on the invoice
+contract's behalf, one frame deeper than the funder's signature reaches. Without
+`authorize_as_current_contract` the payout fails with
+`Error(Auth, InvalidAction)`. This would have broken on chain exactly as it broke
+in tests.
+
+**An unauthorized treasury withdrawal.** The first version of `withdraw` had no
+authorization at all — anyone could drain the pool. It now requires a controller
+address, set to the invoice contract at deployment.
+
+**The anchor names assets asymmetrically.** SEP-38 wants the scheme form
+(`iso4217:TRY`) while this anchor's SEP-6 endpoints want the bare code (`USDC`).
+Three refusals to pin down; recorded next to the code so it is not "corrected"
+back to what the specification implies.
+
+**The transfer splitter was wrong twice.** The anchor caps each transaction at
+3,000 TRY. Filling parts greedily to the cap leaves a remainder that can fall
+below the floor, and folding it into the previous part pushes that part over the
+cap — a 3,016 TRY transfer was refused for exceeding 3,000. Splitting evenly
+fixed that, but rounding each part down piled the accumulated remainder onto the
+last one, putting it over the cap again at larger amounts. Parts now round up so
+the shortfall lands on the final part. A sweep over 1,823 amounts holds the cap,
+the floor and the total.
+
+**Wallets disagree about what they sign.** Freighter implements SEP-53 — prefix,
+hash, sign the hash — while others sign the bytes as given. The verifier tries
+each framing and reports which matched, and the claimed payload must still decode
+to the issued challenge, so text signed under a different prompt is refused.
+
+**Sub-contract errors escalate with their own codes.** The token contract's error
+10 is a balance problem; ours is treasury liquidity. Reading the number alone
+reported "the treasury has no liquidity" when the real cause was an empty wallet.
+Token errors are now matched on their diagnostic text first.
+
+---
+
+## Testing
+
+| Suite | Count | What it establishes |
+|---|---|---|
+| `test:contracts` | 22 | The invariant; authorization boundaries; the pricing floor and cap; the fallback scaling with tenor; the expiring quote window; pro-rata settlement leaving no dust; the recourse waterfall |
+| `test:ubl` | 33 | Field extraction, XAdES structure, and seven malformed documents that must be refused |
+| `test:tranche` | 13 | Cap, floor and total preserved across 1,823 amounts |
+| `test:sep53` | 13 | The specification's own three vectors, reproduced byte for byte |
+| `test:auth` | 17 | Wallet framings accepted; wrong keys, forged payloads, replayed nonces and tampered cookies refused |
+| `smoke` | 6 steps | The whole flow against testnet, ending in the refusal |
+
+The SEP-53 vectors are worth a note. They were first written from memory and the
+seed failed its checksum — which was the useful kind of mistake, because a
+self-invented vector would have passed self-consistently while disagreeing with
+every real wallet. They are now the specification's, verbatim.
+
+---
+
+## Honest limitations
+
+**The signature is checked structurally, not cryptographically.** `ds:SignedInfo`,
+a valid base64 `ds:SignatureValue`, `xades:QualifyingProperties`,
+`ds:X509Certificate` and the algorithm fields are all verified. The signature is
+not verified against the Revenue Administration's certificate chain; access takes
+weeks. The full document hash goes on chain, so that verification can be
+completed later against a document proven unchanged.
+
+**The bank leg is simulated.** The anchor is a sandbox and the lira transfer is
+triggered by us. The Stellar leg is real testnet USDC.
+
+**We publish the testnet feed ourselves.** Explained above. The oracle mirrors
+Reflector's interface and is seeded with real ECB data.
+
+**Demo sign-in holds keys server-side.** One machine plays four parties on stage.
+The session records `method: "demo"`, the interface says so, and `DEMO_LOGIN=off`
+removes the path.
+
+**`listInvoices` is a sequential scan.** Fine for a demo ledger, wrong for a real
+one, where an indexer would serve it.
+
+**The first-loss buffer is thin.** The mechanism is implemented and tested, but a
+production pool would size the buffer against portfolio exposure rather than hold
+a nominal amount.
+
+---
+
+## Deployed artifacts
+
+Stellar testnet, protocol 28.
+
+| | Address |
+|---|---|
+| Invoice contract | [`CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB`](https://stellar.expert/explorer/testnet/contract/CCKQOROLDKC3MM3ZFYUSMG6K463HIKMB7EAJZQMXVN7NSEZG4CROYCNB) |
+| Treasury | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |
+| TRY/USD feed | [`CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC`](https://stellar.expert/explorer/testnet/contract/CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC) |
+| USDC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` |
+| Anchor | `tr-mock-anchor.fly.dev` |
+
+## Running it yourself
+
+```bash
+# Prerequisites: Rust with the wasm32v1-none target, stellar-cli 28, Node 20+
+for k in admin sme buyer funder funder-b; do
+  stellar keys generate payper-$k --network testnet --fund
+done
+
+./scripts/deploy.sh          # builds, deploys, writes .env.local
+npm install
+npm run smoke                # the whole flow against testnet
+npm run build && npm start
+```
+
+The oracle needs seeding with price history before quotes report `live`; see
+`scripts/deploy.sh` for the contract addresses it writes.
+
+## After the hackathon
+
+1. **Stellar Community Fund.** The missing pieces are a passkey smart account
+   that verifies secp256r1 on chain, so a passkey signs its own transactions, and
+   integration with a production TRY anchor. Both are scoped work.
+2. **InstaAwards.** The passkey smart account is a well-sized scope on its own.
+3. **Closed pilot.** One corporate buyer and the suppliers that invoice it. The
+   buyer's acknowledgement is the product's lock, so the pilot starts there.
+
+## Team
+
+Can Sarıhan · Berk Çiçek

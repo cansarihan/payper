@@ -1,9 +1,18 @@
+import { LangSwitch } from "@/components/LangSwitch";
 import { C, FONT, shortKey, trLira, trPct, usdc } from "@/lib/design";
+import { DEFAULT_LANG, isLang, t, type Lang } from "@/lib/i18n/dictionary";
 
 export const dynamic = "force-dynamic";
 
 /** Public page, rendered from chain state per request. No cache, no placeholder. */
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const { lang: requested } = await searchParams;
+  const lang: Lang = isLang(requested) ? requested : DEFAULT_LANG;
+  const d = t(lang);
   const state = await loadState();
 
   return (
@@ -19,25 +28,36 @@ export default async function Page() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            fontFamily: FONT.mono,
-            fontSize: 12,
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            color: C.mint,
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
             marginBottom: 28,
           }}
         >
-          <span
+          <div
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: C.mint,
-              animation: "pulse 2s infinite",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontFamily: FONT.mono,
+              fontSize: 12,
+              letterSpacing: ".12em",
+              textTransform: "uppercase",
+              color: C.mint,
             }}
-          />
-          Stellar testnet · canlı
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: C.mint,
+                animation: "pulse 2s infinite",
+              }}
+            />
+            {d.liveNow}
+          </div>
+          <LangSwitch lang={lang} />
         </div>
 
         <h1
@@ -50,9 +70,9 @@ export default async function Page() {
             textWrap: "balance",
           }}
         >
-          Vadeli faturan,
+          {d.tagline[0]}
           <br />
-          <span style={{ color: C.mint }}>bugün hesabında.</span>
+          <span style={{ color: C.mint }}>{d.tagline[1]}</span>
         </h1>
 
         <p
@@ -65,46 +85,44 @@ export default async function Page() {
             fontWeight: 500,
           }}
         >
-          KOBİ e-faturasını yükler, alıcı zincir üstünde onaylar, para aynı gün TL
-          olarak bankaya düşer. Vadede alıcı öder; kontrat fonlayıcılara oransal
-          dağıtır. İskonto sabit bir sayı değil —{" "}
-          <b style={{ color: C.white }}>canlı zincir getirisinden ve kurdan hesaplanıyor.</b>
+          {d.lead}{" "}
+          <b style={{ color: C.white }}>{d.leadEmphasis}</b>
         </p>
 
-        {state ? <LiveFigures state={state} /> : <Unreachable />}
+        {state ? <LiveFigures state={state} d={d} /> : <Unreachable d={d} />}
       </section>
     </main>
   );
 }
 
-function LiveFigures({ state }: { state: State }) {
+function LiveFigures({ state, d }: { state: State; d: ReturnType<typeof t> }) {
   const q = state.activeQuote;
   const annual = q && q.days > 0 ? (q.totalDiscountBps * 365) / q.days / 100 : null;
 
   const cards: { k: string; v: string; sub: string; tag?: string }[] = [
     {
-      k: "Hazine getirisi",
+      k: d.treasuryYield,
       v: trPct(state.treasury.apyBps),
-      sub: "fonlanan sermaye buradan getiri üretir",
+      sub: d.treasuryYieldSub,
       tag: state.treasury.apySource,
     },
     q
       ? {
-          k: "Canlı iskonto",
+          k: d.liveDiscount,
           v: trPct(q.totalDiscountBps),
-          sub: `${q.days} gün · yıllık ~%${annual!.toFixed(1)}`,
+          sub: `${q.days} ${d.days} · ${d.annual} ~%${annual!.toFixed(1)}`,
           tag: q.fxSource === "live" && q.yieldSource === "live" ? "live" : "fallback",
         }
-      : { k: "Canlı iskonto", v: "—", sub: "fiyatlanacak fatura yok" },
+      : { k: d.liveDiscount, v: "—", sub: d.noInvoiceToPrice },
     {
-      k: "Defterdeki fatura",
+      k: d.bookSize,
       v: String(state.invoices.length),
-      sub: `${state.invoices.filter((i) => i.status === "repaid").length} tanesi vadesinde ödendi`,
+      sub: `${state.invoices.filter((i) => i.status === "repaid").length} ${d.settledSuffix}`,
     },
     {
-      k: "Hazine varlığı",
+      k: d.treasuryAssets,
       v: usdc(state.treasury.assets),
-      sub: state.anchor ? `${state.anchor.homeDomain} · SEP-6` : "anchor okunamadı",
+      sub: state.anchor ? `${state.anchor.homeDomain} · SEP-6` : d.anchorUnreadable,
     },
   ];
 
@@ -149,7 +167,7 @@ function LiveFigures({ state }: { state: State }) {
                     color: c.tag === "live" ? C.mint : C.amber,
                   }}
                 >
-                  {c.tag === "live" ? "canlı" : "fallback"}
+                  {c.tag === "live" ? d.tagLive : d.tagFallback}
                 </span>
               )}
             </div>
@@ -182,10 +200,10 @@ function LiveFigures({ state }: { state: State }) {
         }}
       >
         {[
-          ["kontrat", shortKey(state.contracts.invoice, 6, 6)],
-          ["hazine", shortKey(state.contracts.treasury, 6, 6)],
-          ["besleme", shortKey(state.contracts.fxOracle, 6, 6)],
-          ["anchor", state.anchor?.homeDomain ?? "—"],
+          [d.contract, shortKey(state.contracts.invoice, 6, 6)],
+          [d.treasury, shortKey(state.contracts.treasury, 6, 6)],
+          [d.feed, shortKey(state.contracts.fxOracle, 6, 6)],
+          [d.anchor, state.anchor?.homeDomain ?? "—"],
           ["SEP", "1 · 10 · 12 · 38 · 6"],
         ].map(([k, v]) => (
           <span key={k} style={{ padding: "8px 14px", borderRadius: 999, background: "#121212" }}>
@@ -203,16 +221,16 @@ function LiveFigures({ state }: { state: State }) {
             lineHeight: 1.6,
           }}
         >
-          Şu an işlenen fatura <b style={{ color: C.white }}>#{state.active.id}</b> ·{" "}
-          {trLira(state.active.amountFiat)} · durum <b style={{ color: C.mint }}>{state.active.status}</b>.
-          Bu sayfadaki her rakam istek anında zincirden okundu.
+          {d.processing} <b style={{ color: C.white }}>#{state.active.id}</b> ·{" "}
+          {trLira(state.active.amountFiat)} · {d.status}{" "}
+          <b style={{ color: C.mint }}>{state.active.status}</b>. {d.everyFigure}
         </p>
       )}
     </>
   );
 }
 
-const Unreachable = () => (
+const Unreachable = ({ d }: { d: ReturnType<typeof t> }) => (
   <div
     style={{
       background: "rgba(245,165,36,.14)",
@@ -224,8 +242,7 @@ const Unreachable = () => (
       maxWidth: 620,
     }}
   >
-    Zincir şu anda okunamıyor, bu yüzden buraya sayı yazmıyoruz. Sayfa sahte bir
-    değer göstermektense boş kalır.
+    {d.chainUnreachable}
   </div>
 );
 
