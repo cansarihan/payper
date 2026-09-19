@@ -52,6 +52,11 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  switchRole: string;
+  switchRoleTitle: string;
+  switchRoleLead: string;
+  switchRoleDemo: string;
+  cancel: string;
   anchorTopUp: string;
   anchorTopUpNote: string;
   anchorNoInvoice: string;
@@ -313,6 +318,13 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  switchRole: "Act as",
+  switchRoleTitle: "Act as another party",
+  switchRoleLead:
+    "The panel reloads as the party you pick, and the canvas takes that party's colour. What each one may do is decided by the route handlers, not by this dialog.",
+  switchRoleDemo:
+    "Demo only. Fast role switching exists so one machine can play three parties on stage — it issues a demo session with a server-held key and will not exist in production, where each party signs in with its own wallet.",
+  cancel: "Cancel",
   anchorTopUp: "Buy USDC for the supplier",
   anchorTopUpNote:
     "Runs the same SEP-6 on-ramp the buyer uses, crediting the supplier instead — so the withdrawal can be run again.",
@@ -672,6 +684,13 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  switchRole: "Şu rolle davran",
+  switchRoleTitle: "Başka bir tarafla davran",
+  switchRoleLead:
+    "Panel seçtiğin tarafla yeniden yükleniyor ve kanvas o tarafın rengini alıyor. Hangi tarafın ne yapabileceğine bu pencere değil, route handler'lar karar veriyor.",
+  switchRoleDemo:
+    "Yalnızca demo. Hızlı rol geçişi, tek makinenin sahnede üç tarafı oynayabilmesi için var — sunucuda tutulan anahtarla demo oturumu açıyor ve canlıda bulunmayacak; orada her taraf kendi cüzdanıyla giriş yapar.",
+  cancel: "Vazgeç",
   anchorTopUp: "Tedarikçiye USDC al",
   anchorTopUpNote:
     "Alıcının kullandığı SEP-6 on-ramp'ini bu kez tedarikçiye işleterek çalıştırır — böylece çekim yeniden denenebilir.",

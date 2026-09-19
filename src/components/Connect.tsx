@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 
 import { Lockup } from "@/components/Logo";
-import { C, FONT } from "@/lib/design";
+import { C, ROLE_COLOUR, FONT } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import { ROLE_LABEL, type Session, type SessionRole } from "@/lib/auth/roles";
 
+/** The same colours the panel carries, so the choice made here is recognisable there. */
 const ROLES: { id: SessionRole; colour: string; en: string; tr: string }[] = [
-  { id: "seller", colour: C.mint, en: "I issue invoices", tr: "Fatura kesiyorum" },
-  { id: "buyer", colour: C.blue, en: "I pay invoices", tr: "Fatura ödüyorum" },
-  { id: "funder", colour: C.lime, en: "I fund invoices", tr: "Fatura fonluyorum" },
+  { id: "seller", colour: ROLE_COLOUR.seller.wash, en: "I issue invoices", tr: "Fatura kesiyorum" },
+  { id: "buyer", colour: ROLE_COLOUR.buyer.wash, en: "I pay invoices", tr: "Fatura ödüyorum" },
+  { id: "funder", colour: ROLE_COLOUR.funder.wash, en: "I fund invoices", tr: "Fatura fonluyorum" },
 ];
 
 /**
@@ -209,7 +210,7 @@ export function Connect({ lang, onSignedIn }: { lang: Lang; onSignedIn: (s: Sess
                     borderRadius: 16,
                     padding: "14px 16px",
                     border: `1px solid ${on ? r.colour : "rgba(255,255,255,.1)"}`,
-                    background: on ? "rgba(255,255,255,.07)" : "rgba(255,255,255,.03)",
+                    background: on ? `${r.colour}1F` : "rgba(255,255,255,.03)",
                     color: C.white,
                     display: "grid",
                     gap: 5,

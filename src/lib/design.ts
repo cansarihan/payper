@@ -14,6 +14,20 @@ export const C = {
   grey: "#8A8A8A",
 } as const;
 
+/**
+ * One colour per party, in two strengths.
+ *
+ * `wash` is the panel canvas: light enough that ink text and the white cards
+ * keep their contrast. `pure` is the rail and the markers. The saturated value
+ * is never used as a background because blue already means `acknowledged` and a
+ * blue canvas would swallow that badge.
+ */
+export const ROLE_COLOUR = {
+  seller: { wash: "#3DE29C", pure: "#1A8F63" },
+  buyer: { wash: "#9FC5FF", pure: "#1E7CFF" },
+  funder: { wash: "#D8F87F", pure: "#7FA81E" },
+} as const;
+
 export const FONT = {
   sans: "'Urbanist', system-ui, -apple-system, sans-serif",
   mono: "'JetBrains Mono',ui-monospace,Menlo,monospace",

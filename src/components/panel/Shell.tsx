@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Lockup } from "@/components/Logo";
-import { C, FONT, shortKey } from "@/lib/design";
+import { C, FONT, ROLE_COLOUR, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session, SessionRole } from "@/lib/types";
 
@@ -50,18 +50,36 @@ export function PanelShell({
   children: React.ReactNode;
 }) {
   const d = t(lang);
+  const role = session?.role ?? "seller";
+  const tone = ROLE_COLOUR[role];
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: C.mint,
+        background: tone.wash,
         color: C.ink,
         display: "flex",
         flexDirection: "column",
         animation: "fadeIn .4s both",
+        transition: "background .45s cubic-bezier(.2,.8,.2,1)",
       }}
     >
+      {/* The party acting is the one fact every screen depends on, so it gets
+          a marker that no layout can push off the page. */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 5,
+          background: tone.pure,
+          zIndex: 50,
+          transition: "background .45s cubic-bezier(.2,.8,.2,1)",
+        }}
+      />
       <div
         style={{
           maxWidth: 1480,
@@ -331,7 +349,25 @@ function AccountMenu({
 }) {
   const d = t(lang);
   const [open, setOpen] = useState(false);
+  const [switching, setSwitching] = useState<SessionRole | null>(null);
+  const [picking, setPicking] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+
+  // Three parties and one laptop: a reader who has to sign out and back in to
+  // see the other side will simply not look.
+  async function becomeRole(next: SessionRole) {
+    setSwitching(next);
+    try {
+      await fetch("/api/auth/demo", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ role: next }),
+      });
+      window.location.reload();
+    } finally {
+      setSwitching(null);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -342,7 +378,9 @@ function AccountMenu({
     return () => document.removeEventListener("mousedown", away);
   }, [open]);
 
-  const name = session?.name ?? session?.role ?? "—";
+  const role = session?.role ?? "seller";
+  const tone = ROLE_COLOUR[role];
+  const name = session?.name ?? d.roles[role];
   const initials =
     (name.match(/\p{L}+/gu) ?? [name])
       .slice(0, 2)
@@ -414,7 +452,8 @@ function AccountMenu({
             width: 30,
             height: 30,
             borderRadius: "50%",
-            background: "linear-gradient(135deg,#F5F3EE,#CFCBC2)",
+            background: tone.pure,
+            color: C.white,
             display: "grid",
             placeItems: "center",
             fontSize: 12,
@@ -423,7 +462,12 @@ function AccountMenu({
         >
           {initials}
         </span>
-        {name}
+        <span style={{ display: "grid", lineHeight: 1.2, textAlign: "left" }}>
+          <span>{name}</span>
+          <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: ".06em", color: tone.pure }}>
+            {d.roles[role].toUpperCase()}
+          </span>
+        </span>
         <span
           style={{
             width: 30,
@@ -457,6 +501,48 @@ function AccountMenu({
             gap: 4,
           }}
         >
+          <button
+            onClick={() => {
+              setOpen(false);
+              setPicking(true);
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 11,
+              padding: "9px 10px",
+              borderRadius: 14,
+              border: 0,
+              background: "transparent",
+              textAlign: "left",
+              width: "100%",
+            }}
+          >
+            <span
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                background: tone.pure,
+                color: C.white,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 13,
+                fontWeight: 700,
+                flex: "none",
+              }}
+            >
+              ⇄
+            </span>
+            <span style={{ display: "grid", minWidth: 0 }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>{d.switchRole}</span>
+              <span style={{ fontFamily: FONT.mono, fontSize: 10.5, color: C.grey }}>
+                {d.roles[role]}
+              </span>
+            </span>
+            <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>↗</span>
+          </button>
+
           {rows.map((r) => (
             <button
               key={r.label}
@@ -532,6 +618,173 @@ function AccountMenu({
           </button>
         </div>
       )}
+
+      {picking && (
+        <RoleDialog
+          lang={lang}
+          current={role}
+          switching={switching}
+          onPick={(r) => void becomeRole(r)}
+          onClose={() => setPicking(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Choosing which party to act as.
+ *
+ * A dialog rather than a row of pills because the choice reloads the panel and
+ * changes what every screen will let you do — and because the notice at the
+ * bottom has to be read, not glanced past.
+ */
+function RoleDialog({
+  lang,
+  current,
+  switching,
+  onPick,
+  onClose,
+}: {
+  lang: Lang;
+  current: SessionRole;
+  switching: SessionRole | null;
+  onPick: (r: SessionRole) => void;
+  onClose: () => void;
+}) {
+  const d = t(lang);
+
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={d.switchRoleTitle}
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 80,
+        display: "grid",
+        placeItems: "center",
+        padding: 20,
+        background: "rgba(10,10,10,.45)",
+        backdropFilter: "blur(3px)",
+        animation: "fadeIn .2s both",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "min(560px,100%)",
+          maxHeight: "calc(100vh - 40px)",
+          overflowY: "auto",
+          background: C.white,
+          color: C.ink,
+          borderRadius: 28,
+          padding: 28,
+          display: "grid",
+          gap: 18,
+          boxShadow: "0 40px 90px rgba(0,0,0,.35)",
+          animation: "popIn .28s cubic-bezier(.2,.8,.2,1) both",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: "-.025em", marginBottom: 6 }}>
+            {d.switchRoleTitle}
+          </div>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: C.grey }}>
+            {d.switchRoleLead}
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+          {(["seller", "buyer", "funder"] as const).map((r) => {
+            const on = current === r;
+            return (
+              <button
+                key={r}
+                onClick={() => !on && onPick(r)}
+                disabled={switching !== null}
+                style={{
+                  border: `2px solid ${on ? ROLE_COLOUR[r].pure : "rgba(10,10,10,.1)"}`,
+                  borderRadius: 18,
+                  padding: "18px 12px",
+                  background: on ? ROLE_COLOUR[r].wash : "transparent",
+                  color: C.ink,
+                  display: "grid",
+                  gap: 9,
+                  justifyItems: "center",
+                  cursor: on ? "default" : "pointer",
+                }}
+              >
+                <span
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: "50%",
+                    background: ROLE_COLOUR[r].pure,
+                    color: C.white,
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  {d.roles[r].slice(0, 1).toUpperCase()}
+                </span>
+                <span style={{ fontSize: 13.5, fontWeight: 700 }}>
+                  {switching === r ? "…" : d.roles[r]}
+                </span>
+                {on && (
+                  <span style={{ fontFamily: FONT.mono, fontSize: 9.5, opacity: 0.6 }}>
+                    {lang === "tr" ? "şu an" : "current"}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "start",
+            padding: "13px 15px",
+            borderRadius: 16,
+            background: "rgba(245,165,36,.1)",
+            border: "1px solid rgba(245,165,36,.3)",
+          }}
+        >
+          <span aria-hidden style={{ fontSize: 14, lineHeight: 1.4 }}>
+            ⚠
+          </span>
+          <span style={{ fontSize: 12, lineHeight: 1.6, color: "#8A6400", fontWeight: 500 }}>
+            {d.switchRoleDemo}
+          </span>
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{
+            justifySelf: "end",
+            border: "1px solid rgba(10,10,10,.15)",
+            borderRadius: 999,
+            padding: "11px 22px",
+            background: "transparent",
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {d.cancel}
+        </button>
+      </div>
     </div>
   );
 }
