@@ -199,6 +199,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | `contracts/fx_oracle` | SEP-40 shaped TRY/USD feed for testnet |
 | `src/lib/chirp.ts` | The audio payment frame: 16 tones, a 5-symbol preamble, CRC-8, and the SEP-7 URI the QR carries |
 | `src/lib/chirpDecoder.ts` | The receiving half: microphone, FFT, preamble lock, slot sampling, CRC |
+| `src/lib/bank.ts` | The payout destination, with the IBAN's own ISO 7064 checksum verified before anything is stored |
 | `src/lib/ubl` | UBL-TR parsing, XAdES structural check, document hash |
 | `src/lib/anchor` | SEP-1 discovery, SEP-10 auth, SEP-38 quotes, SEP-6 transfers, transfer splitting |
 | `src/lib/soroban` | Contract reads and writes, i128 encoding, error attribution |
@@ -575,7 +576,9 @@ weeks. The full document hash goes on chain, so that verification can be
 completed later against a document proven unchanged.
 
 **The bank leg is simulated.** The anchor is a sandbox and the lira transfer is
-triggered by us. The Stellar leg is real testnet USDC.
+triggered by us. The supplier's own IBAN is passed to the anchor as the SEP-6
+withdrawal destination and its checksum is verified before it is stored, but no
+money reaches a real bank. The Stellar leg is real testnet USDC.
 
 **We publish the testnet feed ourselves.** Explained above. The oracle mirrors
 Reflector's interface and is seeded with real ECB data.

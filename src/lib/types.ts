@@ -49,6 +49,7 @@ export interface AnchorRunResult {
   usdcIn?: string;
   usdcOut?: string;
   available?: string;
+  iban?: string;
   error?: string;
   needsRole?: string;
 }

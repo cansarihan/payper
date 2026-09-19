@@ -7,7 +7,7 @@ import { C, FONT, ROLE_COLOUR, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session, SessionRole } from "@/lib/types";
 
-export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats" | "wallet";
+export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats" | "wallet" | "bank";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "pay", "board", "settle"];
 
 const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.green, C.mint, C.lime];
@@ -412,7 +412,7 @@ function AccountMenu({
       fg: session?.method === "passkey" && !session.wallet ? C.white : C.ink,
       go: "wallet",
     },
-    { label: d.acct[1][0], meta: d.acct[1][1], icon: "₺", bg: C.blue, fg: C.white },
+    { label: d.acct[1][0], meta: d.acct[1][1], icon: "₺", bg: C.blue, fg: C.white, go: "bank" },
     {
       label: d.acct[2][0],
       meta: `${state?.invoices.length ?? 0} ${d.acct[2][1]}`,

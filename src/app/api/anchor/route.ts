@@ -10,6 +10,8 @@ import {
   totalOut,
   withdrawToBank,
 } from "@/lib/anchor/settle";
+import { getBankAccount } from "@/lib/bank";
+import { signerAddress } from "@/lib/auth/roles";
 import { keypair } from "@/lib/server/actors";
 import { clientKey, rateLimit, requireSession } from "@/lib/server/guard";
 import { getInvoice } from "@/lib/server/invoices";
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
   const log: SepLog[] = [];
   try {
     rateLimit(clientKey(req, "anchor"), 20, 60_000);
-    await requireSession();
+    const session = await requireSession();
     const { flow, invoiceId } = (await req.json()) as {
       flow: "off" | "on" | "topup";
       invoiceId: number;
@@ -88,8 +90,18 @@ export async function POST(req: NextRequest) {
 
       const jwt = await anchor.authenticate(seller);
       await anchor.ensureCustomer(jwt, seller.publicKey());
+      // The supplier's own account when they have registered one. Without it
+      // the anchor pays its default, which is fine for a demo and wrong for
+      // anyone who actually wants the money.
+      const account = getBankAccount(signerAddress(session));
       const legs = await withdrawToBank({
-        anchor, signer: seller, jwt, amountAsset: amount, horizon, limits,
+        anchor,
+        signer: seller,
+        jwt,
+        amountAsset: amount,
+        horizon,
+        limits,
+        bank: account ? { iban: account.iban, holder: account.holder } : undefined,
       });
       return ok({
         flow,
@@ -98,6 +110,7 @@ export async function POST(req: NextRequest) {
         usdcIn: amount.toFixed(7),
         fiatOut: totalOut(legs).toFixed(2),
         available: available.toFixed(7),
+        iban: account?.iban,
       });
     }
 

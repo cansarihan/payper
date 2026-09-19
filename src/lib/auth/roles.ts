@@ -40,3 +40,7 @@ export const ROLE_HOME: Record<SessionRole, string> = {
   buyer: "buyer",
   funder: "board",
 };
+
+/** The address a session signs with: its linked wallet, else its own. */
+export const signerAddress = (session: Session): string =>
+  session.wallet?.address ?? session.address;

@@ -81,6 +81,17 @@ interface Copy {
   anchorProofLead: string;
   anchorFailed: string;
   unreadable: string;
+  bankTitle: string;
+  bankLead: string;
+  bankIban: string;
+  bankHolder: string;
+  bankNameLabel: string;
+  bankSave: string;
+  bankClear: string;
+  bankNone: string;
+  bankNoneNote: string;
+  bankSaved: string;
+  bankWhy: string;
   walletTitle: string;
   walletLead: string;
   signerLabel: string;
@@ -376,6 +387,19 @@ const en: Copy = {
     "Nothing on this screen is written here. Open the endpoints, or run the same requests from a terminal and compare them with the trace above.",
   anchorFailed: "The anchor flow did not complete",
   unreadable: "unreadable",
+  bankTitle: "Where the lira lands",
+  bankLead:
+    "The account an off-ramp pays into. Until one is registered the anchor pays its own default, which is fine on a sandbox and wrong for anyone who actually wants the money.",
+  bankIban: "IBAN",
+  bankHolder: "Account holder",
+  bankNameLabel: "Bank",
+  bankSave: "Save the account",
+  bankClear: "Remove",
+  bankNone: "No account registered",
+  bankNoneNote: "Withdrawals will pay the anchor's default destination.",
+  bankSaved: "Saved. Withdrawals will pay this account.",
+  bankWhy:
+    "The checksum is verified before anything is stored. A mistyped digit in an account number that still looked right is how money reaches a stranger, and ISO 7064 mod-97 is the check designed to catch exactly that.",
   walletTitle: "Identity and wallet",
   walletLead:
     "Who this session signs as, and which browser wallet has been proved alongside it. The two are separate on purpose.",
@@ -753,6 +777,19 @@ const tr: Copy = {
     "Bu ekrandaki hiçbir şey burada yazılı değil. Uç noktaları aç ya da aynı istekleri terminalden çalıştırıp yukarıdaki izle karşılaştır.",
   anchorFailed: "Anchor akışı tamamlanamadı",
   unreadable: "okunamadı",
+  bankTitle: "Liranın indiği yer",
+  bankLead:
+    "Çıkışın ödeme yaptığı hesap. Bir hesap tanımlanmadıkça anchor kendi varsayılanına ödüyor; sandbox'ta sorun değil, parayı gerçekten isteyen biri için yanlış.",
+  bankIban: "IBAN",
+  bankHolder: "Hesap sahibi",
+  bankNameLabel: "Banka",
+  bankSave: "Hesabı kaydet",
+  bankClear: "Kaldır",
+  bankNone: "Tanımlı hesap yok",
+  bankNoneNote: "Çekimler anchor'ın varsayılan adresine ödeyecek.",
+  bankSaved: "Kaydedildi. Çekimler bu hesaba ödeyecek.",
+  bankWhy:
+    "Kontrol hanesi, hiçbir şey saklanmadan önce doğrulanıyor. Doğru görünen bir hesap numarasındaki tek yanlış hane, paranın bir yabancıya gitmesinin yoludur; ISO 7064 mod-97 tam bunu yakalamak için tasarlandı.",
   walletTitle: "Kimlik ve cüzdan",
   walletLead:
     "Bu oturumun kim olarak imzaladığı ve yanında hangi tarayıcı cüzdanının kanıtlandığı. İkisi bilerek ayrı.",

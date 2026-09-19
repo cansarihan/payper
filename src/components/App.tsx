@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Connect } from "@/components/Connect";
 import { Anchor } from "@/components/panel/Anchor";
+import { Bank } from "@/components/panel/Bank";
 import { Board } from "@/components/panel/Board";
 import { Invoices } from "@/components/panel/Invoices";
 import { Market } from "@/components/panel/Market";
@@ -128,6 +129,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "bank" ? (
+            <Bank lang={lang} />
           ) : screen === "wallet" ? (
             <Wallet lang={lang} state={state} session={session} onSession={setSession} />
           ) : screen === "stats" ? (
