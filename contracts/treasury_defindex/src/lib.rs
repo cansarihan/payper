@@ -59,9 +59,11 @@ pub enum Error {
 /// Blend states `b_rate` with twelve decimals, starting at one.
 const BLEND_RATE_ONE: i128 = 1_000_000_000_000;
 
-/// Shortest window that yields a meaningful annualised figure. Under this the
-/// reading is refused rather than extrapolated from a few minutes of accrual.
-const MIN_BLEND_WINDOW: u64 = 3_600;
+/// Shortest window the reading is taken over. Blend accrues its reserve to the
+/// current ledger on every read, so the index is a smooth function of time
+/// rather than a series of jumps, and ten minutes is enough to measure. Under
+/// this the reading is refused rather than extrapolated.
+const MIN_BLEND_WINDOW: u64 = 600;
 
 /// One year in seconds, for annualising a realised gain.
 const YEAR: u64 = 31_536_000;
@@ -115,15 +117,7 @@ impl DefindexTreasury {
         }
 
         let now = BlendPoolClient::new(&env, &pool).get_reserve(&asset).data.b_rate;
-        if now <= marked {
-            return None;
-        }
-        let growth_bps = ((now - marked) * BPS) / marked;
-        let annual = (growth_bps * YEAR as i128) / elapsed as i128;
-        if annual <= 0 {
-            return None;
-        }
-        Some(annual.min(u32::MAX as i128) as u32)
+        annualise_bps(marked, now, elapsed)
     }
 
     /// Hand withdrawal rights to the invoice contract.
@@ -320,6 +314,23 @@ fn mark_start(env: &Env) {
     }
 }
 
+/// Growth between two readings of a twelve-decimal index, annualised in bps.
+///
+/// The multiplication has to come first. An hour of lending accrues far less
+/// than one basis point, so dividing to bps before scaling to a year truncates
+/// the whole measurement to zero and the reading disappears — which is how the
+/// first version of this silently reported nothing at all.
+fn annualise_bps(marked: i128, now: i128, elapsed: u64) -> Option<u32> {
+    if marked <= 0 || now <= marked || elapsed == 0 {
+        return None;
+    }
+    let annual = ((now - marked) * BPS * YEAR as i128) / (marked * elapsed as i128);
+    if annual <= 0 {
+        return None;
+    }
+    Some(annual.min(u32::MAX as i128) as u32)
+}
+
 fn elapsed_seconds(env: &Env) -> u64 {
     let started: u64 = env.storage().instance().get(&symbol_start()).unwrap_or(0);
     if started == 0 {
@@ -345,4 +356,45 @@ fn stored<T: soroban_sdk::TryFromVal<Env, soroban_sdk::Val>>(env: &Env, key: Dat
         .instance()
         .get(&key)
         .unwrap_or_else(|| panic_with_error!(env, Error::NotInitialized))
+}
+
+#[cfg(test)]
+mod test {
+    use super::annualise_bps;
+
+    /// Two readings of the Blend testnet USDC pool, eighty-five minutes apart.
+    /// The growth is real but tiny, which is exactly the case that used to
+    /// round away to nothing.
+    const EARLIER: i128 = 1_056_377_769_408;
+    const LATER: i128 = 1_056_380_003_999;
+
+    #[test]
+    fn an_hours_growth_survives_the_arithmetic() {
+        let bps = annualise_bps(EARLIER, LATER, 5_100).expect("a real reading");
+        assert_eq!(bps, 130, "roughly 1.3% a year, which is what the pool pays");
+    }
+
+    #[test]
+    fn a_ten_minute_window_still_reads() {
+        // A tenth of the growth over a tenth of the window is the same rate.
+        let later = EARLIER + (LATER - EARLIER) / 10;
+        let bps = annualise_bps(EARLIER, later, 510).expect("a real reading");
+        assert!((129..=131).contains(&bps), "same rate, shorter window: {bps}");
+    }
+
+    #[test]
+    fn nothing_is_reported_without_growth() {
+        assert_eq!(annualise_bps(EARLIER, EARLIER, 5_100), None);
+        assert_eq!(annualise_bps(EARLIER, EARLIER - 1, 5_100), None);
+        assert_eq!(annualise_bps(0, LATER, 5_100), None);
+        assert_eq!(annualise_bps(EARLIER, LATER, 0), None);
+    }
+
+    /// A year of the same rate annualises to itself.
+    #[test]
+    fn a_full_year_reports_its_own_return() {
+        let year = 31_536_000u64;
+        let bps = annualise_bps(1_000_000_000_000, 1_074_500_000_000, year).unwrap();
+        assert_eq!(bps, 745);
+    }
 }
