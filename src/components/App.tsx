@@ -1,0 +1,141 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+import { Connect } from "@/components/Connect";
+import { Anchor } from "@/components/panel/Anchor";
+import { PanelShell, type Screen } from "@/components/panel/Shell";
+import { Quote } from "@/components/panel/Quote";
+import { Upload } from "@/components/panel/Upload";
+import { C } from "@/lib/design";
+import { t, type Lang } from "@/lib/i18n/dictionary";
+import type { AppState, Session } from "@/lib/types";
+
+/** The dashboard. One state fetch feeds every screen; no screen talks to chain. */
+export function App({ lang }: { lang: Lang }) {
+  const d = t(lang);
+  const [screen, setScreen] = useState<Screen>("upload");
+  const [state, setState] = useState<AppState | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionKnown, setSessionKnown] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/state", { cache: "no-store" });
+      const json = (await res.json()) as AppState | { ok: false; error: string };
+      if (!("ok" in json) || json.ok !== true) throw new Error((json as { error: string }).error);
+      setState(json);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    void fetch("/api/auth/session", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { session?: Session | null }) => setSession(j.session ?? null))
+      .catch(() => {})
+      .finally(() => setSessionKnown(true));
+  }, []);
+
+  // Keep the book current while someone is looking at it.
+  useEffect(() => {
+    const iv = setInterval(() => void refresh(), 15_000);
+    return () => clearInterval(iv);
+  }, [refresh]);
+
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setSession(null);
+  }
+
+  if (!sessionKnown) {
+    return (
+      <main style={{ minHeight: "100vh", background: C.black, color: C.white, display: "grid", placeItems: "center" }}>
+        <span style={{ opacity: 0.5, fontWeight: 600 }}>{d.loading}…</span>
+      </main>
+    );
+  }
+
+  if (!session) {
+    return <Connect lang={lang} onSignedIn={(s) => setSession(s)} />;
+  }
+
+  return (
+    <PanelShell
+      lang={lang}
+      screen={screen}
+      setScreen={setScreen}
+      session={session}
+      onSignOut={() => void signOut()}
+    >
+      {error && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: "13px 15px",
+            borderRadius: 16,
+            background: "rgba(255,95,87,.12)",
+            color: C.coral,
+            fontSize: 13,
+            fontWeight: 600,
+            overflowWrap: "anywhere",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!state ? (
+        <div style={{ padding: 80, textAlign: "center", fontWeight: 600, opacity: 0.6 }}>
+          {d.loading}…
+        </div>
+      ) : screen === "upload" ? (
+        <Upload
+          lang={lang}
+          network={state.network}
+          onRegistered={() => {
+            void refresh();
+            setScreen("buyer");
+          }}
+        />
+      ) : screen === "quote" ? (
+        <Quote lang={lang} state={state} onDone={refresh} />
+      ) : screen === "anchor" ? (
+        <Anchor state={state} onDone={refresh} />
+      ) : (
+        <Placeholder lang={lang} screen={screen} />
+      )}
+    </PanelShell>
+  );
+}
+
+/** Screens still to be built, named rather than blank. */
+function Placeholder({ lang, screen }: { lang: Lang; screen: Screen }) {
+  const labels: Record<string, [string, string]> = {
+    overview: ["Overview", "Genel bakış"],
+    buyer: ["Buyer acknowledgement", "Alıcı onayı"],
+    board: ["Funding board", "Fonlama panosu"],
+  };
+  const [en, tr] = labels[screen] ?? ["", ""];
+  return (
+    <div
+      style={{
+        background: C.white,
+        borderRadius: 28,
+        padding: "64px 24px",
+        textAlign: "center",
+        color: C.grey,
+        fontWeight: 600,
+      }}
+    >
+      {lang === "tr" ? tr : en}
+    </div>
+  );
+}

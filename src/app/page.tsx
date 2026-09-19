@@ -90,6 +90,38 @@ export default async function Page({
         </p>
 
         {state ? <LiveFigures state={state} d={d} /> : <Unreachable d={d} />}
+
+        <a
+          href={lang === "en" ? "/app" : `/app?lang=${lang}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 38,
+            background: C.mint,
+            color: C.ink,
+            borderRadius: 999,
+            padding: "14px 14px 14px 26px",
+            fontSize: 15.5,
+            fontWeight: 700,
+            textDecoration: "none",
+          }}
+        >
+          {d.openPanel}
+          <span
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              background: C.ink,
+              color: C.mint,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            →
+          </span>
+        </a>
       </section>
     </main>
   );

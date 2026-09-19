@@ -40,3 +40,22 @@ button:not(:disabled) { cursor: pointer; }
 
 .anchor-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
 @media (max-width: 1100px) { .anchor-split { grid-template-columns: minmax(0, 1fr); } }
+
+@media (max-width: 680px) {
+  .panel-head { padding: 14px 16px 0 !important; }
+  .panel-screen { padding: 18px 16px 28px !important; }
+  .panel-nav {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  .panel-nav::-webkit-scrollbar { display: none; }
+  .anchor-split, .up-split, .quote-split { grid-template-columns: minmax(0, 1fr) !important; }
+}
+.up-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.quote-split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 1100px) {
+  .up-split, .quote-split { grid-template-columns: minmax(0, 1fr); }
+}

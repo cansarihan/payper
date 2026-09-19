@@ -29,6 +29,49 @@ interface Copy {
   chainUnreachable: string;
   days: string;
   annual: string;
+
+  nav: readonly string[];
+  step: string;
+  signOut: string;
+  openPanel: string;
+  loading: string;
+  empty: string;
+
+  uploadTitle: string;
+  uploadLead: string;
+  dropzone: string;
+  dropzoneSub: string;
+  demoFiles: string;
+  files: string;
+  checks: string;
+  register: string;
+  registered: string;
+  rejected: string;
+  documentTitle: string;
+  ettn: string;
+  docHash: string;
+  issued: string;
+  due: string;
+  amount: string;
+  seller: string;
+  buyer: string;
+
+  quoteTitle: string;
+  quoteLead: string;
+  components: string;
+  observed: string;
+  acceptQuote: string;
+  accepted: string;
+  payout: string;
+  faceValue: string;
+  discount: string;
+  tenor: string;
+  liveTag: string;
+  paramTag: string;
+  drift: string;
+  range: string;
+  window: string;
+  vaultApy: string;
 }
 
 const en: Copy = {
@@ -64,6 +107,50 @@ const en: Copy = {
 
   days: "days",
   annual: "annual",
+  nav: ["Overview", "Upload", "Acknowledge", "Discount", "Anchor", "Board"],
+  step: "STEP",
+  signOut: "Sign out",
+  openPanel: "Open dashboard",
+  loading: "Loading",
+  empty: "Nothing here yet.",
+
+  uploadTitle: "Upload the invoice",
+  uploadLead:
+    "A UBL-TR e-invoice is checked for its mandatory fields, the structure of its XAdES signature block, and the hash of the document itself. The ETTN decides whether it can be financed at all.",
+  dropzone: "Drop a UBL-TR XML file",
+  dropzoneSub: "XAdES signed · 5 MB maximum",
+  demoFiles: "SAMPLE INVOICES",
+  files: "files",
+  checks: "Checks",
+  register: "Register on chain",
+  registered: "Registered",
+  rejected: "Refused",
+  documentTitle: "Document",
+  ettn: "ETTN",
+  docHash: "Document hash",
+  issued: "Issued",
+  due: "Due",
+  amount: "Amount",
+  seller: "Supplier",
+  buyer: "Buyer",
+
+  quoteTitle: "The discount",
+  quoteLead:
+    "Four components. Two are read from chain on every call and labelled accordingly; the other two are parameters and say so.",
+  components: "Components",
+  observed: "Observed inputs",
+  acceptQuote: "Accept and lock",
+  accepted: "Locked",
+  payout: "Supplier receives",
+  faceValue: "Face value",
+  discount: "Discount",
+  tenor: "Tenor",
+  liveTag: "LIVE",
+  paramTag: "PARAM",
+  drift: "Currency drift",
+  range: "Observed range",
+  window: "Sample window",
+  vaultApy: "Treasury APY",
 };
 
 const tr: Copy = {
@@ -99,6 +186,50 @@ const tr: Copy = {
 
   days: "gün",
   annual: "yıllık",
+  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama"],
+  step: "ADIM",
+  signOut: "Çıkış yap",
+  openPanel: "Paneli aç",
+  loading: "Yükleniyor",
+  empty: "Burada henüz bir şey yok.",
+
+  uploadTitle: "Faturayı yükle",
+  uploadLead:
+    "UBL-TR e-faturasının zorunlu alanları, XAdES imza bloğunun yapısı ve belgenin kendi hash'i kontrol edilir. Finanse edilip edilemeyeceğine ETTN karar verir.",
+  dropzone: "UBL-TR XML dosyasını sürükle",
+  dropzoneSub: "XAdES imzalı · en fazla 5 MB",
+  demoFiles: "ÖRNEK FATURALAR",
+  files: "dosya",
+  checks: "Kontroller",
+  register: "Zincire kaydet",
+  registered: "Kaydedildi",
+  rejected: "Reddedildi",
+  documentTitle: "Belge",
+  ettn: "ETTN",
+  docHash: "Belge hash'i",
+  issued: "Düzenleme",
+  due: "Vade",
+  amount: "Tutar",
+  seller: "Satıcı",
+  buyer: "Alıcı",
+
+  quoteTitle: "İskonto",
+  quoteLead:
+    "Dört bileşen. İkisi her çağrıda zincirden okunur ve öyle etiketlenir; diğer ikisi parametredir ve bunu söyler.",
+  components: "Bileşenler",
+  observed: "Gözlenen girdiler",
+  acceptQuote: "Kabul et ve kilitle",
+  accepted: "Kilitlendi",
+  payout: "KOBİ alır",
+  faceValue: "Nominal",
+  discount: "İskonto",
+  tenor: "Vade",
+  liveTag: "CANLI",
+  paramTag: "PARAM",
+  drift: "Kur kayması",
+  range: "Gözlenen aralık",
+  window: "Örnek penceresi",
+  vaultApy: "Hazine APY",
 };
 
 export const t = (lang: Lang) => (lang === "tr" ? tr : en);
