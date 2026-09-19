@@ -72,6 +72,27 @@ interface Copy {
   range: string;
   window: string;
   vaultApy: string;
+
+  buyerTitle: string;
+  buyerLead: string;
+  acknowledge: string;
+  acknowledged: string;
+  parties: string;
+  awaiting: string;
+
+  boardTitle: string;
+  boardLead: string;
+  fundedLabel: string;
+  remaining: string;
+  target: string;
+  funders: string;
+  fundIt: string;
+  fundingClosed: string;
+  expectedReturn: string;
+  youFund: string;
+  timeLeft: string;
+  noFunders: string;
+  yourShare: string;
 }
 
 const en: Copy = {
@@ -151,6 +172,27 @@ const en: Copy = {
   range: "Observed range",
   window: "Sample window",
   vaultApy: "Treasury APY",
+  buyerTitle: "Buyer acknowledgement",
+  buyerLead:
+    "Only the address written on the invoice can acknowledge it. Until that happens the receivable is a claim the supplier makes; afterwards it is one the buyer has confirmed, which is what a funder can price.",
+  acknowledge: "Acknowledge on chain",
+  acknowledged: "Acknowledged",
+  parties: "Parties",
+  awaiting: "Awaiting acknowledgement",
+
+  boardTitle: "Funding board",
+  boardLead: "Funders subscribe to a fixed payout. The contract takes only what the round still needs.",
+  fundedLabel: "Funded",
+  remaining: "Remaining",
+  target: "Target",
+  funders: "Funders",
+  fundIt: "Fund this invoice",
+  fundingClosed: "Funding closed",
+  expectedReturn: "Expected return",
+  youFund: "You fund",
+  timeLeft: "Time left",
+  noFunders: "No funders yet.",
+  yourShare: "share",
 };
 
 const tr: Copy = {
@@ -230,6 +272,27 @@ const tr: Copy = {
   range: "Gözlenen aralık",
   window: "Örnek penceresi",
   vaultApy: "Hazine APY",
+  buyerTitle: "Alıcı onayı",
+  buyerLead:
+    "Faturayı yalnızca üzerinde yazan adres onaylayabilir. O ana kadar alacak satıcının iddiasıdır; sonrasında alıcının teyit ettiği bir alacaktır — fonlayıcının fiyatlayabileceği şey budur.",
+  acknowledge: "Zincirde onayla",
+  acknowledged: "Onaylandı",
+  parties: "Taraflar",
+  awaiting: "Onay bekleniyor",
+
+  boardTitle: "Fonlama panosu",
+  boardLead: "Fonlayıcılar sabit bir ödemeye abone olur. Kontrat turun ihtiyacından fazlasını almaz.",
+  fundedLabel: "Fonlanan",
+  remaining: "Kalan",
+  target: "Hedef",
+  funders: "Fonlayıcılar",
+  fundIt: "Bu faturayı fonla",
+  fundingClosed: "Fonlama kapalı",
+  expectedReturn: "Beklenen getiri",
+  youFund: "Fonlarsın",
+  timeLeft: "Kalan süre",
+  noFunders: "Henüz fonlayıcı yok.",
+  yourShare: "pay",
 };
 
 export const t = (lang: Lang) => (lang === "tr" ? tr : en);

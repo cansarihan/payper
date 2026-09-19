@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Connect } from "@/components/Connect";
 import { Anchor } from "@/components/panel/Anchor";
+import { Board } from "@/components/panel/Board";
+import { Buyer } from "@/components/panel/Buyer";
 import { PanelShell, type Screen } from "@/components/panel/Shell";
 import { Quote } from "@/components/panel/Quote";
 import { Upload } from "@/components/panel/Upload";
@@ -105,6 +107,10 @@ export function App({ lang }: { lang: Lang }) {
             setScreen("buyer");
           }}
         />
+      ) : screen === "buyer" ? (
+        <Buyer lang={lang} state={state} onDone={refresh} />
+      ) : screen === "board" ? (
+        <Board lang={lang} state={state} onDone={refresh} />
       ) : screen === "quote" ? (
         <Quote lang={lang} state={state} onDone={refresh} />
       ) : screen === "anchor" ? (
@@ -120,8 +126,6 @@ export function App({ lang }: { lang: Lang }) {
 function Placeholder({ lang, screen }: { lang: Lang; screen: Screen }) {
   const labels: Record<string, [string, string]> = {
     overview: ["Overview", "Genel bakış"],
-    buyer: ["Buyer acknowledgement", "Alıcı onayı"],
-    board: ["Funding board", "Fonlama panosu"],
   };
   const [en, tr] = labels[screen] ?? ["", ""];
   return (
