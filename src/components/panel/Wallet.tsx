@@ -44,12 +44,27 @@ export function Wallet({
   useEffect(() => {
     if (!session?.address) return;
     let alive = true;
-    const horizon = state.network === "mainnet"
-      ? "https://horizon.stellar.org"
-      : "https://horizon-testnet.stellar.org";
-    void fetch(`${horizon}/accounts/${session.address}`)
-      .then((r) => alive && setOnChain(r.ok))
-      .catch(() => alive && setOnChain(false));
+    let tries = 0;
+    const horizon =
+      state.network === "mainnet"
+        ? "https://horizon.stellar.org"
+        : "https://horizon-testnet.stellar.org";
+
+    // Sign-in starts the account creation in the background, so a miss here is
+    // usually "not yet" rather than "never". Poll a few times before saying so.
+    const look = () => {
+      void fetch(`${horizon}/accounts/${session.address}`)
+        .then((r) => {
+          if (!alive) return;
+          if (r.ok) return setOnChain(true);
+          if (tries++ < 8) window.setTimeout(look, 2500);
+          else setOnChain(false);
+        })
+        .catch(() => {
+          if (alive && tries++ >= 8) setOnChain(false);
+        });
+    };
+    look();
     return () => {
       alive = false;
     };
@@ -168,8 +183,16 @@ export function Wallet({
               k={d.sessionAddress}
               v={session ? shortKey(session.address, 8, 6) : "—"}
               href={session && onChain ? explorer(session.address) : undefined}
-              tag={onChain === null ? undefined : onChain ? d.onChainYes : d.onChainNo}
-              tagTone={onChain ? C.green : C.amber}
+              tag={
+                method !== "passkey"
+                  ? undefined
+                  : onChain === null
+                    ? d.onChainNo
+                    : onChain
+                      ? d.onChainYes
+                      : d.onChainFailed
+              }
+              tagTone={onChain ? C.green : onChain === null ? C.blue : C.amber}
             />
             <Row k={d.roleLabel} v={session ? d.roles[session.role] : "—"} />
             {session?.credentialId && (

@@ -1,7 +1,9 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/brand/lockup-white-1040.png">
-  <img src="public/brand/lockup-ink-1040.png" alt="payper" height="56">
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/readme-dark.svg">
+  <img src="public/brand/readme-light.svg" alt="payper" width="260">
 </picture>
+
+<br>
 
 **Turkish working capital, funded from anywhere.** A supplier in Bursa waits
 ninety days to be paid. The capital that could bridge that gap sits inside

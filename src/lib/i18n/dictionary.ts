@@ -89,6 +89,7 @@ interface Copy {
   passkeyAccount: string;
   onChainYes: string;
   onChainNo: string;
+  onChainFailed: string;
   onChainNoNote: string;
   activateCta: string;
   activatedNote: string;
@@ -387,10 +388,11 @@ const en: Copy = {
   sessionAddress: "Session address",
   passkeyAccount: "Passkey account",
   onChainYes: "on the network",
-  onChainNo: "not on the network yet",
+  onChainNo: "being created…",
+  onChainFailed: "not created",
   onChainNoNote:
-    "An address is only an address until someone funds it — a Stellar account comes into existence with its first payment, which is why the explorer has nothing to show. On testnet friendbot can do it; in production the first deposit would.",
-  activateCta: "Create it on testnet",
+    "Signing in started this: a Stellar account comes into existence with its first payment, so the address is being funded and given a USDC trustline. If it has not appeared after a moment, the button retries it.",
+  activateCta: "Try again",
   activatedNote: "Created, with a USDC trustline. The explorer link now resolves.",
   walletNotNeeded: "Your passkey account is ready to use. Nothing needs linking.",
   noWalletLinked: "none linked — not needed",
@@ -763,10 +765,11 @@ const tr: Copy = {
   sessionAddress: "Oturum adresi",
   passkeyAccount: "Passkey hesabı",
   onChainYes: "ağda var",
-  onChainNo: "henüz ağda yok",
+  onChainNo: "oluşturuluyor…",
+  onChainFailed: "oluşturulamadı",
   onChainNoNote:
-    "Bir adres, biri ona para gönderene kadar yalnızca adrestir — Stellar hesabı ilk ödemeyle var olur, o yüzden gezginin gösterecek bir şeyi yok. Testnet'te bunu friendbot yapabilir; üretimde ilk yatırma yapardı.",
-  activateCta: "Testnet'te oluştur",
+    "Bunu giriş başlattı: Stellar hesabı ilk ödemeyle var olur, o yüzden adres fonlanıyor ve USDC trustline'ı açılıyor. Biraz bekleyince görünmediyse buton yeniden dener.",
+  activateCta: "Yeniden dene",
   activatedNote: "Oluşturuldu, USDC trustline'ı ile. Gezgin linki artık açılıyor.",
   walletNotNeeded: "Passkey hesabın kullanıma hazır. Bağlanması gereken bir şey yok.",
   noWalletLinked: "bağlı değil — gerekmiyor",

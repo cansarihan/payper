@@ -10,6 +10,7 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 
+import { activatePasskeyAccount } from "@/lib/auth/activate";
 import { consumeChallenge, issueChallenge } from "@/lib/auth/challenge";
 import {
   allPasskeys,
@@ -105,6 +106,10 @@ export async function POST(req: NextRequest) {
         issuedAt: Date.now(),
       };
       await writeSession(session);
+      // Signing in is the moment the account should start existing. It is not
+      // awaited: the person is already signed in, and a friendbot round trip
+      // has no business standing between them and the panel.
+      void activateInBackground(credential.id);
       return ok({ session, address: keypair.publicKey() });
     }
 
@@ -158,6 +163,7 @@ export async function POST(req: NextRequest) {
         issuedAt: Date.now(),
       };
       await writeSession(session);
+      void activateInBackground(record.credentialId);
       return ok({ session, address: record.address });
     }
 
@@ -176,6 +182,19 @@ export async function GET() {
       label: p.label,
       createdAt: p.createdAt,
     })),
+  });
+}
+
+/**
+ * Create the account without making anyone wait for it.
+ *
+ * This runs in a persistent Node process, so a floating promise finishes. A
+ * failure is logged rather than swallowed, and the wallet screen still offers
+ * the manual path when it finds the account missing.
+ */
+function activateInBackground(credentialId: string) {
+  return activatePasskeyAccount(credentialId).catch((e: unknown) => {
+    console.warn("passkey account activation failed:", (e as Error).message);
   });
 }
 
