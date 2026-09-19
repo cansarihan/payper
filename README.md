@@ -1,8 +1,14 @@
 # Payper
 
-**On-chain receivable financing for Turkish SMEs.** A supplier uploads a term
-e-invoice, the buyer acknowledges it on chain, and the supplier is paid today in
-Turkish lira. At maturity the buyer pays and the contract distributes to funders.
+**Turkish working capital, funded from anywhere.** A supplier in Bursa waits
+ninety days to be paid. The capital that could bridge that gap sits inside
+Turkish bank balance sheets, and a funder abroad has no way to reach it — no
+lira account, no correspondent banking relationship, no ticket small enough to
+be worth the paperwork. Payper opens that door: an e-invoice the buyer has
+acknowledged on chain becomes an instrument anyone holding USDC can fund, in
+seconds, from fifty dollars up. The supplier is paid the same day in lira and
+never touches crypto; the funder is repaid in USDC and never touches a Turkish
+bank.
 
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
@@ -22,6 +28,7 @@ npm run test:ubl                  # document validator
 npm run test:tranche              # anchor transfer splitter
 npm run test:sep53                # signed messages, against the spec's vectors
 npm run test:auth                 # login, from the attacker's side
+npm run test:chirp                # the audio payment frame, 2000 random payloads
 ```
 
 `npm run smoke` is the one to run. It registers an invoice, has the buyer
@@ -169,6 +176,8 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | `contracts/treasury_defindex` | Treasury backed by a DeFindex vault; holds the position in vault shares and reports the vault's realised rate |
 | `contracts/treasury_local` | The same adapter interface over plain USDC, so the product still runs if the vault is unreachable |
 | `contracts/fx_oracle` | SEP-40 shaped TRY/USD feed for testnet |
+| `src/lib/chirp.ts` | The audio payment frame: 16 tones, a 5-symbol preamble, CRC-8, and the SEP-7 URI the QR carries |
+| `src/lib/chirpDecoder.ts` | The receiving half: microphone, FFT, preamble lock, slot sampling, CRC |
 | `src/lib/ubl` | UBL-TR parsing, XAdES structural check, document hash |
 | `src/lib/anchor` | SEP-1 discovery, SEP-10 auth, SEP-38 quotes, SEP-6 transfers, transfer splitting |
 | `src/lib/soroban` | Contract reads and writes, i128 encoding, error attribution |
@@ -187,6 +196,7 @@ inputs and labels the provenance of each component, rather than setting a rate.
 | **SEP-10** | Challenge authentication, validated before signing |
 | **SEP-12** | Customer registration |
 | **SEP-38** | Firm quotes, so the payout shown is the payout paid |
+| **SEP-7** | Payment URI in the QR, so any SEP-7 wallet can scan the same request the tones carry |
 | **SEP-40** | Oracle interface implemented by `fx_oracle` |
 | **SEP-53** | Signed messages for wallet login |
 

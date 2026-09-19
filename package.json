@@ -14,7 +14,8 @@
     "test:ubl": "tsx scripts/ubl-test.ts",
     "test:tranche": "tsx scripts/tranche-test.ts",
     "test:sep53": "tsx scripts/sep53-test.ts",
-    "test:auth": "tsx scripts/auth-test.ts"
+    "test:auth": "tsx scripts/auth-test.ts",
+    "test:chirp": "tsx scripts/chirp-test.ts"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.6.0",

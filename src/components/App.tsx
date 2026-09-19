@@ -8,6 +8,7 @@ import { Board } from "@/components/panel/Board";
 import { Overview } from "@/components/panel/Overview";
 import { Buyer } from "@/components/panel/Buyer";
 import { PanelShell, type Screen } from "@/components/panel/Shell";
+import { Pay } from "@/components/panel/Pay";
 import { Quote } from "@/components/panel/Quote";
 import { Settle } from "@/components/panel/Settle";
 import { Upload } from "@/components/panel/Upload";
@@ -120,6 +121,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
+          ) : screen === "pay" ? (
+            <Pay lang={lang} state={state} onDone={refresh} />
           ) : screen === "settle" ? (
             <Settle lang={lang} state={state} onDone={refresh} />
           ) : (

@@ -52,6 +52,16 @@ interface Copy {
   statusShort: Readonly<Record<"registered" | "acknowledged" | "funded" | "repaid" | "defaulted", string>>;
   cardTitles: readonly [string, string, string, string, string, string];
   scoreCaption: string;
+  payTitle: string;
+  payLead: string;
+  payModes: readonly [string, string, string];
+  payPlay: string;
+  payStop: string;
+  payListen: string;
+  payHeard: string;
+  payConfirm: string;
+  payAmount: string;
+  payFrame: string;
   settleTitle: string;
   settleLead: string;
   repayCta: string;
@@ -153,10 +163,10 @@ interface Copy {
 }
 
 const en: Copy = {
-  tagline: ["Your term invoice,", "paid today."],
+  tagline: ["Turkish working capital,", "funded from anywhere."],
   lead:
-    "A supplier uploads a term e-invoice, the buyer acknowledges it on chain, and the money arrives the same day as fiat in a bank account. At maturity the buyer pays and the contract distributes to funders.",
-  leadEmphasis: "The discount is not a fixed number — it is computed from live on-chain yield and the observed currency move.",
+    "A supplier in Bursa waits ninety days to be paid. The capital that could bridge that gap is trapped inside Turkish bank balance sheets, and a funder abroad has no way to reach it — no lira account, no correspondent bank, no ticket small enough to bother with. Payper opens that door: an acknowledged e-invoice becomes something anyone holding USDC can fund, in seconds, from fifty dollars up.",
+  leadEmphasis: "The supplier is paid the same day in lira. The funder never touches a Turkish bank.",
   liveNow: "Stellar testnet · live",
 
   treasuryYield: "Treasury yield",
@@ -186,7 +196,7 @@ const en: Copy = {
   days: "days",
   annual: "annual",
   roles: { seller: "Supplier", buyer: "Buyer", funder: "Funder" },
-  nav: ["Overview", "Upload invoice", "Buyer approval", "Quote", "Anchor", "Funding board", "Settle"],
+  nav: ["Overview", "Upload invoice", "Buyer approval", "Quote", "Anchor", "Pay by sound", "Funding board", "Settle"],
   acct: [
     ["Wallet", "signing key"],
     ["Bank account", "payout destination"],
@@ -232,6 +242,17 @@ const en: Copy = {
     "ETTN blocked",
   ],
   scoreCaption: "Payper Score · on-chain",
+  payTitle: "Pay by sound, or by QR",
+  payLead:
+    "The request is encoded as sixteen tones and played out loud. Any phone in the room hears it, checks the CRC and acts on it — no camera, no pairing, no data connection. The QR beside it carries the same request as a SEP-7 URI, so a wallet can scan it instead. Both end in the same fund() call.",
+  payModes: ["Play", "Listen", "QR"],
+  payPlay: "Play the request",
+  payStop: "Stop",
+  payListen: "Listen for a request",
+  payHeard: "Heard and verified",
+  payConfirm: "Fund it",
+  payAmount: "Amount",
+  payFrame: "Frame",
   settleTitle: "Settlement, and what happens when it does not come",
   settleLead:
     "At maturity the buyer pays the face value in and the contract repays funders pro rata. When the buyer does not pay, the same contract runs the recourse waterfall instead.",
@@ -326,7 +347,7 @@ const en: Copy = {
   howTitle: "Five steps, each one a contract call or a SEP flow",
   trackTitle: "What the Genesis track asks for, and where it is in the product",
   trackLead:
-    "Three requirements. Each one is answered by something you can open and check, not by a claim on this page.",
+    "Three requirements. Each one is answered by something you can open and check, not by a claim on this page. The same ETTN cannot be financed twice either — the contract refuses it — but that is hygiene, not the headline.",
   track: [
     [
       "INTEGRATION",
@@ -396,10 +417,10 @@ const en: Copy = {
 };
 
 const tr: Copy = {
-  tagline: ["Vadeli faturan,", "bugün ödensin."],
+  tagline: ["Türkiye'nin işletme sermayesi,", "her yerden fonlanabilir."],
   lead:
-    "KOBİ vadeli e-faturasını yükler, alıcı zincir üstünde onaylar, para aynı gün TL olarak banka hesabına geçer. Vadede alıcı öder, kontrat fonlayıcılara dağıtır.",
-  leadEmphasis: "İskonto sabit bir sayı değil — canlı zincir getirisinden ve gözlenen kur hareketinden hesaplanıyor.",
+    "Bursa'daki bir üretici parasını doksan gün bekliyor. O açığı kapatacak sermaye Türk bankalarının bilançosunda kilitli; yurt dışındaki bir fonlayıcının oraya ulaşma yolu yok — TL hesabı yok, muhabir banka yok, uğraşmaya değecek kadar küçük bir bilet yok. Payper o kapıyı açıyor: alıcısı onaylamış bir e-fatura, USDC tutan herkesin saniyeler içinde, elli dolardan başlayarak fonlayabildiği bir enstrümana dönüşüyor.",
+  leadEmphasis: "Tedarikçiye aynı gün TL geçiyor. Fonlayıcı hiçbir Türk bankasına dokunmuyor.",
   liveNow: "Stellar testnet · canlı",
 
   treasuryYield: "Hazine getirisi",
@@ -429,7 +450,7 @@ const tr: Copy = {
   days: "gün",
   annual: "yıllık",
   roles: { seller: "KOBİ", buyer: "Alıcı", funder: "Fonlayıcı" },
-  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Fonlama panosu", "Kapanış"],
+  nav: ["Genel bakış", "Fatura yükle", "Alıcı onayı", "İskonto", "Anchor", "Sesle öde", "Fonlama panosu", "Kapanış"],
   acct: [
     ["Cüzdan", "imza anahtarı"],
     ["Banka hesabı", "ödeme adresi"],
@@ -475,6 +496,17 @@ const tr: Copy = {
     "ETTN engeli",
   ],
   scoreCaption: "Payper Score · zincir üstü",
+  payTitle: "Sesle öde, ya da QR ile",
+  payLead:
+    "İstek on altı tona kodlanıp yüksek sesle çalınıyor. Odadaki herhangi bir telefon duyuyor, CRC'sini doğruluyor ve işleme koyuyor — kamera yok, eşleşme yok, veri bağlantısı yok. Yanındaki QR aynı isteği SEP-7 URI olarak taşıyor; cüzdan onu okuyabiliyor. İkisi de aynı fund() çağrısında bitiyor.",
+  payModes: ["Çal", "Dinle", "QR"],
+  payPlay: "İsteği çal",
+  payStop: "Durdur",
+  payListen: "İstek dinle",
+  payHeard: "Duyuldu ve doğrulandı",
+  payConfirm: "Fonla",
+  payAmount: "Tutar",
+  payFrame: "Çerçeve",
   settleTitle: "Kapanış ve gelmediğinde ne olduğu",
   settleLead:
     "Vadede alıcı fatura tutarını yatırır ve kontrat fonlayıcılara oransal öder. Alıcı ödemediğinde aynı kontrat bu kez rücu şelalesini çalıştırır.",
@@ -569,7 +601,7 @@ const tr: Copy = {
   howTitle: "Beş adım, her biri bir kontrat çağrısı ya da SEP akışı",
   trackTitle: "Genesis track'in istedikleri ve ürünün neresinde durdukları",
   trackLead:
-    "Üç şart. Her birinin karşılığı, bu sayfadaki bir iddia değil, açıp kontrol edebileceğin bir şey.",
+    "Üç şart. Her birinin karşılığı, bu sayfadaki bir iddia değil, açıp kontrol edebileceğin bir şey. Aynı ETTN ikinci kez de finanse edilemiyor — kontrat reddediyor — ama o manşet değil, hijyen.",
   track: [
     [
       "ENTEGRASYON",
