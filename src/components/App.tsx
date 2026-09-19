@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Connect } from "@/components/Connect";
 import { Anchor } from "@/components/panel/Anchor";
 import { Board } from "@/components/panel/Board";
+import { Overview } from "@/components/panel/Overview";
 import { Buyer } from "@/components/panel/Buyer";
 import { PanelShell, type Screen } from "@/components/panel/Shell";
 import { Quote } from "@/components/panel/Quote";
@@ -107,6 +108,8 @@ export function App({ lang }: { lang: Lang }) {
             setScreen("buyer");
           }}
         />
+      ) : screen === "overview" ? (
+        <Overview lang={lang} state={state} onGo={setScreen} />
       ) : screen === "buyer" ? (
         <Buyer lang={lang} state={state} onDone={refresh} />
       ) : screen === "board" ? (
@@ -116,30 +119,8 @@ export function App({ lang }: { lang: Lang }) {
       ) : screen === "anchor" ? (
         <Anchor state={state} onDone={refresh} />
       ) : (
-        <Placeholder lang={lang} screen={screen} />
+        <Overview lang={lang} state={state} onGo={setScreen} />
       )}
     </PanelShell>
-  );
-}
-
-/** Screens still to be built, named rather than blank. */
-function Placeholder({ lang, screen }: { lang: Lang; screen: Screen }) {
-  const labels: Record<string, [string, string]> = {
-    overview: ["Overview", "Genel bakış"],
-  };
-  const [en, tr] = labels[screen] ?? ["", ""];
-  return (
-    <div
-      style={{
-        background: C.white,
-        borderRadius: 28,
-        padding: "64px 24px",
-        textAlign: "center",
-        color: C.grey,
-        fontWeight: 600,
-      }}
-    >
-      {lang === "tr" ? tr : en}
-    </div>
   );
 }
