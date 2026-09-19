@@ -17,7 +17,7 @@ jobs:
       release_name: ${{ github.ref_name }}
       release_description: 'Invoice registry, pricing and settlement'
       home_domain: 'payper.live'
-      relative_path: '["contracts/invoice"]'
+      relative_path: 'contracts/invoice'
       package: 'payper-invoice'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
@@ -28,7 +28,7 @@ jobs:
       release_name: ${{ github.ref_name }}-treasury
       release_description: 'DeFindex treasury adapter'
       home_domain: 'payper.live'
-      relative_path: '["contracts/treasury_defindex"]'
+      relative_path: 'contracts/treasury_defindex'
       package: 'payper-treasury-defindex'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
