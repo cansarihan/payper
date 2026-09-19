@@ -1,0 +1,13 @@
+Payper turns an acknowledged e-invoice into an instrument anyone holding USDC can fund — in seconds, from fifty dollars up.
+
+THE PROBLEM. A supplier waits 60-120 days to be paid. The capital that could bridge that gap is bank capital: a factor can only advance what its own balance sheet allows, and that balance sheet is bounded by the country it is licensed in. A funder abroad who would take that risk at that price cannot reach it — no local-currency account, no correspondent banking, no ticket size small enough to be worth the paperwork. Two more follow: the discount is asserted rather than derived, and the same receivable can be sold twice.
+
+WHAT WE BUILT. Four Soroban contracts on testnet. The supplier uploads a UBL-TR e-invoice; the contract writes its unique document identifier (ETTN) and refuses a second registration — a contract invariant, not a database row. The buyer acknowledges on chain. quote() computes the discount from four components and returns each one's provenance, so a number that fell back to a parameter cannot be presented as live. Funders contribute USDC and hold a transferable pro-rata claim that can change hands before maturity. The supplier sells the payout for local currency through a SEP-6 anchor; the buyer settles in the same currency at maturity.
+
+USERS. Suppliers invoicing a single large corporate buyer, roughly 1,500-15,000 USD per invoice on 30-120 day terms. The buyer's acknowledgement is both what makes the receivable real to a funder and the distribution channel.
+
+ECOSYSTEM. DeFindex (treasury vault — our wasm hash matches their published hash byte for byte), Blend v2 (the lending rate the yield component reads), Stellar Wallets Kit, and nine SEPs including a bidirectional SEP-6 anchor. The anchor is load-bearing: without it the supplier cannot be paid and the buyer cannot settle.
+
+The mechanism is country-neutral; what changes is the document standard, the identifier and the anchor. The first corridor is Türkiye.
+
+Open limitations are named in the README, not buried.
