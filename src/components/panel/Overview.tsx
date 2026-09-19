@@ -890,9 +890,11 @@ function metrics(state: AppState, d: ReturnType<typeof t>) {
     firstLossUsdc: `${(firstLoss / 1e7).toFixed(2)} USDC`,
   };
 
+  // Two rows of the three-column grid. Fewer leaves the column beside the cash
+  // flow chart visibly empty; more pushes the table below the fold.
   const offers = inv
     .filter((i) => i.status === "acknowledged" || i.status === "registered")
-    .slice(0, 3)
+    .slice(0, 6)
     .map((i, k) => ({
       id: i.id,
       name: `${d.invoicesLabel} #${i.id}`,
