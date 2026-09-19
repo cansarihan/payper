@@ -23,8 +23,7 @@ instance of a general rule, marked where it appears.
 
 Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet
 
-**Live:** [payper.live](https://payper.live) · **Demo:**
-[80-second walkthrough](https://payper.live/payper-demo.mp4) · **Contract:**
+**Live:** [payper.live](https://payper.live) · **Contract:**
 [`CB2EUFAF…3NBA`](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA)
 
 ---
@@ -120,7 +119,7 @@ chain on every call:
 
 | Component | Source | On the live deployment |
 |---|---|---|
-| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** once the reference window opens |
+| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** · ~130 bps |
 | Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** · 723 bps |
 | Credit premium | Parameter | 120 bps |
 | Platform fee | Parameter | 50 bps |
@@ -135,7 +134,9 @@ strategies are bound to their test USDC, while this system holds Circle's
 testnet USDC because that is what the anchor issues — so there is nothing
 realised there to measure. The adapter then reads a Blend v2 pool instead:
 `b_rate`, the pool's bToken-to-underlying index, is sampled once when the
-reference is set and the growth since that sample is annualised. That is the
+reference is set and the growth since that sample is annualised. The pool
+accrues its reserve to the current ledger on every read, so the index is a
+smooth function of time and ten minutes of it is enough to measure. That is the
 rate this capital earns lending on Stellar, which is the cost of money the
 discount is meant to carry. Neither source is a parameter, and when neither can
 be read the adapter refuses rather than substituting a number that would arrive
@@ -429,7 +430,7 @@ stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5R
 
 ```bash
 # Our position, in vault shares
-stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ
+stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP --source payper-admin --network testnet -- balance --id CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4
 ```
 
 ```bash
@@ -701,7 +702,7 @@ Stellar testnet, protocol 28.
 | | Address |
 |---|---|
 | Invoice contract | [`CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA`](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA) |
-| Treasury adapter | [`CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ`](https://stellar.expert/explorer/testnet/contract/CC6I3EGL6G22CRNZZLD32LQXSTLM5EOVUOY3ISDJ34ITEHGPDXUUHTYQ) |
+| Treasury adapter | [`CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4`](https://stellar.expert/explorer/testnet/contract/CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4) |
 | DeFindex vault | [`CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP`](https://stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP) |
 | Treasury, local fallback | [`CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI`](https://stellar.expert/explorer/testnet/contract/CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI) |
 | TRY/USD feed | [`CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC`](https://stellar.expert/explorer/testnet/contract/CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC) |
