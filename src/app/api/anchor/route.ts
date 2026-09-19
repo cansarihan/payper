@@ -10,7 +10,7 @@ import {
   totalOut,
   withdrawToBank,
 } from "@/lib/anchor/settle";
-import { getBankAccount } from "@/lib/bank";
+import { getBankAccount } from "@/lib/server/bank-store";
 import { signerAddress } from "@/lib/auth/roles";
 import { keypair } from "@/lib/server/actors";
 import { clientKey, rateLimit, requireSession } from "@/lib/server/guard";

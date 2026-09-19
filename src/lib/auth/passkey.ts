@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { Keypair } from "@stellar/stellar-sdk";
 
+import { persistentMap, type PersistentMap } from "@/lib/server/store";
+
 /**
  * Passkey-backed wallets.
  *
@@ -29,16 +31,19 @@ export interface PasskeyRecord {
 
 declare global {
   // eslint-disable-next-line no-var
-  var __payperPasskeys: Map<string, PasskeyRecord> | undefined;
+  var __payperPasskeys: PersistentMap<PasskeyRecord> | undefined;
   // eslint-disable-next-line no-var
   var __payperPasskeySecret: Buffer | undefined;
 }
 
 /**
  * On `globalThis` for the same reason the challenge store is: route handlers
- * are bundled separately and would otherwise each hold their own registry.
+ * are bundled separately and would otherwise each hold their own registry. On
+ * disk as well, because a credential that disappears on deploy tells the person
+ * who registered it yesterday that their passkey is unknown.
  */
-const store: Map<string, PasskeyRecord> = (globalThis.__payperPasskeys ??= new Map());
+const store: PersistentMap<PasskeyRecord> = (globalThis.__payperPasskeys ??=
+  persistentMap<PasskeyRecord>("passkeys"));
 
 /**
  * The relying party, as the browser sees it.
@@ -95,4 +100,4 @@ export function keypairForCredential(credentialId: string): Keypair {
 
 export const rememberPasskey = (record: PasskeyRecord) => store.set(record.credentialId, record);
 export const findPasskey = (credentialId: string) => store.get(credentialId) ?? null;
-export const allPasskeys = () => [...store.values()];
+export const allPasskeys = () => store.values();

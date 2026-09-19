@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { clearBankAccount, getBankAccount, saveBankAccount } from "@/lib/bank";
+import { clearBankAccount, getBankAccount, saveBankAccount } from "@/lib/server/bank-store";
 import { signerAddress } from "@/lib/auth/roles";
 import { clientKey, rateLimit, requireSession } from "@/lib/server/guard";
 import { fail, ok } from "@/lib/server/respond";
