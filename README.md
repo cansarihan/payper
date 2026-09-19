@@ -53,7 +53,7 @@ What to look for, in order:
 | | Where | What it shows |
 |---|---|---|
 | 1 | `npm run smoke`, final step | The same ETTN is refused. This is the product's one invariant |
-| 2 | `npm run smoke`, step 3 | Both pricing components report `live` — read from chain, not configured |
+| 2 | `npm run smoke`, step 3 | Currency risk reports `live` — read from the feed, not configured. The yield component reports `fallback` and says why, which is the point: provenance is labelled, never assumed |
 | 3 | Dashboard → Anchor | The SEP trace, request by request, with the status the anchor returned |
 | 4 | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CC76VPEQA6SCHUOWL62RSO4EVWWZXACNUYJENREZSA4BGZIOLJQ3EJ4R) | The transactions the run just wrote |
 

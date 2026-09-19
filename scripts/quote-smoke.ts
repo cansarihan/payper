@@ -131,9 +131,17 @@ async function main() {
       `${q.fxWindowDays} gün pencere, drift ${q.fxDriftBps}, aralık ${q.fxRangeBps}) · ` +
       `kredi ${q.creditPremiumBps} · ücret ${q.platformFeeBps}`,
   );
-  if (q.yieldSource !== "live" || q.fxSource !== "live") {
-    bad("iki bileşen de zincirden okunmalıydı");
+  if (q.fxSource !== "live") {
+    bad("kur riski zincirden okunmalıydı — besleme boş ya da pencere yetersiz");
     process.exit(1);
+  }
+  if (q.yieldSource === "live") {
+    ok("getiri de zincirden okundu");
+  } else {
+    dim(
+      "getiri fallback: kasaya strateji bağlı değil, gerçekleşmiş kazanç yok. " +
+        "Adaptör sayı uydurmak yerine reddediyor, bileşen kaynağını böyle etiketliyor.",
+    );
   }
   const accepted = await inv.acceptQuote(id);
   ok(`accept_quote() · %${(accepted.quote.totalDiscountBps / 100).toFixed(2)} kilitlendi`);
