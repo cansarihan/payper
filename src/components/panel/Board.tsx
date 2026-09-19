@@ -53,6 +53,10 @@ export function Board({
   const discountBps = invoice?.lockedDiscountBps ?? 0;
 
   async function fund() {
+    // Same reason as the buyer screen: filling an invoice moves it out of the
+    // list this screen defaults to, and the receipt would be shown against a
+    // different invoice than the one just funded.
+    if (invoice) setPicked(invoice.id);
     if (!invoice || !rate) return;
     setBusy(true);
     setError(null);

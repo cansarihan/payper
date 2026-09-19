@@ -36,6 +36,11 @@ export function Buyer({
 
   async function acknowledge() {
     if (!invoice) return;
+    // Pin the invoice before the refresh. Acknowledging takes it out of
+    // `pending`, and without this the screen would fall through to the next
+    // one waiting — the call succeeds, the confirmation never appears, and it
+    // reads as a button that does nothing.
+    setPicked(invoice.id);
     setBusy(true);
     setError(null);
     setNeedsRole(null);
