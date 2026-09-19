@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     };
 
     if (!body.address || !body.nonce || !body.signature) {
-      return fail(new Error("address, nonce ve signature gerekli"), 422);
+      return fail(new Error("address, nonce and signature are required"), 422);
     }
     const challenge = consumeChallenge(body.nonce);
     if (!challenge) return fail(new Error("The challenge is invalid or has expired"), 401);
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
     if (!result.ok) {
       return fail(
-        new Error(`İmza doğrulanamadı. Denenen biçimler: ${result.tried.join(", ")}`),
+        new Error(`The signature did not verify. Formats tried: ${result.tried.join(", ")}`),
         422,
       );
     }

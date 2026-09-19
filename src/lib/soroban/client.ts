@@ -48,7 +48,7 @@ export async function read<T>(
 
   const sim = await srv.simulateTransaction(tx);
   if (rpc.Api.isSimulationError(sim)) {
-    throw new SorobanCallError(`${method} simülasyonu başarısız: ${sim.error}`, method);
+    throw new SorobanCallError(`${method} simulation failed: ${sim.error}`, method);
   }
   const retval = (sim as rpc.Api.SimulateTransactionSuccessResponse).result?.retval;
   return (retval ? scValToNative(retval) : undefined) as T;
@@ -93,7 +93,7 @@ export async function invoke<T = unknown>(
       };
     }
     if (got.status === rpc.Api.GetTransactionStatus.FAILED) {
-      throw new SorobanCallError(`${method} başarısız: ${JSON.stringify(got.resultXdr)}`, method);
+      throw new SorobanCallError(`${method} failed: ${JSON.stringify(got.resultXdr)}`, method);
     }
     if (Date.now() > deadline) {
       throw new SorobanCallError(`${method} zaman aşımına uğradı (hash ${sent.hash})`, method);
@@ -152,24 +152,28 @@ export const INVOICE_ERRORS: Record<number, string> = {
   12: "NotYetDue",
   13: "NoQuoteAccepted",
   14: "QuoteExpired",
+  15: "NoClaimToTransfer",
+  16: "ClaimNotTransferable",
 };
 
 export const ERROR_MESSAGES: Record<string, string> = {
-  EttnAlreadyUsed: "Bu ETTN daha önce finanse edilmiş. Aynı alacak ikinci kez satılamaz.",
-  InvalidStatus: "Fatura bu işlem için uygun durumda değil.",
-  Unauthorized: "Bu işlemi yapma yetkiniz yok.",
-  InvoiceNotFound: "Fatura bulunamadı.",
-  InvalidAmount: "Tutar geçersiz.",
-  InvalidDueDate: "Vade tarihi geçersiz.",
-  Oversubscribed: "Bu tutar faturanın kalan ihtiyacını aşıyor.",
-  InsufficientLiquidity: "Hazinede bu ödemeyi karşılayacak likidite yok.",
-  NotWhitelisted: "Bu büyüklükte bir dilim için lisanslı fonlayıcı olmanız gerekir.",
-  NotYetDue: "Faturanın vadesi ve ek süresi henüz geçmedi.",
-  NoQuoteAccepted: "Satıcı henüz bir iskonto teklifini kabul etmedi.",
+  EttnAlreadyUsed: "This ETTN has already been financed. The same receivable cannot be sold twice.",
+  InvalidStatus: "The invoice is not in a state that allows this.",
+  Unauthorized: "You are not allowed to perform this operation.",
+  InvoiceNotFound: "No such invoice.",
+  InvalidAmount: "The amount is invalid.",
+  InvalidDueDate: "The due date is invalid.",
+  Oversubscribed: "That amount exceeds what the invoice still needs.",
+  InsufficientLiquidity: "The treasury cannot release this payout.",
+  NotWhitelisted: "A tranche this size requires a licensed funder.",
+  NotYetDue: "The invoice is not past its due date and grace period yet.",
+  NoQuoteAccepted: "The supplier has not accepted a discount quote yet.",
   QuoteExpired:
-    "Kabul edilen teklifin süresi doldu. İskonto o anki kurdan hesaplanmıştı; satıcının güncel fiyattan yeni bir teklif kabul etmesi gerekiyor.",
-  TokenBalanceTooLow: "Gönderen hesabın USDC bakiyesi bu tutar için yetersiz.",
-  TokenTrustlineMissing: "Hesapta USDC trustline'ı yok.",
+    "The accepted quote has expired. Its discount was computed from the rate at the time; the supplier has to accept a new quote at the current price.",
+  NoClaimToTransfer: "This address holds no claim on the invoice, or not enough of one.",
+  ClaimNotTransferable: "A claim can only move while the invoice is still outstanding.",
+  TokenBalanceTooLow: "The sending account does not hold enough USDC for this amount.",
+  TokenTrustlineMissing: "The account has no USDC trustline.",
 };
 
 // ── argument helpers ────────────────────────────────────────────────────────

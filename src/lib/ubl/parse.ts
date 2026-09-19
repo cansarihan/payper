@@ -144,7 +144,7 @@ export function parseUblInvoice(xml: string | Buffer): ParsedInvoice {
       const scheme = first(entry.ID)?.["@_schemeID"];
       if (value && (scheme === "VKN" || scheme === "TCKN" || !taxId)) taxId = value;
     }
-    if (!taxId) throw new UblParseError(`${role} vergi kimlik numarası bulunamadı`, "taxId");
+    if (!taxId) throw new UblParseError(`${role} tax identifier not found`, "taxId");
     return { taxId, name: text(nameNode?.Name) ?? role };
   };
 
@@ -204,10 +204,10 @@ export function checkSignature(raw: string): SignatureCheck {
   const hasSignatureValue =
     cleaned.length > 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(cleaned) && cleaned.length % 4 === 0;
 
-  if (!hasSignedInfo) notes.push("ds:SignedInfo yok");
+  if (!hasSignedInfo) notes.push("ds:SignedInfo missing");
   if (!hasSignatureValue) notes.push("ds:SignatureValue is not valid base64");
-  if (!hasCertificate) notes.push("ds:X509Certificate yok");
-  if (!hasQualifyingProperties) notes.push("xades:QualifyingProperties yok");
+  if (!hasCertificate) notes.push("ds:X509Certificate missing");
+  if (!hasQualifyingProperties) notes.push("xades:QualifyingProperties missing");
   if (!method) notes.push("No SignatureMethod algorithm is declared");
 
   const structurallyValid =

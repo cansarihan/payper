@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     rateLimit(clientKey(req, "quote-read"), 60, 60_000);
     const id = Number(new URL(req.url).searchParams.get("invoiceId"));
-    if (!id) return fail(new Error("invoiceId gerekli"), 422);
+    if (!id) return fail(new Error("invoiceId is required"), 422);
     // The lock decides whether funding will be accepted, so it travels with the
     // price rather than being discovered by a failed transaction.
     const [breakdown, locked] = await Promise.all([quote(id), quoteLocked(id).catch(() => null)]);

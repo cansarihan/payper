@@ -34,7 +34,7 @@ export function keypair(actor: Actor): Keypair {
   const secret = fromEnv?.trim() || readFromCli(actor);
   if (!secret) {
     throw new Error(
-      `${actor} için anahtar yok: ${ENV_NAME[actor]} tanımla ya da \`stellar keys generate ${CLI_NAME[actor]}\` çalıştır`,
+      `no key for ${actor}: set ${ENV_NAME[actor]} or run \`stellar keys generate ${CLI_NAME[actor]}\``,
     );
   }
   const kp = Keypair.fromSecret(secret);
