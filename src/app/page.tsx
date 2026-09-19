@@ -1,5 +1,6 @@
-import { LangSwitch } from "@/components/LangSwitch";
-import { C, FONT, shortKey, trLira, trPct, usdc } from "@/lib/design";
+import { Hero, Marquee, TopNav } from "@/components/Hero";
+import { Closing, Pillars, Steps, Ways } from "@/components/Sections";
+import { C, FONT, shortKey, trLira, trNumber, trPct, usdc } from "@/lib/design";
 import { DEFAULT_LANG, isLang, t, type Lang } from "@/lib/i18n/dictionary";
 
 export const dynamic = "force-dynamic";
@@ -15,115 +16,139 @@ export default async function Page({
   const d = t(lang);
   const state = await loadState();
 
+  const financed = state
+    ? state.invoices
+        .filter((i) => i.status === "funded" || i.status === "repaid")
+        .reduce((sum, i) => sum + Number(i.amountFiat) / 100, 0)
+    : 0;
+  const stats: [string, string, string][] = [
+    ["\u20ba", state ? trNumber(financed, 0) : "\u00b7\u00b7", d.statsLabels[0]],
+    ["", state ? String(state.invoices.length) : "\u00b7\u00b7", d.statsLabels[1]],
+    [
+      "%",
+      state ? trNumber(state.treasury.apyBps / 100, 2) : "\u00b7\u00b7",
+      state
+        ? `${d.statsLabels[2]} \u00b7 ${state.treasury.apySource === "live" ? d.tagLive : d.tagFallback}`
+        : `${d.statsLabels[2]} \u00b7 ${d.loading}`,
+    ],
+    ["", String(state?.invoices.filter((i) => i.status === "defaulted").length ?? 0), d.statsLabels[3]],
+  ];
+
   return (
     <main style={{ background: C.black, color: C.white, minHeight: "100vh" }}>
-      <section
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "clamp(60px,10vw,140px) 28px 60px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-            flexWrap: "wrap",
-            marginBottom: 28,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              fontFamily: FONT.mono,
-              fontSize: 12,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              color: C.mint,
-            }}
-          >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: C.mint,
-                animation: "pulse 2s infinite",
-              }}
-            />
-            {d.liveNow}
-          </div>
-          <LangSwitch lang={lang} />
-        </div>
+      <TopNav d={d} lang={lang} />
+      <Hero d={d} lang={lang} stats={stats} />
+      <Marquee />
 
-        <h1
+      <section id="proof" style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(60px,9vw,110px) 28px 0" }}>
+        <h2
+          className="reveal-lg"
           style={{
-            fontSize: "clamp(40px,7.5vw,92px)",
+            margin: "0 0 14px",
+            fontSize: "clamp(28px,4.4vw,52px)",
             fontWeight: 600,
-            letterSpacing: "-.05em",
-            lineHeight: .98,
-            margin: "0 0 26px",
+            letterSpacing: "-.045em",
+            lineHeight: 1.05,
             textWrap: "balance",
+            maxWidth: 820,
           }}
         >
-          {d.tagline[0]}
-          <br />
-          <span style={{ color: C.mint }}>{d.tagline[1]}</span>
-        </h1>
-
+          {d.proofTitle}
+        </h2>
         <p
+          className="reveal"
           style={{
-            fontSize: "clamp(16px,2vw,20px)",
-            lineHeight: 1.55,
-            color: "rgba(255,255,255,.72)",
-            maxWidth: 680,
-            margin: "0 0 44px",
+            margin: "0 0 34px",
+            fontSize: 16.5,
+            lineHeight: 1.6,
+            color: "rgba(255,255,255,.65)",
+            maxWidth: 640,
             fontWeight: 500,
           }}
         >
-          {d.lead}{" "}
-          <b style={{ color: C.white }}>{d.leadEmphasis}</b>
+          {d.proofLead}
         </p>
-
         {state ? <LiveFigures state={state} d={d} /> : <Unreachable d={d} />}
-
-        <a
-          href={lang === "en" ? "/app" : `/app?lang=${lang}`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 12,
-            marginTop: 38,
-            background: C.mint,
-            color: C.ink,
-            borderRadius: 999,
-            padding: "14px 14px 14px 26px",
-            fontSize: 15.5,
-            fontWeight: 700,
-            textDecoration: "none",
-          }}
-        >
-          {d.openPanel}
-          <span
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "50%",
-              background: C.ink,
-              color: C.mint,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            →
-          </span>
-        </a>
       </section>
+
+      <Steps d={d} />
+      <Ways d={d} />
+      <Pillars d={d} />
+      <Closing
+        d={d}
+        lang={lang}
+        contract={state?.contracts.invoice ?? ""}
+        network={state?.network ?? "testnet"}
+      />
+      <Wordmark />
+      <Foot d={d} state={state} lang={lang} />
     </main>
+  );
+}
+
+/** The closing wordmark: one word, large enough to read as a full stop. */
+function Wordmark() {
+  return (
+    <div
+      style={{
+        overflow: "hidden",
+        padding: "clamp(50px,8vw,90px) 32px 0",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "end",
+        lineHeight: 0.8,
+      }}
+    >
+      <div
+        style={{
+          fontSize: "clamp(90px,22vw,340px)",
+          fontWeight: 800,
+          letterSpacing: "-.06em",
+          color: "transparent",
+          background: "linear-gradient(180deg,#242424,#080808)",
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          transform: "translateY(12%)",
+          userSelect: "none",
+        }}
+      >
+        payper
+      </div>
+    </div>
+  );
+}
+
+/** Footer facts, read from the running deployment rather than written here. */
+function Foot({ d, state, lang }: { d: ReturnType<typeof t>; state: State | null; lang: Lang }) {
+  const items = [
+    state?.contracts.invoice ? `${d.contract} ${shortKey(state.contracts.invoice, 4, 4)}` : d.contract,
+    "SEP-1 · 6 · 10 · 12 · 38 · 40 · 53",
+    state?.anchor?.homeDomain ?? "anchor",
+    "Soroban",
+  ];
+  return (
+    <footer
+      style={{
+        padding: "26px 28px 30px",
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 16,
+        flexWrap: "wrap",
+        fontSize: 11.5,
+        color: "rgba(255,255,255,.42)",
+        fontFamily: FONT.mono,
+      }}
+    >
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        {items.map((i) => (
+          <span key={i}>{i}</span>
+        ))}
+      </div>
+      <div>
+        payper · {d.footerNote}
+        {lang !== "en" && " · "}
+      </div>
+    </footer>
   );
 }
 
@@ -279,6 +304,7 @@ const Unreachable = ({ d }: { d: ReturnType<typeof t> }) => (
 );
 
 interface State {
+  network: string;
   contracts: { invoice: string; treasury: string; fxOracle: string };
   invoices: { id: number; status: string; amountFiat: string }[];
   active: { id: number; status: string; amountFiat: string } | null;

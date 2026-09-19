@@ -93,6 +93,23 @@ interface Copy {
   timeLeft: string;
   noFunders: string;
   yourShare: string;
+
+  landingNav: readonly (readonly [string, string])[];
+  uploadCta: string;
+  exploreCta: string;
+  statsLabels: readonly [string, string, string, string];
+
+  howTitle: string;
+  howSteps: readonly (readonly [string, string, string])[];
+  waysTitle: string;
+  ways: readonly (readonly [string, string])[];
+  pillarsTitle: string;
+  pillars: readonly (readonly [string, string])[];
+  proofTitle: string;
+  proofLead: string;
+  closingTitle: string;
+  closingLead: string;
+  footerNote: string;
 }
 
 const en: Copy = {
@@ -193,6 +210,42 @@ const en: Copy = {
   timeLeft: "Time left",
   noFunders: "No funders yet.",
   yourShare: "share",
+  landingNav: [
+    ["How it works", "#how"],
+    ["Who it is for", "#who"],
+    ["What is different", "#why"],
+  ],
+  uploadCta: "Upload an invoice",
+  exploreCta: "How it works",
+  statsLabels: ["Financed to date", "Invoices in the book", "Treasury yield", "Defaults"],
+
+  howTitle: "Seven steps, each one a contract call or a SEP flow",
+  howSteps: [
+    ["Register", "register()", "The ETTN hash is written. A second registration of the same ETTN is refused before anything else happens."],
+    ["Acknowledge", "acknowledge()", "Only the address written on the invoice can confirm it. This is what makes the receivable real to a funder."],
+    ["Price", "quote()", "Four components. The treasury's yield and the observed currency move are read from chain on every call."],
+    ["Accept", "accept_quote()", "The discount is fixed so funders subscribe against a known payout. The lock expires on its own."],
+    ["Fund", "fund()", "Contributions sit in the treasury while the round fills. On completion the payout is drawn and paid."],
+    ["Settle", "SEP-6", "The supplier sells USDC for lira; at maturity the buyer pays lira back in."],
+    ["Distribute", "repay()", "Funders are repaid pro rata, each with their share of the discount."],
+  ],
+  waysTitle: "Three ways in",
+  ways: [
+    ["Supplier", "Upload a term invoice and take the money today instead of in ninety days."],
+    ["Buyer", "Acknowledge once, pay at maturity as you already do. Nothing changes on your side."],
+    ["Funder", "Subscribe to a payout backed by an acknowledged invoice, priced from live chain data."],
+  ],
+  pillarsTitle: "What makes it different",
+  pillars: [
+    ["One ETTN, one financing", "The identifier comes from the tax authority, so uniqueness is inherited rather than maintained by us. Selling the same receivable twice is refused by the contract, not by a policy."],
+    ["A price you can check", "Two of the four components are read from chain on every call, and each says whether it was live. A number that fell back to a parameter cannot be presented as live."],
+    ["Money that reaches a bank", "SEP-6 in both directions: the supplier is paid in lira, the buyer settles in lira. Every endpoint is discovered from the anchor at run time."],
+  ],
+  proofTitle: "Everything here is checkable",
+  proofLead: "The contracts are on testnet, the flow writes real transactions, and the figures on this page were read from chain when you loaded it.",
+  closingTitle: "See it run",
+  closingLead: "Upload an invoice, watch the discount come off chain, and try the duplicate.",
+  footerNote: "Rise In x Stellar Pro Hackathon 2026",
 };
 
 const tr: Copy = {
@@ -293,6 +346,42 @@ const tr: Copy = {
   timeLeft: "Kalan süre",
   noFunders: "Henüz fonlayıcı yok.",
   yourShare: "pay",
+  landingNav: [
+    ["Nasıl çalışır", "#how"],
+    ["Kimlere uygun", "#who"],
+    ["Farkı ne", "#why"],
+  ],
+  uploadCta: "Fatura yükle",
+  exploreCta: "Nasıl çalışır",
+  statsLabels: ["Toplam finanse edilen", "Defterdeki fatura", "Hazine getirisi", "Temerrüt"],
+
+  howTitle: "Yedi adım, her biri bir kontrat çağrısı ya da SEP akışı",
+  howSteps: [
+    ["Kayıt", "register()", "ETTN hash'i yazılır. Aynı ETTN'in ikinci kaydı, başka hiçbir şey olmadan önce reddedilir."],
+    ["Onay", "acknowledge()", "Faturayı yalnızca üzerinde yazan adres onaylayabilir. Alacağı fonlayıcı için gerçek kılan budur."],
+    ["Fiyat", "quote()", "Dört bileşen. Hazine getirisi ve gözlenen kur hareketi her çağrıda zincirden okunur."],
+    ["Kabul", "accept_quote()", "İskonto sabitlenir, fonlayıcılar bilinen bir ödemeye abone olur. Kilit kendiliğinden düşer."],
+    ["Fonlama", "fund()", "Katkılar tur dolarken hazinede durur. Tamamlanınca ödeme çekilir ve satıcıya geçer."],
+    ["Nakde çevirme", "SEP-6", "Satıcı USDC'yi TL'ye çevirir; vadede alıcı TL öder."],
+    ["Dağıtım", "repay()", "Fonlayıcılara oransal, her birine iskontodaki payıyla ödenir."],
+  ],
+  waysTitle: "Üç giriş yolu",
+  ways: [
+    ["KOBİ", "Vadeli faturanı yükle, parayı doksan gün sonra değil bugün al."],
+    ["Alıcı", "Bir kez onayla, vadede zaten ödediğin gibi öde. Senin tarafında değişen bir şey yok."],
+    ["Fonlayıcı", "Onaylanmış bir faturaya dayalı ödemeye abone ol; fiyat canlı zincir verisinden."],
+  ],
+  pillarsTitle: "Farkı ne",
+  pillars: [
+    ["Bir ETTN, bir finansman", "Kimlik vergi idaresinden gelir; tekillik bizim tuttuğumuz bir kayıt değil, miras alınan bir özelliktir. Aynı alacağı ikinci kez satmayı politika değil kontrat reddeder."],
+    ["Doğrulayabileceğin bir fiyat", "Dört bileşenin ikisi her çağrıda zincirden okunur ve her biri canlı olup olmadığını söyler. Yedeğe düşen bir sayı canlı diye sunulamaz."],
+    ["Bankaya inen para", "Çift yönlü SEP-6: satıcı TL alır, alıcı TL öder. Tüm uç noktalar anchor'dan çalışma anında keşfedilir."],
+  ],
+  proofTitle: "Buradaki her şey doğrulanabilir",
+  proofLead: "Kontratlar testnet'te, akış gerçek işlem yazıyor ve bu sayfadaki rakamlar sen açtığında zincirden okundu.",
+  closingTitle: "Çalışırken gör",
+  closingLead: "Bir fatura yükle, iskontonun zincirden gelişini izle, sonra kopyayı dene.",
+  footerNote: "Rise In x Stellar Pro Hackathon 2026",
 };
 
 export const t = (lang: Lang) => (lang === "tr" ? tr : en);
