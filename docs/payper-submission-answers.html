@@ -1,0 +1,497 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 17mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Urbanist', sans-serif; color: #0A0A0A; font-size: 10pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 30pt; font-weight: 600; letter-spacing: -.035em; line-height: 1.02; margin: 0 0 6pt; }
+  h2 { font-size: 15pt; font-weight: 700; letter-spacing: -.02em; margin: 19pt 0 4pt; padding-top: 8pt;
+       border-top: 2px solid #0A0A0A; break-after: avoid; }
+  h3 { font-size: 11pt; font-weight: 700; margin: 13pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 5pt; }
+  .q { font-size: 11.4pt; font-weight: 700; margin: 14pt 0 5pt; break-after: avoid; }
+  .q span { font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; font-weight: 600;
+            color: #1A8F63; margin-right: 6pt; }
+  .en { margin: 0 0 6pt; }
+  .tr { margin: 0 0 4pt; padding-left: 9pt; border-left: 2px solid #D8E8DE; color: #3A4A42; }
+  .tr::before { content: 'TR '; font-family: 'JetBrains Mono', monospace; font-size: 7.6pt;
+                font-weight: 700; color: #1A8F63; letter-spacing: .08em; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 8.3pt; }
+  table { width: 100%; border-collapse: collapse; margin: 5pt 0 9pt; font-size: 8.8pt; break-inside: avoid; }
+  th { text-align: left; font-weight: 700; border-bottom: 1.5px solid #0A0A0A; padding: 4pt 5pt 3pt; }
+  td { border-bottom: 1px solid #E4E4E0; padding: 4pt 5pt; vertical-align: top; }
+  .cover { background: #0A0A0A; color: #fff; margin: -17mm -15mm 0; padding: 38mm 15mm 20mm; break-after: page; }
+  .cover h1 { color: #fff; font-size: 38pt; }
+  .cover .mint { color: #3DE29C; }
+  .cover p { color: rgba(255,255,255,.72); font-size: 11pt; max-width: 132mm; }
+  .meta { margin-top: 14mm; display: flex; gap: 12mm; flex-wrap: wrap;
+          font-family: 'JetBrains Mono', monospace; font-size: 8.4pt; color: rgba(255,255,255,.55); }
+  .box { background: #F4F5F3; border-left: 3px solid #3DE29C; padding: 7pt 10pt; margin: 6pt 0 9pt; break-inside: avoid; }
+  .box.warn { border-left-color: #F5A524; }
+  .box h4 { margin: 0 0 3pt; font-size: 9pt; font-weight: 800; letter-spacing: .05em;
+            text-transform: uppercase; color: #6A6A6A; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 7.4pt; font-weight: 600;
+         padding: 1.5pt 5pt; border-radius: 3pt; background: #EDEDEA; margin: 0 3pt 3pt 0; }
+  .page { break-before: page; }
+  a { color: #1A8F63; text-decoration: none; }
+  ul { margin: 0 0 6pt; padding-left: 15pt; } li { margin-bottom: 2.5pt; }
+</style></head><body>
+<div class="cover">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:8.6pt;letter-spacing:.14em;color:#3DE29C;margin-bottom:9mm">
+    RISE IN × STELLAR PRO HACKATHON 2026 · GENESIS TRACK
+  </div>
+  <h1>payper<br><span class="mint">submission answers</span></h1>
+  <p>Every question Rise In asks, answered in English and Turkish, with the
+  technical detail and the stack behind each answer. Figures are read from the
+  deployment rather than quoted from memory.</p>
+  <div class="meta">
+    <span>payper.live</span><span>github.com/cansarihan/payper</span>
+    <span>Stellar testnet · protocol 28</span><span>Can Sarıhan · Berk Çiçek</span>
+  </div>
+</div>
+<h2>1 · The Narrative "Why"</h2>
+<p style="font-size:9pt;color:#6A6A6A;margin-bottom:2pt">Five questions, asked verbatim in the submission form.</p>
+
+<div class="q"><span>Q1</span>What are you building?</div>
+<p class="en">On-chain receivable financing. A supplier uploads a signed e-invoice; the contract writes its
+unique document identifier and refuses a second registration of the same one. The buyer acknowledges the
+debt on chain. From that moment the receivable is an instrument anyone holding USDC can fund — in seconds,
+from fifty dollars up — and the supplier is paid the same day in their own currency through a SEP-6 anchor.</p>
+<p class="tr">Zincir üstü alacak finansmanı. Tedarikçi imzalı e-faturasını yüklüyor; kontrat faturanın tekil
+kimliğini yazıyor ve aynısının ikinci kez kaydedilmesini reddediyor. Alıcı borcu zincir üstünde onaylıyor.
+O andan itibaren alacak, USDC tutan herkesin saniyeler içinde ve elli dolardan başlayarak fonlayabildiği
+bir enstrüman oluyor; tedarikçiye aynı gün kendi para biriminde, SEP-6 anchor üzerinden ödeniyor.</p>
+
+<div class="q"><span>Q2</span>What problem does it solve?</div>
+<p class="en">A supplier waits 60 to 120 days to be paid while the goods have shipped and the wages are paid.
+The capital that could bridge that gap is bank capital: a factor can only advance what its own balance sheet
+allows, and that balance sheet is bounded by the country it is licensed in. A funder abroad who would take
+that risk at that price cannot reach it — no local-currency account, no correspondent banking, no ticket
+size small enough to be worth the paperwork. Two more problems follow: the discount is asserted rather than
+derived, and the same receivable can be sold twice.</p>
+<p class="tr">Tedarikçi malı sevk etmiş, maaşı ödemiş; parayı 60-120 gün bekliyor. O açığı kapatacak sermaye
+banka sermayesi: bir faktoring şirketi ancak kendi bilançosunun izin verdiği kadar avans verebiliyor ve o
+bilanço, lisanslı olduğu ülkeyle sınırlı. Bu riski o fiyata almaya razı yabancı bir fonlayıcı ise erişemiyor —
+yerel para hesabı yok, muhabir bankacılık yok, evrak masrafına değecek kadar küçük bir dilim yok. İki sorun
+daha bunu izliyor: iskonto türetilmiyor, dayatılıyor; ve aynı alacak iki kez satılabiliyor.</p>
+
+<div class="q"><span>Q3</span>Who are your target users?</div>
+<p class="en">Suppliers invoicing a single large corporate buyer — organised retail, automotive sub-industry,
+construction materials. Ticket sizes of roughly 1,500 to 15,000 USD equivalent on 30 to 120 day terms. On the
+other side, anyone holding USDC who wants short-dated, buyer-acknowledged paper. The buyer's acknowledgement
+is both the lock that makes the receivable real to a funder and the distribution channel: one corporate buyer
+brings its suppliers with it.</p>
+<p class="tr">Tek büyük kurumsal alıcıya fatura kesen tedarikçiler — organize perakende, otomotiv yan sanayi,
+inşaat malzemesi. 30-120 gün vadede, yaklaşık 1.500-15.000 USD karşılığı dilimler. Diğer tarafta, kısa vadeli
+ve alıcısı onaylı kâğıt arayan, USDC tutan herkes. Alıcının onayı hem alacağı fonlayıcı gözünde gerçek kılan
+kilit hem de dağıtım kanalı: bir kurumsal alıcı, tedarikçilerini beraberinde getiriyor.</p>
+
+<div class="q"><span>Q4</span>Why is this problem worth solving?</div>
+<p class="en">The market is established rather than speculative — it already pays. In the first corridor the
+figures are public: Türkiye had 4,016,059 active enterprises in 2025, of which 99.6% are SMEs (TÜİK), and the
+factoring sector turned over 1.875 trillion TRY across roughly 95,000 customers in 2025. What that market does
+not have is a price anyone can check, or capital from outside the licensing perimeter. Both are addressable.</p>
+<p class="tr">Pazar spekülatif değil, kurulu — ve zaten ödüyor. İlk koridorda rakamlar açık: Türkiye'de 2025'te
+4.016.059 aktif girişim vardı, bunların %99,6'sı KOBİ (TÜİK); faktoring sektörü 2025'te yaklaşık 95.000 müşteri
+üzerinden 1,875 trilyon TL hacim döndürdü. Bu pazarda olmayan şey, herkesin kontrol edebileceği bir fiyat ve
+lisans çevresinin dışından gelen sermaye. İkisi de çözülebilir.</p>
+
+<div class="q"><span>Q5</span>What is your value proposition?</div>
+<table>
+  <tr><th style="width:44mm">For whom</th><th>What changes</th></tr>
+  <tr><td><b>Supplier</b></td><td>Paid the same day, in local currency, into a normal bank account. Never touches crypto.</td></tr>
+  <tr><td><b>Funder</b></td><td>Reaches a market that was closed, from fifty dollars, without opening an account in that country.</td></tr>
+  <tr><td><b>Buyer</b></td><td>Suppliers stay liquid without the buyer extending credit or paying early.</td></tr>
+  <tr><td><b>Everyone</b></td><td>The discount is computed from on-chain data, each component labelled with its source.</td></tr>
+</table>
+<p class="tr">Tedarikçi aynı gün, kendi para biriminde, normal banka hesabına ödeme alıyor ve kriptoya hiç
+dokunmuyor. Fonlayıcı kapalı bir pazara elli dolardan, o ülkede hesap açmadan erişiyor. Alıcı, kendi kredisini
+uzatmadan tedarikçisini likit tutuyor. Herkes için: iskonto zincir üstü veriden hesaplanıyor ve her bileşen
+kaynağıyla etiketli.</p>
+
+<div class="box">
+  <h4>The mechanism is not country-bound</h4>
+  The shape of the problem is the same wherever suppliers invoice on terms. What changes per country is the
+  document standard, the invoice identifier and the anchor. Türkiye is the first corridor and what runs on
+  testnet today.
+  <br><br>
+  <b>TR ·</b> Sorunun biçimi, tedarikçilerin vadeli fatura kestiği her yerde aynı. Ülkeye göre değişen şey
+  belge standardı, fatura kimliği ve anchor. Türkiye ilk koridor ve bugün testnet'te çalışan da o.
+</div>
+<h2 class="page">2 · MVP · required deliverables</h2>
+<table>
+  <tr><th style="width:52mm">Asked for</th><th>Where it is</th></tr>
+  <tr><td>Public GitHub repository</td><td><code>github.com/cansarihan/payper</code> — public, two co-authors</td></tr>
+  <tr><td>Well-structured README</td><td>Opens with a five-minute evaluation section; architecture, design decisions,
+  technical challenges and a dedicated <b>Honest limitations</b> section</td></tr>
+  <tr><td>Smart contracts on Stellar Testnet</td><td>Four contracts, Soroban SDK 27.0.6, <code>wasm32v1-none</code>, protocol 28</td></tr>
+  <tr><td>Front-end / application URL</td><td><code>payper.live</code> — our own server behind a Cloudflare Tunnel</td></tr>
+  <tr><td>Working live demo</td><td>A judge can sign in, upload an invoice, price it, fund it and settle it.
+  Every step writes a real transaction to testnet</td></tr>
+  <tr><td>Documented contract IDs</td><td>README <b>Deployed artifacts</b> table, every entry linked to stellar.expert</td></tr>
+</table>
+<p class="tr">İstenen altı kalemin altısı da yerinde: açık depo, beş dakikada değerlendirme bölümüyle başlayan
+README, testnet'te dört kontrat, kendi sunucumuzda canlı uygulama, jürinin uçtan uca çalıştırabildiği demo ve
+stellar.expert linkli kontrat adresleri tablosu.</p>
+
+<h3>Deployed artifacts</h3>
+<table>
+  <tr><th style="width:42mm">Contract</th><th>Address</th></tr>
+  <tr><td>Invoice contract</td><td class="mono">CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA</td></tr>
+  <tr><td>Treasury adapter</td><td class="mono">CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4</td></tr>
+  <tr><td>DeFindex vault</td><td class="mono">CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP</td></tr>
+  <tr><td>Blend v2 pool · rate reference</td><td class="mono">CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF</td></tr>
+  <tr><td>Local-currency feed (SEP-40)</td><td class="mono">CCO6YMLR2MUB4JYZIU77XCO7DP6EVNOOAF4ZZQQXZOW7UEVNG52XJLRC</td></tr>
+  <tr><td>Treasury, local fallback</td><td class="mono">CACRTTWHUUJD7KCJWVYCKJIHGZM5K2WWHXKWNCCG4PR3X52ALG3NTGDI</td></tr>
+  <tr><td>USDC (SAC)</td><td class="mono">CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA</td></tr>
+  <tr><td>Anchor</td><td class="mono">tr-mock-anchor.fly.dev</td></tr>
+</table>
+
+<div class="box">
+  <h4>The deployed contract is a reproducible build</h4>
+  <code>.github/workflows/release.yml</code> runs stellar.expert's build workflow on a tag. What is deployed is
+  that artifact, not a local build — the hashes are identical, and GitHub holds a signed attestation tying the
+  hash to this repository at tag <code>v1.0.2</code>. Checkable in three commands that do not trust us.
+  <br><br>
+  <b>TR ·</b> Zincirdeki wasm, CI'ın temiz bir runner'da ürettiği artefaktın aynısı — hash'ler birebir eşleşiyor
+  ve GitHub bu hash'i depoya bağlayan imzalı bir attestation tutuyor. Bize güvenmeyi gerektirmeyen üç komutla
+  doğrulanabiliyor.
+</div>
+
+<h3>Numbers, read from the deployment</h3>
+<table>
+  <tr><th style="width:52mm">Metric</th><th>Value</th></tr>
+  <tr><td>Rust · contracts</td><td>2,744 lines across 10 files</td></tr>
+  <tr><td>TypeScript · app</td><td>17,537 lines across 90 files</td></tr>
+  <tr><td>Contract tests</td><td><b>36</b>, all passing</td></tr>
+  <tr><td>Application-level checks</td><td><b>100</b>, across five suites</td></tr>
+  <tr><td>API routes</td><td>22</td></tr>
+  <tr><td>Panel screens</td><td>15</td></tr>
+  <tr><td>SEP standards implemented</td><td>9</td></tr>
+</table>
+<h2 class="page">3 · Technical documentation</h2>
+<p style="font-size:9pt;color:#6A6A6A;margin-bottom:2pt">The five items the submission asks to be explained.</p>
+
+<div class="q"><span>T1</span>Overall architecture</div>
+<div class="arch" style="font-family:'JetBrains Mono',monospace;font-size:7.4pt;line-height:1.45;background:#0A0A0A;color:#E8E8E8;padding:9pt 11pt;border-radius:6pt;white-space:pre;break-inside:avoid;margin-bottom:6pt">
+  UBL-TR e-invoice ──▶ Next.js route handlers (the keys live here)
+                         │                        │
+              ┌──────────▼──────────┐   ┌─────────▼──────────────┐
+              │  Soroban · testnet  │   │  SEP client            │
+              │                     │   │  1 · 10 · 12 · 38 · 6  │
+              │  invoice ───────────┼──▶│  discovered at run     │
+              │   ├─ treasury ──────┼─┐ │  time from             │
+              │   └─ fx_oracle      │ │ │  stellar.toml          │
+              └─────────────────────┘ │ └─────────┬──────────────┘
+                                      │           │
+              DeFindex vault ◀────────┘     ┌─────▼──────┐
+              Blend v2 pool  ◀── rate       │   Anchor   │──▶ Bank · IBAN
+</div>
+<p class="en">The client holds no chain logic. It renders <code>/api/state</code> and posts intents; every
+signature and every contract call happens in a route handler. That is a deliberate trade-off, listed under
+design decisions below.</p>
+<p class="tr">İstemcide zincir mantığı yok. Sadece <code>/api/state</code>'i render ediyor ve niyet gönderiyor;
+her imza ve her kontrat çağrısı route handler'da gerçekleşiyor. Bu bilinçli bir ödünleşme, aşağıda yazılı.</p>
+
+<div class="q"><span>T2</span>Main components and their responsibilities</div>
+<table>
+  <tr><th style="width:44mm">Component</th><th>Responsibility</th></tr>
+  <tr><td><code>contracts/invoice</code></td><td>The ETTN registry and the product's one invariant. Registration,
+  buyer acknowledgement, pricing, the funding ledger, transferable claims, repayment and the recourse waterfall.</td></tr>
+  <tr><td><code>contracts/treasury_defindex</code></td><td>Holds the pooled capital as DeFindex vault shares.
+  Reports the yield: the vault's own realised gain when it has one, otherwise a Blend v2 pool's lending rate.</td></tr>
+  <tr><td><code>contracts/treasury_local</code></td><td>A fallback treasury with the same interface, so the
+  backing vault can fail or be swapped without changing the flow.</td></tr>
+  <tr><td><code>contracts/fx_oracle</code></td><td>SEP-40 shaped price feed for the local-currency leg, with the
+  history the volatility estimate reads.</td></tr>
+  <tr><td><code>src/lib/ubl</code></td><td>Document verification: mandatory UBL fields, the XAdES signature
+  block's structure, the document hash, and whether the identifier is free.</td></tr>
+  <tr><td><code>src/lib/anchor</code></td><td>The SEP client. Discovery, authentication, KYC, firm quotes,
+  deposit and withdrawal, plus the tranche splitter that fits transfers inside the anchor's limits.</td></tr>
+  <tr><td><code>src/lib/auth</code></td><td>Passkey registration and login, wallet login by signed message,
+  sessions and role gates.</td></tr>
+  <tr><td><code>src/lib/chirp</code></td><td>The audio payment frame: 8-FSK encoder, FFT decoder, CRC-8.</td></tr>
+</table>
+<p class="tr">Fatura kontratı ETTN kaydını ve ürünün tek değişmezini tutuyor. Hazine adaptörü havuzlanan
+sermayeyi DeFindex kasa payı olarak tutuyor ve getiriyi raporluyor. Yerel hazine aynı arayüzle yedek. Oracle
+kur bacağını besliyor. UBL katmanı belgeyi doğruluyor, anchor katmanı SEP akışlarını yürütüyor, auth katmanı
+kimlik ve rolleri, chirp katmanı sesli ödeme çerçevesini.</p>
+
+<div class="q"><span>T3</span>Stellar integrations and protocols used</div>
+<table>
+  <tr><th style="width:30mm">Integration</th><th>How it is used</th></tr>
+  <tr><td><b>Soroban</b> SDK 27.0.6</td><td>Four contracts, <code>wasm32v1-none</code>, protocol 28. All three
+  storage layers: <code>instance</code> for config, <code>persistent</code> for the ETTN registry with TTL
+  extended to the maximum, <code>temporary</code> for the quote lock, which expires by itself.</td></tr>
+  <tr><td><b>DeFindex</b></td><td>The treasury is a vault opened through their own factory. A contribution becomes
+  vault shares; a payout burns the shares it is worth. Our vault's wasm hash matches DeFindex's published hash
+  byte for byte.</td></tr>
+  <tr><td><b>Blend v2</b></td><td>The yield component reads the pool's bToken index, sampled once when the
+  reference is set and annualised over a window the adapter times itself. <b>Live: 127 bps.</b></td></tr>
+  <tr><td><b>Stellar Wallets Kit</b> 2.6</td><td>Wallet connection for funders and suppliers who bring their own key.</td></tr>
+  <tr><td><b>SEP-1</b></td><td>Anchor discovery. Every endpoint is read at run time, nothing hard-coded.</td></tr>
+  <tr><td><b>SEP-6</b></td><td>Programmatic deposit and withdrawal, both directions.</td></tr>
+  <tr><td><b>SEP-7</b></td><td>The payment URI in the QR code, so any wallet can read what the tones carry.</td></tr>
+  <tr><td><b>SEP-10</b></td><td>Challenge authentication, verified before signing.</td></tr>
+  <tr><td><b>SEP-12</b></td><td>Customer registration for the fiat leg.</td></tr>
+  <tr><td><b>SEP-38</b></td><td>Firm quotes, so the payout shown is the payout paid.</td></tr>
+  <tr><td><b>SEP-40</b></td><td>The oracle interface the currency feed is read through.</td></tr>
+  <tr><td><b>SEP-41</b></td><td>The treasury position itself is a SEP-41 token — the DeFindex vault share.</td></tr>
+  <tr><td><b>SEP-46</b></td><td>Contract metadata in the wasm: <code>source_repo</code> and <code>home_domain</code>,
+  readable straight off the ledger.</td></tr>
+  <tr><td><b>SEP-53</b></td><td>Signed messages for wallet login, verified against the spec's own test vectors.</td></tr>
+</table>
+<div class="box">
+  <h4>Which integration is load-bearing</h4>
+  Without the anchor the supplier cannot be paid and the buyer cannot settle — that is the product's entire
+  proposition. Without the treasury, <code>fund()</code> cannot complete and the yield component of the price
+  has no source. Neither is decoration.
+  <br><br>
+  <b>TR ·</b> Anchor olmadan tedarikçi ödenemiyor ve alıcı kapatamıyor — ürünün bütün önerisi bu. Hazine
+  olmadan <code>fund()</code> tamamlanamıyor ve fiyatın getiri bileşeninin kaynağı kalmıyor. İkisi de süs değil.
+</div>
+<div class="q"><span>T4</span>Key design decisions and trade-offs</div>
+<table>
+  <tr><th style="width:46mm">Decision</th><th>What it costs, and why we took it</th></tr>
+  <tr><td><b>The identifier is the invariant</b></td><td>Uniqueness is a contract rule, not a database row.
+  A licensed factor inside a country with a registry can already check one; a funder abroad cannot. The contract
+  gives them the same guarantee without asking them to join anything.</td></tr>
+  <tr><td><b>Every price component carries its source</b></td><td>More surface to build and to explain, but a
+  number that fell back to a parameter cannot arrive wearing the live badge. This is the decision the rest of
+  the product is organised around.</td></tr>
+  <tr><td><b>SEP-6 rather than SEP-24</b></td><td>SEP-24 hands the flow to the anchor's own hosted interface.
+  SEP-6 is API-first, which is what lets us show every request and status in the open. The cost is that we
+  implement the flow ourselves.</td></tr>
+  <tr><td><b>The treasury is an interface, not a vault</b></td><td>The invoice contract knows four functions and
+  cannot tell which treasury is behind them. That is why a DeFindex outage or a swap does not touch the flow.</td></tr>
+  <tr><td><b>Yield falls through, never substitutes</b></td><td>The vault's realised gain first, a Blend pool's
+  lending rate second, and a refusal third. It would have been easier to return the configured number and call
+  it live.</td></tr>
+  <tr><td><b>Keys live in route handlers</b></td><td>Three parties on one laptop makes the demo legible, and a
+  passkey cannot sign Soroban XDR on its own yet. The cost is real and it is stated in the limitations: this is
+  the thing a production deployment must change first.</td></tr>
+</table>
+<p class="tr">Kimliğin değişmez olması, her fiyat bileşeninin kaynağını taşıması, SEP-24 yerine SEP-6, hazinenin
+kasa değil arayüz olması, getirinin sayı uydurmak yerine reddetmesi, ve anahtarların sunucuda durması. Sonuncusu
+gerçek bir maliyet ve sınırlılıklar bölümünde açıkça yazılı — üretimde ilk değişmesi gereken şey bu.</p>
+
+<div class="q"><span>T5</span>Technical challenges and how we solved them</div>
+<table>
+  <tr><th style="width:44mm">Challenge</th><th>Resolution</th></tr>
+  <tr><td><b>Cross-contract authorisation</b></td><td>The treasury moves the token one frame deeper than the
+  invoker's signature reaches. <code>authorize_as_current_contract()</code> authorises that sub-call only, for
+  that amount only.</td></tr>
+  <tr><td><b>The DeFindex vault pulls with <code>transfer</code>, not <code>transfer_from</code></b></td><td>The
+  first adapter granted an allowance and came back with <code>Auth, InvalidAction</code>. We authorise the
+  vault's pull explicitly with the same pattern. Deposit and withdraw verified on testnet with real funds.</td></tr>
+  <tr><td><b>The anchor names its memo type</b></td><td>We sent <code>MEMO_TEXT</code> where it asked for
+  <code>MEMO_ID</code>. The payment arrived at the treasury and the transfer sat at
+  <code>pending_user_transfer_start</code> for ever. <b>A simulated rail would not have cared</b> — this bug is
+  the proof the rail is real.</td></tr>
+  <tr><td><b>Anchor transfer limits</b></td><td>3,000 ₺ per transfer, 50 ₺ minimum. The splitter broke twice:
+  greedy filling left a remainder under the minimum, even division piled it onto the last part and crossed the
+  cap. The version that rounds parts up and leaves the shortfall last was swept across 1,823 amounts.</td></tr>
+  <tr><td><b>Asset naming differs between SEP-38 and SEP-6</b></td><td>SEP-38 wants
+  <code>stellar:USDC:ISSUER</code> and <code>iso4217:TRY</code>; SEP-6's exchange endpoints want the bare code
+  for the asset but the ISO form for fiat. Found through three separate 400s.</td></tr>
+  <tr><td><b>An hour of lending rounds to nothing</b></td><td>Dividing to basis points before scaling to a year
+  truncated the whole measurement to zero, and the yield reading silently disappeared. <code>annualise_bps</code>
+  multiplies first; four tests hold it against two real readings of the pool taken eighty-five minutes apart.</td></tr>
+  <tr><td><b>An unbounded funding ledger</b></td><td>Found by running the official Stellar security checklist.
+  <code>repay()</code> walks the ledger and <code>transfer_claim()</code> rebuilds it, so enough entries would
+  strand an invoice. Closed with a minimum ticket and a cap of 32 entries, held by three tests.</td></tr>
+  <tr><td><b>Audio on iOS</b></td><td>Four rounds: a suspended AudioContext, a carrier above the voice-band
+  roll-off, a preamble that recurred inside payloads, and a room's reverb merging bursts. The context is now
+  created before the first <code>await</code>, and the detection threshold adapts to a measured noise floor.</td></tr>
+  <tr><td><b>Next.js route handler isolation</b></td><td>Route handlers are bundled separately and share no
+  module state. Challenges, the rate limiter and the session secret live on <code>globalThis</code>; payout
+  accounts and passkeys are written to disk atomically, so a deploy does not reset the demo.</td></tr>
+</table>
+<p class="tr">Kontratlar arası yetkilendirme, DeFindex'in <code>transfer</code> kullanması, anchor'ın memo tipi,
+transfer limitleri, SEP-38 ile SEP-6 arasındaki varlık adlandırma farkı, bir saatlik getirinin sıfıra
+yuvarlanması, sınırsız fonlama defteri, iOS'ta ses ve route handler yalıtımı. Dokuzunun da çözümü yukarıda;
+memo tipi hatası özellikle önemli, çünkü <b>simüle bir ray bunu umursamazdı</b>.</p>
+<h2 class="page">4 · Technology stack</h2>
+<p><b>Contracts</b><br>
+<span class="tag">Rust</span><span class="tag">soroban-sdk 27.0.6</span><span class="tag">wasm32v1-none</span>
+<span class="tag">protocol 28</span><span class="tag">stellar-cli 27</span><span class="tag">cargo test</span></p>
+<p><b>Application</b><br>
+<span class="tag">TypeScript 6</span><span class="tag">Next.js 15 · App Router</span><span class="tag">React 19</span>
+<span class="tag">@stellar/stellar-sdk 17</span><span class="tag">tsx</span></p>
+<p><b>Stellar ecosystem</b><br>
+<span class="tag">DeFindex</span><span class="tag">Blend v2</span><span class="tag">Stellar Wallets Kit 2.6</span>
+<span class="tag">SEP-6 anchor</span><span class="tag">Horizon</span><span class="tag">Soroban RPC</span>
+<span class="tag">stellar.expert</span></p>
+<p><b>Identity</b><br>
+<span class="tag">@simplewebauthn 14</span><span class="tag">WebAuthn · passkeys</span><span class="tag">SEP-53 signed messages</span>
+<span class="tag">Ed25519</span></p>
+<p><b>Documents and signals</b><br>
+<span class="tag">fast-xml-parser</span><span class="tag">UBL 2.1 / UBL-TR</span><span class="tag">XAdES structure</span>
+<span class="tag">SHA-256</span><span class="tag">Web Audio API · 8-FSK</span><span class="tag">CRC-8</span>
+<span class="tag">qrcode</span><span class="tag">ISO 7064 mod-97 IBAN</span></p>
+<p><b>Infrastructure</b><br>
+<span class="tag">Debian 13</span><span class="tag">systemd</span><span class="tag">Cloudflare Tunnel</span>
+<span class="tag">GitHub Actions</span><span class="tag">stellar-expert build workflow</span>
+<span class="tag">Sigstore attestations</span></p>
+<p class="tr">Kontratlar Rust ve soroban-sdk 27.0.6 ile, protokol 28 hedefli. Uygulama TypeScript, Next.js 15 ve
+React 19. Ekosistem tarafında DeFindex, Blend v2, Stellar Wallets Kit ve SEP-6 anchor. Kimlik WebAuthn passkey
+ve SEP-53 imzalı mesaj. Belge doğrulama UBL 2.1/UBL-TR ve XAdES yapısı üzerinden. Altyapı kendi sunucumuzda,
+derleme GitHub Actions ile yeniden üretilebilir.</p>
+
+<h2>5 · The three track requirements</h2>
+<table>
+  <tr><th style="width:40mm">Requirement</th><th>How it is met</th></tr>
+  <tr><td><b>Integration</b><br><span style="font-size:8pt;color:#6A6A6A">from the eligible partners list</span></td>
+  <td><b>DeFindex</b> (DeFi-Yield) holds the treasury; <b>Blend v2</b> (DeFi-Lending) supplies the yield rate;
+  <b>Stellar Wallets Kit</b> (Wallets) connects funders. Three entries from the list.</td></tr>
+  <tr><td><b>Anchor / Local Payments</b><br><span style="font-size:8pt;color:#6A6A6A">a real fiat rail</span></td>
+  <td>SEP-6 in both directions, discovered at run time from <code>stellar.toml</code>. The smoke run has two
+  funders buy USDC through the anchor before funding, and the supplier sells the payout back for local currency.</td></tr>
+  <tr><td><b>Core Feature</b><br><span style="font-size:8pt;color:#6A6A6A">load-bearing, not an add-on</span></td>
+  <td>Remove the anchor and the supplier cannot be paid. Remove the treasury and <code>fund()</code> cannot
+  complete. Neither can be deleted without deleting the product.</td></tr>
+</table>
+<p class="tr">Üç zorunlu şartın üçü de karşılanıyor: uygun listeden üç entegrasyon, çift yönlü SEP-6 fiat rayı,
+ve ikisinin de taşıyıcı olması — çıkarıldıklarında ürün çalışmıyor.</p>
+
+<h2>6 · Stellar skill files used</h2>
+<p class="en">The submission asks which official skill files were used, by path. These, from
+<code>stellar/stellar-dev-skill</code>:</p>
+<table>
+  <tr><th style="width:52mm">Path</th><th>What it was used for</th></tr>
+  <tr><td class="mono">skills/standards/<br>SKILL.md</td><td>The SEP/CAP routing map. Confirmed SEP-6 over SEP-24
+  for an API-first fiat rail, and SEP-12 for the KYC leg. SEP-46 and SEP-55 came from here.</td></tr>
+  <tr><td class="mono">skills/smart-contracts/<br>SKILL.md</td><td>Build and platform constraints. Our release
+  profile, <code>crate-type</code>, target and event usage were checked line by line and already matched.</td></tr>
+  <tr><td class="mono">skills/smart-contracts/<br>security.md</td><td>The contract security checklist, run against
+  <code>contracts/invoice</code>.</td></tr>
+</table>
+<div class="box warn">
+  <h4>What the security review found — and we fixed</h4>
+  Every privileged entry point authorises from stored config, <code>init</code> refuses a second call, storage
+  keys are typed, arithmetic is checked, error codes are appended rather than renumbered, and events cover state
+  changes. One item did not pass: <i>"loops and footprints bounded on attacker-shaped input."</i>
+  <code>fund()</code> accepted any amount above zero and appended to an unbounded ledger that
+  <code>repay()</code> walks. Closed with a configurable minimum ticket — waived only for the contribution that
+  closes an invoice, so the floor can never strand one — and a cap of 32 entries. Three tests hold it.
+  <br><br>
+  <b>TR ·</b> Resmî güvenlik listesini kontratımıza uyguladık. Bir madde geçmedi: <code>fund()</code> sıfırdan
+  büyük her tutarı kabul ediyor ve <code>repay()</code>'in dolaştığı sınırsız bir deftere ekliyordu. Asgari
+  dilim ve 32 kayıt üst sınırıyla kapatıldı, üç testle bağlandı.
+</div>
+<h2 class="page">7 · The judging criteria, answered</h2>
+
+<div class="q"><span>J1</span>Meaningful idea &amp; real-world impact</div>
+<p class="en">The problem is defined by a number a supplier can read off their own ageing report: sixty to a
+hundred and twenty days. The use case is trade finance and local payments, both named in the brief. Who
+benefits: suppliers who stay solvent without a bank line, and funders who reach a market that was closed to
+them. The target segment is specific — suppliers invoicing one large corporate buyer, 1,500 to 15,000 USD per
+invoice — which is also the distribution channel, because one buyer brings its suppliers.</p>
+<p class="tr">Problem, tedarikçinin kendi vade raporundan okuyabileceği bir sayıyla tanımlı: 60-120 gün.
+Kullanım alanı ticaret finansmanı ve yerel ödemeler, ikisi de şartnamede geçiyor. Kazanan: banka limiti
+olmadan ayakta kalan tedarikçi ve kendisine kapalı bir pazara erişen fonlayıcı. Hedef kitle belirli ve aynı
+zamanda dağıtım kanalı.</p>
+
+<div class="q"><span>J2</span>Technical implementation</div>
+<table>
+  <tr><th style="width:56mm">What is asked</th><th>Evidence</th></tr>
+  <tr><td>Deployed with real functionality, not mocked</td><td>Four contracts on testnet. <code>npm run smoke</code>
+  registers, acknowledges, prices, funds from two funders who buy USDC through the anchor first, settles,
+  distributes pro rata, then tries the same identifier again and is refused. Every step a real transaction.</td></tr>
+  <tr><td>Core flows work end to end</td><td>The smoke run is that flow, and it is also driveable by hand in
+  the panel.</td></tr>
+  <tr><td>Soroban auth and storage used appropriately</td><td>All three storage layers, each for what it is for.
+  Cross-contract authorisation scoped to one sub-call and one amount.</td></tr>
+  <tr><td>Architecture designed and documented</td><td>A rendered diagram in the README plus a component table,
+  design decisions and challenges.</td></tr>
+  <tr><td>Passkeys and smart wallets are a bonus</td><td>Implemented — passkey registration and login, and
+  SEP-53 wallet login verified against the spec's vectors.</td></tr>
+</table>
+
+<div class="q"><span>J3</span>Ecosystem fit <span style="font-weight:500;color:#6A6A6A">— anchor carries the highest weight</span></div>
+<p class="en">Three integrations from the eligible list, all load-bearing. The anchor is SEP-6 in both
+directions and discovered at run time, so moving to another anchor is one domain change. The DeFindex claim is
+cryptographic rather than narrative: our vault's wasm hash matches their published hash byte for byte. The
+skill files are cited by path in the README, and the security checklist from one of them found a real bug that
+is now fixed.</p>
+<p class="tr">Uygun listeden üç entegrasyon, hepsi taşıyıcı. Anchor çift yönlü SEP-6 ve çalışma anında
+keşfediliyor — başka bir anchor'a geçmek tek alan adı değişikliği. DeFindex iddiası anlatı değil kriptografik:
+kasamızın wasm hash'i yayımladıklarıyla bayt bayt aynı. Skill dosyaları README'de yol vererek atıflı.</p>
+
+<div class="q"><span>J4</span>User experience</div>
+<p class="en">The interface is built for someone who has never held a token: the supplier signs in with Face ID,
+never sees a seed phrase, and is paid in their own currency into a normal bank account. Fifteen screens, each
+one a step with its own number, so the order is discoverable without instruction. A guided tour walks the whole
+flow. English is the default; Turkish is one toggle away.</p>
+<p class="tr">Arayüz, hiç token tutmamış biri için kurulu: tedarikçi Face ID ile giriyor, seed phrase görmüyor,
+kendi para biriminde normal banka hesabına ödeme alıyor. On beş ekran, her biri numaralı bir adım, böylece sıra
+anlatılmadan anlaşılıyor. Rehberli tur bütün akışı geziyor. Varsayılan dil İngilizce, Türkçe tek tuş.</p>
+
+<div class="q"><span>J5</span>Traction &amp; continuity</div>
+<p class="en"><b>Feedback during the event changed the product twice.</b> A jury member asked what the blockchain
+part actually does; we reframed from digitising factoring to opening the capital pool across borders, and
+rewrote the site and README around it. A judge said a DeFi yield integration would put us in finalist
+territory; the Blend v2 reading exists because of that conversation, and the yield component reads live at 127
+bps as a result. Both changes are visible commit by commit in the git history. The roadmap and the intended
+next step — SCF and InstaAward — are in the README.</p>
+<p class="tr"><b>Etkinlikteki geri bildirim ürünü iki kez değiştirdi.</b> Bir jüri üyesi blockchain'in gerçekte
+ne yaptığını sordu; konumlandırmayı faktoringi dijitalleştirmekten sermaye havuzunu sınır ötesine açmaya
+çevirdik ve siteyi de README'yi de buna göre yeniden yazdık. Bir jüri DeFi getiri entegrasyonunun finale
+taşıyacağını söyledi; Blend v2 okuması tam olarak o konuşmadan çıktı ve getiri şu an 127 bps olarak canlı
+okunuyor. İki değişiklik de git geçmişinde commit commit görünüyor.</p>
+
+<div class="q"><span>J6</span>Presentation &amp; documentation</div>
+<p class="en">The README opens with a five-minute evaluation path and a table of what to look at, in order. Setup,
+testing and evaluation commands are copy-pasteable and were run as written. Architecture is a rendered diagram.
+The proof section gives commands that do not require trusting us. Open limitations have their own section rather
+than being buried.</p>
+<p class="tr">README beş dakikada değerlendirme yolu ve sırayla nereye bakılacağı tablosuyla açılıyor. Kurulum,
+test ve değerlendirme komutları kopyala-yapıştır ve yazıldığı gibi çalıştırıldı. Mimari render edilmiş bir
+diyagram. Kanıt bölümü bize güvenmeyi gerektirmeyen komutlar veriyor. Açık sınırlılıklar gömülü değil, kendi
+bölümünde.</p>
+
+<h2>8 · Honest limitations</h2>
+<div class="box warn">
+  <h4>Stated here rather than found later</h4>
+  <b>Nobody bears the currency risk yet.</b> The funder's claim is fixed in USDC while the buyer owes a fixed
+  amount of local currency. Over ninety days those stop matching, and the contract does not say who absorbs the
+  difference. The currency premium prices that risk; it does not assign it.<br><br>
+  <b>The funder's claim has no legal wrapper.</b> The contract creates a pro-rata economic interest in a payout,
+  not an assignment of the receivable. What that is under securities law differs by country.<br><br>
+  <b>A fabricated invoice passes our checks.</b> We verify structure, not existence. The gate is
+  <code>acknowledge()</code> — the address written on the invoice must sign. What that does not stop is
+  collusion between a supplier and a buyer.<br><br>
+  <b>Also:</b> the signature is checked structurally, not against the tax authority's certificate chain; the
+  bank leg runs against a sandbox anchor; we publish the testnet price feed ourselves; and funding transactions
+  are signed server-side until a passkey smart account verifies secp256r1 on chain.
+  <br><br>
+  <b>TR ·</b> Kur riskini henüz kimse taşımıyor. Fonlayıcının hakkının hukuki kabı yok. Uydurma fatura yapısal
+  kontrollerden geçer — kapı <code>acknowledge()</code>, ama muvazaayı durdurmuyor. Ayrıca imza GİB sertifika
+  zincirine karşı doğrulanmıyor, banka bacağı sandbox, kur beslemesini testnet'te biz yayımlıyoruz ve fonlama
+  işlemleri sunucuda imzalanıyor.
+</div>
+
+<h2>9 · After the hackathon</h2>
+<table>
+  <tr><th style="width:44mm">Next step</th><th>Scope</th></tr>
+  <tr><td><b>Stellar Community Fund</b></td><td>The missing pieces are a passkey smart account that verifies
+  secp256r1 on chain, so a passkey signs its own transactions, and integration with a production fiat anchor.
+  Both are scoped work.</td></tr>
+  <tr><td><b>InstaAwards</b></td><td>The passkey smart account is a well-sized scope on its own.</td></tr>
+  <tr><td><b>Closed pilot</b></td><td>One corporate buyer and the suppliers that invoice it. The buyer's
+  acknowledgement is the product's lock, so the pilot starts there.</td></tr>
+  <tr><td><b>DeFindex strategies</b></td><td>Attaching a strategy to the vault turns the treasury from custody
+  into yield, and the adapter already prefers the vault's own gain when it has one.</td></tr>
+</table>
+<p class="tr">SCF için eksik parçalar: secp256r1'i zincirde doğrulayan passkey akıllı hesabı ve üretim anchor'ı
+entegrasyonu. InstaAward için passkey akıllı hesabı tek başına yeterli kapsam. Pilot bir kurumsal alıcı ve
+tedarikçileriyle başlıyor. Kasaya strateji bağlanması hazineyi saklamadan getiriye çeviriyor.</p>
+
+<div class="box" style="margin-top:14pt">
+  <h4>Team</h4>
+  <b>Can Sarıhan</b> — anchor and SEP client, identity and sessions, the API surface, panel screens.<br>
+  <b>Berk Çiçek</b> — contracts, the document validator, README and technical documentation.<br>
+  <span style="font-size:8.6pt;color:#5A5A5A">Component ownership rather than a split of hours: whoever is named
+  owns how that part works.</span>
+</div>
+</body></html>
