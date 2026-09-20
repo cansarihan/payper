@@ -40,6 +40,7 @@ npm run test:tranche              # anchor transfer splitter
 npm run test:sep53                # signed messages, against the spec's vectors
 npm run test:auth                 # login, from the attacker's side
 npm run test:chirp                # the audio payment frame, 2000 random payloads
+npm run test:wallet               # a wallet signs its own transaction (needs the app running)
 ```
 
 `npm run smoke` is the one to run. It registers an invoice, has the buyer
@@ -315,10 +316,18 @@ tranches and credit scoring were left out: there is no data to score with, and a
 score produced without data is not honest. The credit premium is labelled a
 parameter for the same reason.
 
-**No chain logic in the client.** Every read and write goes through a route
-handler, and keys exist only there. The trade-off is that demo sign-in holds
-keys server-side; this is deliberate, marked in the session and the interface,
-and removable with `DEMO_LOGIN=off`.
+**No chain logic in the client, but the signature is the caller's.** Reads and
+the building of a call go through a route handler. Who signs depends on how you
+arrived: a connected wallet signs its own transactions — the server prepares and
+simulates the call and hands over an unsigned envelope, the extension shows what
+it authorises, and nothing reaches the ledger unless the person approves it
+there. Demo sign-in and passkey sessions are signed server-side, which is
+deliberate and marked in both the session and the interface.
+
+The asymmetry is not laziness. A passkey produces secp256r1 and Stellar expects
+Ed25519, so a passkey cannot sign Soroban XDR until a smart account verifies
+that curve on chain. A wallet has no such excuse, which is why the wallet path
+exists.
 
 ---
 
@@ -370,11 +379,13 @@ Token errors are now matched on their diagnostic text first.
 
 | Suite | Count | What it establishes |
 |---|---|---|
-| `test:contracts` | 22 | The invariant; authorization boundaries; the pricing floor and cap; the fallback scaling with tenor; the expiring quote window; pro-rata settlement leaving no dust; the recourse waterfall |
+| `test:contracts` | 36 | The invariant; authorization boundaries; the pricing floor and cap; the fallback scaling with tenor; the expiring quote window; pro-rata settlement leaving no dust; the recourse waterfall; a claim changing hands without changing the total; the funding ledger staying walkable; the yield arithmetic against two real readings of the reference pool |
 | `test:ubl` | 33 | Field extraction, XAdES structure, and seven malformed documents that must be refused |
 | `test:tranche` | 13 | Cap, floor and total preserved across 1,823 amounts |
 | `test:sep53` | 13 | The specification's own three vectors, reproduced byte for byte |
 | `test:auth` | 17 | Wallet framings accepted; wrong keys, forged payloads, replayed nonces and tampered cookies refused |
+| `test:chirp` | 24 | The audio frame over 2,000 random payloads: every one decodes back exactly, and a single flipped symbol never passes the CRC |
+| `test:wallet` | 6 checks | The wallet signing path against a running instance. The envelope the server hands over carries no signature of its own, the wallet signs it, and the contract is read back to confirm what that signature moved |
 | `smoke` | 6 steps | The whole flow against testnet, ending in the refusal |
 
 The SEP-53 vectors are worth a note. They were first written from memory and the
@@ -687,9 +698,13 @@ money reaches a real bank. The Stellar leg is real testnet USDC.
 **We publish the testnet feed ourselves.** Explained above. The oracle mirrors
 Reflector's interface and is seeded with real ECB data.
 
-**Demo sign-in holds keys server-side.** One machine plays four parties on stage.
-The session records `method: "demo"`, the interface says so, and `DEMO_LOGIN=off`
-removes the path.
+**Demo and passkey sessions are signed server-side.** One machine plays four
+parties on stage. The session records its method, the interface says so, and
+`DEMO_LOGIN=off` removes the demo path. A **connected wallet signs its own
+transactions** — `npm run test:wallet` proves it against a running instance,
+including the assertion that the envelope the server hands over carries no
+signature of its own. For passkeys this stays open until secp256r1 is verified
+on chain.
 
 **`listInvoices` is a sequential scan.** Fine for a demo ledger, wrong for a real
 one, where an indexer would serve it.

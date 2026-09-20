@@ -164,6 +164,7 @@ stellar.expert linkli kontrat adresleri tablosu.</p>
   <tr><td>Rust · contracts</td><td>2,744 lines across 10 files</td></tr>
   <tr><td>TypeScript · app</td><td>17,537 lines across 90 files</td></tr>
   <tr><td>Contract tests</td><td><b>36</b>, all passing</td></tr>
+  <tr><td>Wallet signing</td><td>Verified end to end — prepare, sign outside the server, submit, read back</td></tr>
   <tr><td>Application-level checks</td><td><b>100</b>, across five suites</td></tr>
   <tr><td>API routes</td><td>22</td></tr>
   <tr><td>Panel screens</td><td>15</td></tr>
@@ -267,9 +268,11 @@ kimlik ve rolleri, chirp katmanı sesli ödeme çerçevesini.</p>
   <tr><td><b>Yield falls through, never substitutes</b></td><td>The vault's realised gain first, a Blend pool's
   lending rate second, and a refusal third. It would have been easier to return the configured number and call
   it live.</td></tr>
-  <tr><td><b>Keys live in route handlers</b></td><td>Three parties on one laptop makes the demo legible, and a
-  passkey cannot sign Soroban XDR on its own yet. The cost is real and it is stated in the limitations: this is
-  the thing a production deployment must change first.</td></tr>
+  <tr><td><b>Who signs depends on how you arrived</b></td><td>A connected wallet signs its own transactions:
+  the server prepares and simulates the call, hands over an unsigned envelope, and the extension shows what it
+  authorises. Demo and passkey sessions are signed server-side — three parties on one laptop makes the demo
+  legible, and a passkey produces secp256r1 where Stellar expects Ed25519, so it cannot sign Soroban XDR until
+  a smart account verifies that curve on chain.</td></tr>
 </table>
 <p class="tr">Kimliğin değişmez olması, her fiyat bileşeninin kaynağını taşıması, SEP-24 yerine SEP-6, hazinenin
 kasa değil arayüz olması, getirinin sayı uydurmak yerine reddetmesi, ve anahtarların sunucuda durması. Sonuncusu
@@ -405,7 +408,8 @@ zamanda dağıtım kanalı.</p>
   <tr><td>Architecture designed and documented</td><td>A rendered diagram in the README plus a component table,
   design decisions and challenges.</td></tr>
   <tr><td>Passkeys and smart wallets are a bonus</td><td>Implemented — passkey registration and login, and
-  SEP-53 wallet login verified against the spec's vectors.</td></tr>
+  SEP-53 wallet login verified against the spec's vectors. A connected wallet also signs its own transactions;
+  <code>npm run test:wallet</code> asserts the envelope the server hands over carries no signature of its own.</td></tr>
 </table>
 
 <div class="q"><span>J3</span>Ecosystem fit <span style="font-weight:500;color:#6A6A6A">— anchor carries the highest weight</span></div>
@@ -462,13 +466,15 @@ bölümünde.</p>
   <code>acknowledge()</code> — the address written on the invoice must sign. What that does not stop is
   collusion between a supplier and a buyer.<br><br>
   <b>Also:</b> the signature is checked structurally, not against the tax authority's certificate chain; the
-  bank leg runs against a sandbox anchor; we publish the testnet price feed ourselves; and funding transactions
-  are signed server-side until a passkey smart account verifies secp256r1 on chain.
+  bank leg runs against a sandbox anchor; and we publish the testnet price feed ourselves. A connected wallet
+  signs its own transactions; demo and passkey sessions are still signed server-side, and for passkeys that
+  stays open until secp256r1 is verified on chain.
   <br><br>
   <b>TR ·</b> Kur riskini henüz kimse taşımıyor. Fonlayıcının hakkının hukuki kabı yok. Uydurma fatura yapısal
   kontrollerden geçer — kapı <code>acknowledge()</code>, ama muvazaayı durdurmuyor. Ayrıca imza GİB sertifika
   zincirine karşı doğrulanmıyor, banka bacağı sandbox, kur beslemesini testnet'te biz yayımlıyoruz ve fonlama
-  işlemleri sunucuda imzalanıyor.
+  işlemleri — bağlı bir cüzdan kendi
+  işlemini imzalıyor, ancak demo ve passkey oturumları hâlâ sunucuda imzalanıyor.
 </div>
 
 <h2>9 · After the hackathon</h2>
