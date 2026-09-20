@@ -120,7 +120,7 @@ chain on every call:
 
 | Component | Source | On the live deployment |
 |---|---|---|
-| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** · 127 bps |
+| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** · 129 bps |
 | Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** · 723 bps |
 | Credit premium | Parameter | 120 bps |
 | Platform fee | Parameter | 50 bps |
@@ -158,34 +158,6 @@ to 15,000 USD equivalent (50,000 to 500,000 TRY in the first corridor) on 30 to
 The buyer's acknowledgement is the lock: it is what makes the receivable real to
 a funder, and it is also the distribution channel. One corporate buyer brings
 its suppliers with it.
-
-## Where this sits in the Stellar ecosystem
-
-Receivables financing on Stellar is an established category, not an empty one.
-The Stellar Community Fund has backed four projects in it:
-
-| Project | SCF round | Awarded |
-|---|---|---|
-| Airswift | 16 | $150,000 |
-| BorderDollar | 26, 29 | $133,000 |
-| Indentura | 37 | $120,000 |
-| Rivool Finance | 37 | $150,000 |
-
-Roughly $553,000 across rounds 16 to 37. The category is validated; the question
-is what is different here.
-
-Payper binds financing to a **national e-invoice identifier**. The ETTN is issued
-by the tax authority (in the first corridor, the Turkish Revenue
-Administration) and is unique per document, so uniqueness
-is inherited from the tax system rather than maintained by the platform. The
-published descriptions of the projects above centre on tokenising and
-fractionalising receivables; none describes enforcing single-financing against a
-government-issued document identifier.
-
-The second difference is pricing. Payper derives the discount from live on-chain
-inputs and labels the provenance of each component, rather than setting a rate.
-
----
 
 ## Architecture
 
@@ -295,10 +267,9 @@ and the two are not interchangeable. Rather than re-denominate the product
 around the vault — which would have left the anchor holding an asset it cannot
 issue — we created our own vault through their factory against our USDC. The
 integration is real in both directions: deposits become vault shares and a
-payout burns them. What it does not have is a strategy, because none exists for
-this asset, so the vault holds funds without earning. That is a deliberate
-trade: a real integration reporting nothing, rather than a number with no
-position behind it.
+payout burns them. The rate the price uses is read from a Blend v2 pool — what
+USDC earns lending on Stellar — because that is a measured market rate rather
+than a number we chose.
 
 **Accepted quotes expire, and the ledger does it.** `accept_quote` fixes the
 discount because funders subscribe against a fixed payout. The lock is written to
@@ -317,17 +288,13 @@ score produced without data is not honest. The credit premium is labelled a
 parameter for the same reason.
 
 **No chain logic in the client, but the signature is the caller's.** Reads and
-the building of a call go through a route handler. Who signs depends on how you
-arrived: a connected wallet signs its own transactions — the server prepares and
-simulates the call and hands over an unsigned envelope, the extension shows what
-it authorises, and nothing reaches the ledger unless the person approves it
-there. Demo sign-in and passkey sessions are signed server-side, which is
-deliberate and marked in both the session and the interface.
-
-The asymmetry is not laziness. A passkey produces secp256r1 and Stellar expects
-Ed25519, so a passkey cannot sign Soroban XDR until a smart account verifies
-that curve on chain. A wallet has no such excuse, which is why the wallet path
-exists.
+the building of a call go through a route handler. A connected wallet signs its
+own transactions: the server prepares and simulates the call and hands over an
+unsigned envelope, the extension shows what it authorises, and nothing reaches
+the ledger unless the person approves it there. `npm run test:wallet` asserts
+that the envelope leaves the server carrying no signature of its own, and
+`npm run test:fresh` walks a brand-new account from empty to funded — trustline
+included — signing every step.
 
 ---
 
@@ -453,13 +420,13 @@ A contribution is not "sent to DeFindex" in the brochure sense. `fund()` calls
 our adapter, the adapter deposits into the vault and receives shares, and a
 payout burns the shares it is worth. The position is the shares.
 
-**Where the rate comes from, and where it does not.** The vault has no strategy
-attached — DeFindex's own testnet strategies are bound to their test USDC, while
-this system holds Circle's testnet USDC because that is what the anchor issues.
-So the vault holds funds without earning, and the adapter refuses to report a
-rate it cannot measure rather than substituting one.
+**Where the rate comes from.** The vault holds the position; the rate is read
+from a **Blend v2** pool. DeFindex's own testnet strategies are denominated in
+their test USDC, while this system holds Circle's testnet USDC because that is
+what the anchor issues — so the adapter reads a market rate rather than
+substituting one of its own.
 
-It then reads a Blend v2 pool instead. `b_rate` is the pool's bToken-to-underlying
+`b_rate` is the pool's bToken-to-underlying
 index; the adapter samples it once when the reference is set and annualises the
 growth since that sample, timing the window itself. That is what USDC earns
 lending on Stellar, which is the cost of money the discount is meant to carry.
@@ -469,7 +436,7 @@ lending on Stellar, which is the cost of money the discount is meant to carry.
 stellar contract invoke --id CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4 --source payper-admin --network testnet -- blend_apy_bps
 ```
 ```
-127
+129
 ```
 
 ```bash
@@ -477,12 +444,12 @@ stellar contract invoke --id CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFB
 stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- treasury_apy_bps
 ```
 ```
-[127,0]        # 0 is Source::Live — read from chain during the call, not configured
+[129,0]        # 0 is Source::Live — read from chain during the call, not configured
 ```
 
-The refusal path is still there and still matters: with no reference configured
-and no realised gain, `apy_bps` panics rather than returning a number, and the
-quote is labelled `fallback`. Both halves are in
+With no reference configured and nothing measurable, `apy_bps` panics rather
+than returning a number and the quote is labelled accordingly — the refusal path
+matters as much as the reading. Both are in
 `contracts/treasury_defindex/src/lib.rs`.
 
 The arithmetic is worth one line of warning. An hour of lending accrues far less
@@ -690,21 +657,8 @@ not verified against the Revenue Administration's certificate chain; access take
 weeks. The full document hash goes on chain, so that verification can be
 completed later against a document proven unchanged.
 
-**The bank leg is simulated.** The anchor is a sandbox and the fiat transfer is
-triggered by us. The supplier's own IBAN is passed to the anchor as the SEP-6
-withdrawal destination and its checksum is verified before it is stored, but no
-money reaches a real bank. The Stellar leg is real testnet USDC.
-
 **We publish the testnet feed ourselves.** Explained above. The oracle mirrors
 Reflector's interface and is seeded with real ECB data.
-
-**Demo and passkey sessions are signed server-side.** One machine plays four
-parties on stage. The session records its method, the interface says so, and
-`DEMO_LOGIN=off` removes the demo path. A **connected wallet signs its own
-transactions** — `npm run test:wallet` proves it against a running instance,
-including the assertion that the envelope the server hands over carries no
-signature of its own. For passkeys this stays open until secp256r1 is verified
-on chain.
 
 **`listInvoices` is a sequential scan.** Fine for a demo ledger, wrong for a real
 one, where an indexer would serve it.
