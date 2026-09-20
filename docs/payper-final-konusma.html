@@ -1,0 +1,213 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+ @page { size: A4; margin: 18mm 17mm; }
+ body { font-family:'Urbanist',sans-serif; color:#0A0A0A; font-size:11.4pt; line-height:1.62; margin:0; }
+ h2.lang { font-size:21pt; font-weight:800; letter-spacing:.1em; margin:0 0 14pt;
+   padding-bottom:7pt; border-bottom:3px solid #0A0A0A; }
+ h2.page { break-before:page; }
+ h2.sec { font-size:13pt; margin:20pt 0 6pt; }
+ h3 { font-size:12.6pt; font-weight:800; margin:17pt 0 5pt; break-after:avoid;
+   display:flex; justify-content:space-between; align-items:baseline; gap:10pt;
+   border-top:1.5px solid #E4E4E0; padding-top:8pt; }
+ h3 .t { order:2; font-family:'JetBrains Mono',monospace; font-size:9pt; font-weight:600;
+   color:#1A8F63; white-space:nowrap; }
+ p { margin:0 0 7pt; }
+ b { font-weight:800; }
+ code { font-family:'JetBrains Mono',monospace; font-size:9.6pt; }
+ ul { margin:6pt 0 0; padding-left:16pt; } li { margin-bottom:5pt; font-size:10.6pt; }
+ .cover { background:#0A0A0A; color:#fff; margin:-18mm -17mm 0; padding:44mm 17mm 24mm; break-after:page; }
+ .cover h1 { font-size:42pt; font-weight:600; letter-spacing:-.035em; margin:0 0 8pt; }
+ .cover .m { color:#3DE29C; }
+ .cover p { color:rgba(255,255,255,.72); font-size:12pt; max-width:130mm; }
+ .meta { margin-top:16mm; font-family:'JetBrains Mono',monospace; font-size:8.6pt;
+   color:rgba(255,255,255,.55); display:flex; gap:12mm; flex-wrap:wrap; }
+</style></head><body>
+<div class="cover">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;letter-spacing:.14em;color:#3DE29C;margin-bottom:10mm">
+    RISE IN × STELLAR PRO HACKATHON 2026 · FINAL
+  </div>
+  <h1>payper<br><span class="m">konuşma metni</span></h1>
+  <p>Dört buçuk dakikalık sunum metni, İngilizce ve Türkçe. Slayt sırasına göre,
+  her bölümün süresiyle. Rakamlar canlı deploymentten okundu.</p>
+  <div class="meta"><span>payper.live</span><span>Can Sarıhan · Berk Çiçek</span></div>
+</div>
+<p>Two versions of the same speech. Numbers are read from the live deployment;</p>
+<p>if you are asked, every one of them is checkable on chain.</p>
+<h2 class="lang">ENGLISH</h2>
+<h3><span class="t">~25s</span>1 · Cover</h3>
+<p>Good afternoon. We are Payper.</p>
+<p>A supplier ships the goods, pays the wages, and then waits ninety days to be</p>
+<p>paid. The capital that could close that gap exists — it is just sitting inside</p>
+<p>domestic bank balance sheets, where a funder abroad cannot reach it.</p>
+<p>We built the door.</p>
+<h3><span class="t">~45s</span>2 · Problem</h3>
+<p>This is not a small market and it is not a speculative one. In our first</p>
+<p>corridor, Türkiye, there are four million active enterprises and ninety-nine</p>
+<p>point six percent of them are SMEs. The factoring sector turned over one point</p>
+<p>eight seven five trillion lira last year across roughly ninety-five thousand</p>
+<p>customers.</p>
+<p>So the demand is proven. What that market does not have is two things.</p>
+<p>First, a price anyone can check — the cost is quoted per deal, at a desk, with</p>
+<p>no published rate to compare against.</p>
+<p>Second, and this is the binding one: the capital is bank capital. A factor can</p>
+<p>only advance what its own balance sheet allows, and that balance sheet is</p>
+<p>bounded by the country it is licensed in. Someone abroad who would happily take</p>
+<p>that risk at that price simply cannot reach it.</p>
+<h3><span class="t">~50s</span>3 · Solution</h3>
+<p>Here is what we do.</p>
+<p>A supplier uploads a signed e-invoice. The contract writes its ETTN — the tax</p>
+<p>authority's unique identifier for that document — and refuses a second</p>
+<p>registration of the same one.</p>
+<p>The buyer acknowledges the debt on chain. From that moment the receivable is an</p>
+<p>instrument anyone holding USDC can fund. In seconds. From fifty dollars.</p>
+<p>The supplier is paid the same day, in lira, into a normal bank account. They</p>
+<p>never touch crypto. The funder never opens an account in Türkiye.</p>
+<h3><span class="t">~60s</span>4 · Architecture</h3>
+<p>Four Soroban contracts on testnet. Let me give you the parts that matter.</p>
+<p><b>One ETTN, one financing.</b> That is the product's single invariant, and it is</p>
+<p>enforced by a contract, not by a database row. A licensed factor inside a</p>
+<p>country with a central registry can already check one. A funder in Berlin</p>
+<p>cannot — and the contract gives them the same guarantee without asking them to</p>
+<p>join anything.</p>
+<p><b>The price is computed, not quoted.</b> Four components. Two of them are read</p>
+<p>from chain on every single call, and every component carries its own</p>
+<p>provenance — so a number that fell back to a parameter cannot be presented as</p>
+<p>live. The interface labels it.</p>
+<p><b>The money reaches a bank account.</b> SEP-6, in both directions, against a real</p>
+<p>anchor. The supplier sells USDC for lira; the buyer settles in lira at maturity.</p>
+<p>Everything about that anchor is discovered at run time — moving to another one</p>
+<p>is a single domain change.</p>
+<h3><span class="t">~35s</span>5 · Competitive advantage</h3>
+<p>Two things make this different from the on-chain supply chain finance projects</p>
+<p>that came before.</p>
+<p>The first is that financing is bound to a <b>sovereign document identifier</b>. The</p>
+<p>ETTN is issued by the tax authority and is unique per document, so uniqueness is</p>
+<p>inherited from the tax system rather than maintained by us.</p>
+<p>The second is verifiable pricing. Our DeFi yield is not a claim — our treasury</p>
+<p>vault's code hash matches the hash DeFindex publishes, byte for byte. And the</p>
+<p>rate itself is read live from a Blend v2 pool: one hundred and twenty-nine basis</p>
+<p>points, on chain, right now, not configured.</p>
+<h3><span class="t">~40s</span>6 · Honest limitations</h3>
+<p>I want to tell you what this does not solve, before you find it.</p>
+<p><b>Nobody bears the currency risk yet.</b> The funder's claim is fixed in USDC</p>
+<p>while the buyer owes a fixed amount of lira. Over ninety days those stop</p>
+<p>matching, and the contract does not say who absorbs the difference. We price</p>
+<p>that risk into the discount — we do not assign it.</p>
+<p><b>The funder's claim has no legal wrapper.</b> The contract creates a pro-rata</p>
+<p>economic interest in a payout, not an assignment of the receivable. What that is</p>
+<p>under securities law differs by country, and production needs counsel.</p>
+<p><b>A fabricated invoice would pass our structural checks.</b> The gate is the</p>
+<p>buyer's acknowledgement — the address on the invoice has to sign. What that does</p>
+<p>not stop is collusion.</p>
+<p>We would rather say these ourselves than have you find them.</p>
+<h3><span class="t">~30s</span>7 · Business model</h3>
+<p>Fifty basis points on every funded invoice, embedded in the pricing engine</p>
+<p>itself. A performance fee on treasury yield. A share of the FX conversion. And</p>
+<p>an enterprise tier for corporate buyers.</p>
+<p>Acquisition is the interesting part: we sell to the <b>buyer</b>, not the supplier.</p>
+<p>One corporate buyer brings dozens of its suppliers with it, and the buyer's</p>
+<p>acknowledgement is both our lock and our distribution channel.</p>
+<h3><span class="t">~35s</span>8 · Roadmap and the ask</h3>
+<p>Next: a passkey smart account that verifies secp256r1 on chain, so a passkey</p>
+<p>signs its own transactions. Integration with a production fiat anchor. Legal</p>
+<p>structure. Then a closed pilot with one corporate buyer and its suppliers.</p>
+<p>We are applying to the Stellar Community Fund and to InstaAwards.</p>
+<h3><span class="t">~20s</span>9 · Close</h3>
+<p>Everything I have said is on payper.live right now, on testnet, and the README</p>
+<p>gives you the commands to check each claim without trusting us.</p>
+<p>One ETTN, one financing. The supplier is paid today. The funder never opens a</p>
+<p>Turkish bank account.</p>
+<p>Thank you.</p>
+<h2 class="lang page">TÜRKÇE</h2>
+<h3><span class="t">~25 sn</span>1 · Kapak</h3>
+<p>İyi günler. Biz Payper.</p>
+<p>Tedarikçi malı sevk ediyor, maaşı ödüyor, sonra parasını doksan gün bekliyor. O</p>
+<p>açığı kapatacak sermaye var — sadece yurt içi bankaların bilançosunda duruyor ve</p>
+<p>yurt dışındaki bir fonlayıcı oraya erişemiyor.</p>
+<p>Biz o kapıyı açtık.</p>
+<h3><span class="t">~45 sn</span>2 · Problem</h3>
+<p>Bu küçük bir pazar değil ve spekülatif de değil. İlk koridorumuz Türkiye'de dört</p>
+<p>milyon aktif girişim var, yüzde doksan dokuz virgül altısı KOBİ. Faktoring</p>
+<p>sektörü geçen yıl yaklaşık doksan beş bin müşteri üzerinden bir virgül sekiz yüz</p>
+<p>yetmiş beş trilyon lira hacim döndürdü.</p>
+<p>Yani talep kanıtlı. Bu pazarda olmayan iki şey var.</p>
+<p>Birincisi, kimsenin kontrol edebileceği bir fiyat. Maliyet masa başında, her</p>
+<p>işlem için ayrı söyleniyor; karşılaştırılacak yayımlanmış bir oran yok.</p>
+<p>İkincisi — ve asıl kısıt bu — sermaye banka sermayesi. Bir faktoring şirketi</p>
+<p>ancak kendi bilançosunun izin verdiği kadar avans verebiliyor ve o bilanço,</p>
+<p>lisanslı olduğu ülkeyle sınırlı. Bu riski o fiyata almaya razı yabancı biri ise</p>
+<p>o sermayeye hiç erişemiyor.</p>
+<h3><span class="t">~50 sn</span>3 · Çözüm</h3>
+<p>Yaptığımız şey şu.</p>
+<p>Tedarikçi imzalı e-faturasını yüklüyor. Kontrat faturanın ETTN'ini yazıyor —</p>
+<p>vergi idaresinin o belgeye verdiği tekil kimlik — ve aynısının ikinci kez</p>
+<p>kaydedilmesini reddediyor.</p>
+<p>Alıcı borcu zincir üstünde onaylıyor. O andan itibaren alacak, USDC tutan</p>
+<p>herkesin fonlayabildiği bir enstrüman. Saniyeler içinde. Elli dolardan</p>
+<p>başlayarak.</p>
+<p>Tedarikçiye aynı gün, lira olarak, normal banka hesabına ödeniyor. Kriptoya hiç</p>
+<p>dokunmuyor. Fonlayıcı da Türkiye'de hesap açmıyor.</p>
+<h3><span class="t">~60 sn</span>4 · Mimari</h3>
+<p>Testnet'te dört Soroban kontratı. Önemli parçaları söyleyeyim.</p>
+<p><b>Bir ETTN, bir finansman.</b> Ürünün tek değişmezi bu ve bir veritabanı satırı</p>
+<p>değil, kontrat kuralı. Merkezi kaydı olan bir ülkedeki lisanslı faktoring</p>
+<p>şirketi bunu zaten kontrol edebiliyor. Berlin'deki bir fonlayıcı edemiyor — ve</p>
+<p>kontrat ona aynı garantiyi, hiçbir yere üye olmasını istemeden veriyor.</p>
+<p><b>Fiyat hesaplanıyor, dayatılmıyor.</b> Dört bileşen. İkisi her çağrıda zincirden</p>
+<p>okunuyor ve her bileşen kendi kaynağını taşıyor — yani parametreye düşen bir</p>
+<p>sayı canlı diye sunulamıyor. Arayüz etiketliyor.</p>
+<p><b>Para bankaya ulaşıyor.</b> SEP-6, çift yönlü, gerçek bir anchor üzerinden.</p>
+<p>Tedarikçi USDC'yi liraya çeviriyor, alıcı vadede lira ile kapatıyor. Anchor'a</p>
+<p>dair her şey çalışma anında keşfediliyor — başka bir anchor'a geçmek tek alan</p>
+<p>adı değişikliği.</p>
+<h3><span class="t">~35 sn</span>5 · Rekabet avantajı</h3>
+<p>Bizi önceki zincir üstü tedarik zinciri finansmanı projelerinden ayıran iki şey</p>
+<p>var.</p>
+<p>Birincisi, finansmanın <b>devlet tarafından verilen bir belge kimliğine</b> bağlı</p>
+<p>olması. ETTN'i vergi idaresi veriyor ve her belge için tekil, yani tekillik bizim</p>
+<p>tuttuğumuz bir kayıttan değil, vergi sisteminden geliyor.</p>
+<p>İkincisi doğrulanabilir fiyatlama. DeFi getirimiz bir iddia değil — hazine</p>
+<p>kasamızın kod hash'i, DeFindex'in yayımladığı hash ile bayt bayt aynı. Oranın</p>
+<p>kendisi de canlı olarak bir Blend v2 havuzundan okunuyor: yüz yirmi dokuz baz</p>
+<p>puan, şu anda, zincirden, yapılandırmadan değil.</p>
+<h3><span class="t">~40 sn</span>6 · Dürüst sınırlılıklar</h3>
+<p>Siz bulmadan önce, bunun neyi çözmediğini söylemek istiyorum.</p>
+<p><b>Kur riskini henüz kimse taşımıyor.</b> Fonlayıcının hakkı USDC cinsinden sabit,</p>
+<p>alıcı ise sabit bir lira tutarı borçlu. Doksan günde bu ikisi uyuşmayı</p>
+<p>bırakıyor ve kontrat farkı kimin soğuracağını söylemiyor. Riski iskontoya</p>
+<p>fiyatlıyoruz — ama atamıyoruz.</p>
+<p><b>Fonlayıcının hakkının hukuki kabı yok.</b> Kontrat temlik değil, ödeme üzerinde</p>
+<p>oransal bir ekonomik katılım yaratıyor. Bunun menkul kıymet mevzuatı açısından ne</p>
+<p>olduğu ülkeye göre değişiyor ve üretim için hukuki görüş gerekiyor.</p>
+<p><b>Uydurma bir fatura yapısal kontrollerimizden geçer.</b> Kapı alıcının onayı —</p>
+<p>faturada yazılı adresin imzalaması gerekiyor. Durdurmadığı şey muvazaa.</p>
+<p>Bunları sizin bulmanızı beklemektense kendimiz söylemeyi tercih ederiz.</p>
+<h3><span class="t">~30 sn</span>7 · İş modeli</h3>
+<p>Fonlanan her faturada elli baz puan, doğrudan fiyatlama motorunun içine gömülü.</p>
+<p>Hazine getirisinden performans ücreti. Kur dönüşümünden pay. Ve kurumsal alıcılar</p>
+<p>için kurumsal abonelik.</p>
+<p>İlginç kısmı müşteri kazanımı: biz <b>alıcıya</b> satıyoruz, tedarikçiye değil. Bir</p>
+<p>kurumsal alıcı, onlarca tedarikçisini beraberinde getiriyor — ve alıcının onayı</p>
+<p>hem kilidimiz hem dağıtım kanalımız.</p>
+<h3><span class="t">~35 sn</span>8 · Yol haritası ve talep</h3>
+<p>Sırada: secp256r1'i zincirde doğrulayan bir passkey akıllı hesabı, böylece</p>
+<p>passkey kendi işlemini imzalayabilsin. Üretim fiat anchor'ı entegrasyonu. Hukuki</p>
+<p>yapı. Sonra bir kurumsal alıcı ve tedarikçileriyle kapalı pilot.</p>
+<p>Stellar Community Fund ve InstaAwards'a başvuruyoruz.</p>
+<h3><span class="t">~20 sn</span>9 · Kapanış</h3>
+<p>Söylediğim her şey şu anda payper.live'da, testnet üzerinde çalışıyor — ve</p>
+<p>README, her iddiayı bize güvenmeden kontrol edebileceğiniz komutları veriyor.</p>
+<p>Bir ETTN, bir finansman. Tedarikçi bugün ödeniyor. Fonlayıcı hiçbir zaman Türk</p>
+<p>bankasında hesap açmıyor.</p>
+<p>Teşekkürler.</p>
+<h2 class="sec">Delivery notes</h2>
+<ul><li>Total is about four and a half minutes at a normal pace. If you are cut to</li>
+<p>  four, drop the business model slide — the roadmap carries enough of it.</p>
+<li>The two lines worth slowing down for: <b>"one ETTN, one financing"</b> and</li>
+<p>  <b>"we would rather say these ourselves than have you find them."</b></p>
+<li>If a judge interrupts on DeFindex, the answer is one sentence: <i>the vault holds</li>
+<p>  the position, the rate is read from Blend, and our vault's code hash matches</p>
+<p>  theirs byte for byte.</i></p>
+<li>If asked whether the user really signs: <i>a connected wallet signs its own</li></ul>
+<p>  transactions; the server prepares the call and hands over an unsigned envelope.</i></p></body></html>
