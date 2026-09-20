@@ -61,6 +61,7 @@ export function Upload({
   const input = useRef<HTMLInputElement>(null);
   const [buyerIsWallet, setBuyerIsWallet] = useState(false);
   const [sellerIsWallet, setSellerIsWallet] = useState(false);
+  const [buyerAddress, setBuyerAddress] = useState("");
   const [session] = useState(() => `s${Date.now().toString(36)}`);
   const [busy, setBusy] = useState<"inspect" | "register" | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -79,6 +80,9 @@ export function Upload({
       // acknowledge the invoice itself, instead of a server key doing it.
       if (!inspect && buyerIsWallet) body.append("buyerIsWallet", "1");
       if (!inspect && sellerIsWallet) body.append("sellerIsWallet", "1");
+      // A named buyer lets the acknowledgement come from a different wallet on a
+      // different machine, which is what a two-party demo actually looks like.
+      if (!inspect && buyerAddress.trim()) body.append("buyerAddress", buyerAddress.trim());
       const res = await fetch("/api/upload", { method: "POST", body });
       const json = (await res.json()) as Result;
       // A refusal with nothing to render would otherwise leave the screen
@@ -481,6 +485,25 @@ export function Upload({
                         <span style={{ opacity: 0.7, fontWeight: 500 }}>{d.sellerIsWalletNote}</span>
                       </button>
                     )}
+                    <input
+                      value={buyerAddress}
+                      onChange={(e) => setBuyerAddress(e.target.value)}
+                      placeholder={d.buyerAddressPlaceholder}
+                      spellCheck={false}
+                      style={{
+                        width: "100%",
+                        border: `1px solid ${buyerAddress.trim() ? C.ink : "rgba(10,10,10,.16)"}`,
+                        borderRadius: 16,
+                        padding: "11px 14px",
+                        marginBottom: 9,
+                        fontFamily: FONT.mono,
+                        fontSize: 11.5,
+                        background: "transparent",
+                      }}
+                    />
+                    <div style={{ fontSize: 11.5, opacity: 0.6, marginBottom: 9, lineHeight: 1.45 }}>
+                      {d.buyerAddressNote}
+                    </div>
                     {walletAddress && (
                       <button
                         onClick={() => setBuyerIsWallet((v) => !v)}

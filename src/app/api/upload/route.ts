@@ -27,6 +27,12 @@ export async function POST(req: NextRequest) {
     // The supplier signs the registration in their own wallet, which also makes
     // them the seller the contract will later ask to authorise the price lock.
     const sellerIsWallet = form.get("sellerIsWallet") === "1";
+    // A named buyer, so the two parties can be two different wallets on two
+    // different machines rather than one session changing which hat it wears.
+    const namedBuyer = String(form.get("buyerAddress") ?? "").trim();
+    if (namedBuyer && !/^G[A-Z2-7]{55}$/.test(namedBuyer)) {
+      throw new Error("The buyer address is not a Stellar public key.");
+    }
     // Inspection writes nothing; only registration spends a key.
     const session = inspectOnly ? null : await requireRole("seller");
     if ((buyerIsWallet || sellerIsWallet) && !session?.wallet) {
@@ -97,7 +103,7 @@ export async function POST(req: NextRequest) {
     if (sellerIsWallet && session?.wallet) {
       const prepared = await prepareRegister({
         signer: session.wallet.address,
-        buyerAddress: buyerIsWallet ? session.wallet.address : undefined,
+        buyerAddress: namedBuyer || (buyerIsWallet ? session.wallet.address : undefined),
         ettnHashHex: parsed.ettnHash,
         docHashHex: parsed.docHash,
         sellerTaxId: parsed.seller.taxId,
@@ -121,7 +127,7 @@ export async function POST(req: NextRequest) {
       // A buyer who signed in with their own wallet can be named here, and then
       // they are the only address the contract will accept an acknowledgement
       // from — including instead of the demo key this process holds.
-      buyerAddress: buyerIsWallet ? session?.wallet?.address : undefined,
+      buyerAddress: namedBuyer || (buyerIsWallet ? session?.wallet?.address : undefined),
     });
 
     return ok({ document: parsed, checks, registered: { id, hash } });

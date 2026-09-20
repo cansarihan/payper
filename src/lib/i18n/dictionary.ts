@@ -211,6 +211,8 @@ interface Copy {
   register: string;
   sellerIsWallet: string;
   sellerIsWalletNote: string;
+  buyerAddressPlaceholder: string;
+  buyerAddressNote: string;
   buyerIsWallet: string;
   buyerIsWalletNote: string;
   registered: string;
@@ -573,6 +575,8 @@ const en: Copy = {
   register: "Register on chain",
   sellerIsWallet: "Sign the registration in my wallet",
   sellerIsWalletNote: "Then my wallet is the supplier on this invoice, and it is what locks the price later.",
+  buyerAddressPlaceholder: "Buyer address · G…  (optional)",
+  buyerAddressNote: "Leave it empty and the demo buyer is used. Paste an address and only that wallet can acknowledge this invoice — which is how two people on two machines demonstrate it.",
   buyerIsWallet: "Name my wallet as the buyer",
   buyerIsWalletNote: "Then only this wallet can acknowledge the invoice, and it signs that itself.",
   registered: "Registered",
@@ -994,6 +998,8 @@ const tr: Copy = {
   register: "Zincire kaydet",
   sellerIsWallet: "Kaydı cüzdanımla imzala",
   sellerIsWalletNote: "O zaman bu faturanın tedarikçisi cüzdanım olur ve fiyatı da o kilitler.",
+  buyerAddressPlaceholder: "Alıcı adresi · G…  (isteğe bağlı)",
+  buyerAddressNote: "Boş bırakırsan demo alıcı kullanılır. Bir adres yazarsan bu faturayı yalnızca o cüzdan onaylayabilir — iki kişi iki makinede bunu böyle gösterir.",
   buyerIsWallet: "Alıcı olarak cüzdanımı yaz",
   buyerIsWalletNote: "O zaman faturayı yalnızca bu cüzdan onaylayabilir ve onayı kendisi imzalar.",
   registered: "Kaydedildi",
