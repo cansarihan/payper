@@ -252,13 +252,24 @@ tam olarak bunu tutuyor.</p>
 döndürüyor — yedeğe düşen bir sayı canlı diye sunulamıyor.</p>
 <table>
   <tr><th style="width:34mm">Bileşen</th><th style="width:44mm">Kaynak</th><th>Canlı deploymentte</th></tr>
-  <tr><td>Fonlama getirisi</td><td>Hazine APY'si, vadeye ölçekli</td><td><code>fallback</code> · 195 bps</td></tr>
-  <tr><td>Kur riski</td><td>TRY/USD beslemesinde gözlenen hareket</td><td><b>live</b> · 723 bps
-  (29 günlük pencerede 203 bps sapma, 201 bps bant)</td></tr>
-  <tr><td>Kredi primi</td><td>Parametre</td><td>120 bps</td></tr>
-  <tr><td>Platform ücreti</td><td>Parametre</td><td>50 bps</td></tr>
-  <tr><td><b>Toplam</b></td><td></td><td><b>1.088 bps · 89 günde %10,88 · yıllık ~%44,6</b></td></tr>
+  <tr><td>Fonlama getirisi</td><td>Hazine APY'si, vadeye ölçekli — kasanın gerçekleşmiş kazancı,
+  yoksa referans Blend v2 havuzunun ödediği oran</td><td><b>live</b></td></tr>
+  <tr><td>Kur riski</td><td>TRY/USD beslemesinde gözlenen hareket</td><td><b>live</b></td></tr>
+  <tr><td>Kredi primi</td><td>Parametre</td><td><code>configured</code></td></tr>
+  <tr><td>Platform ücreti</td><td>Parametre</td><td><code>configured</code></td></tr>
 </table>
+<div class="box">
+  <h4>Toplamı buraya yazmıyoruz</h4>
+  Dört bileşenin ikisi her çağrıda zincirden okunuyor, yani toplam beslemeyle ve referans havuzun
+  ödediği oranla birlikte hareket ediyor. Statik bir sayfaya yazılan her toplam bir gün sonra yanlış
+  olur — o yüzden kontrata sorun:
+  <br><br>
+  <code>stellar contract invoke --id CB2EUFAF…3NBA --source payper-admin --network testnet -- quote --invoice_id 33</code>
+  <br><br>
+  Bu satırlar yazıldığında 89 günlük fatura için <b>924 bps · %9,24 · yıllık ~%37,9</b> dönüyordu:
+  getiri 31, kur riski 723, kredi primi 120, platform ücreti 50. Bileşenler kaynağını taşıdığı için
+  yedeğe düşen bir sayı canlı diye sunulamıyor; ezberden söylenen bir toplam da güncel diye sunulamıyor.
+</div>
 <p>Kur primi varsayılan bir katsayı değil: oracle'dan 30 gerçek kapanış okunuyor, liranın o pencerede
 fiilen ne kadar değer kaybettiği ölçülüp vadeye projekte ediliyor, bandın yarısı oynaklık payı olarak
 ekleniyor, sonuç taban ve tavana kıstırılıyor.</p>

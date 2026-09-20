@@ -40,15 +40,18 @@ export const SPECS: InvoiceSpec[] = [
     tenorDays: 60,
     note: "60-day term · a second buyer",
   },
-  // The pair used for the recorded walkthrough. The ETTN is fixed rather than
-  // minted so it reads the same on screen as in the deck, and the copy carries a
-  // different amount and tenor on purpose: an identical file would leave it
-  // ambiguous whether the ETTN or the document hash was what caught it.
+  // The pair used for the recorded walkthrough.
+  //
+  // The identifier is minted per session rather than fixed. An ETTN can be
+  // financed exactly once — that is the product's whole invariant — so a fixed
+  // one could be demonstrated exactly once and every later recording would open
+  // on a refusal. The copy takes whatever the primary was just given, and
+  // carries a different amount and tenor on purpose: an identical file would
+  // leave it ambiguous whether the ETTN or the document hash was what caught it.
   {
     key: "video",
     fileName: "fatura-A.xml",
     number: "GIB2026000000900",
-    ettn: "3f9a1b2c-4d5e-4f60-8a71-9b2c3d4e5c21",
     buyerName: "Marmara Otomotiv San. ve Tic. A.Ş.",
     buyerTaxId: "3250456789",
     amount: "50000.00",
@@ -61,7 +64,6 @@ export const SPECS: InvoiceSpec[] = [
     key: "video-copy",
     fileName: "fatura-A-kopya.xml",
     number: "GIB2026000000901",
-    ettn: "3f9a1b2c-4d5e-4f60-8a71-9b2c3d4e5c21",
     buyerName: "Marmara Otomotiv San. ve Tic. A.Ş.",
     buyerTaxId: "3250456789",
     amount: "180000.00",

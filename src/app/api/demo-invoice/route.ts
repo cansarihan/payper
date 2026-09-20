@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
 
   // The duplicate must carry the primary's ETTN for this session. The video pair
   // carries its own fixed identifier, so it needs none of this.
-  const shares = variant === "duplicate" ? "primary" : variant;
+  const shares =
+    variant === "duplicate" ? "primary" : variant === "video-copy" ? "video" : variant;
   const key = `${session}:${shares}`;
   const existing = spec.ettn ? undefined : issued.get(key);
   const { xml, ettn } = buildInvoice(spec, existing ? { ettn: existing } : undefined);

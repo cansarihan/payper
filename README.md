@@ -120,16 +120,25 @@ them the same guarantee without asking them to join anything.
 **The price is computed, not quoted.** Four components, two of them read from
 chain on every call:
 
-| Component | Source | On the live deployment |
+| Component | Source | Provenance |
 |---|---|---|
-| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** · 129 bps |
-| Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** · 723 bps |
-| Credit premium | Parameter | 120 bps |
-| Platform fee | Parameter | 50 bps |
+| Funding yield | Treasury APY, scaled to tenor. The DeFindex vault's own realised gain when it has one, otherwise what the reference Blend v2 pool has paid suppliers | **live** |
+| Currency risk | Observed move in the local-currency feed (TRY/USD) | **live** |
+| Credit premium | Parameter | configured |
+| Platform fee | Parameter | configured |
 
-That is 10.88% over 89 days, about 44.6% annualised. Each component carries its
+Two of the four are read from chain on every call, so the total is not a figure
+this page can state — it moves with the feed and with what the reference pool is
+paying. Ask the contract instead:
+
+```bash
+stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA --source payper-admin --network testnet -- quote --invoice_id 33
+```
+
+At the time of writing that returns 924 bps over 89 days — 31 for the yield, 723
+for currency risk, 120 and 50 for the two parameters. Each component carries its
 provenance, so a number that fell back to a parameter cannot be presented as
-live — the interface labels it.
+live, and a total quoted from memory cannot be presented as current.
 
 The yield component has two chain sources, in order. First the DeFindex vault's
 own realised gain. The vault carries no strategy on testnet — DeFindex's own
