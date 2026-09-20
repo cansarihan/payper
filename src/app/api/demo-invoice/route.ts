@@ -26,11 +26,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: `Bilinmeyen varyant: ${variant}` }, { status: 404 });
   }
 
-  // The duplicate must carry the primary's ETTN for this session.
-  const key = `${session}:${variant === "duplicate" ? "primary" : variant}`;
-  const existing = issued.get(key);
+  // The duplicate must carry the primary's ETTN for this session. The video pair
+  // carries its own fixed identifier, so it needs none of this.
+  const shares = variant === "duplicate" ? "primary" : variant;
+  const key = `${session}:${shares}`;
+  const existing = spec.ettn ? undefined : issued.get(key);
   const { xml, ettn } = buildInvoice(spec, existing ? { ettn: existing } : undefined);
-  issued.set(key, ettn);
+  if (!spec.ettn) issued.set(key, ettn);
 
   return new NextResponse(xml, {
     headers: {

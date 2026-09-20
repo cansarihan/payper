@@ -7,7 +7,7 @@ import { createHash, randomUUID } from "node:crypto";
  * sealed invoice passes the same structural checks.
  */
 export interface InvoiceSpec {
-  key: "primary" | "secondary" | "duplicate";
+  key: "primary" | "secondary" | "duplicate" | "video" | "video-copy";
   fileName: string;
   number: string;
   /** Shared with `primary` on purpose: this is the rejection demo. */
@@ -39,6 +39,34 @@ export const SPECS: InvoiceSpec[] = [
     amount: "1850.00",
     tenorDays: 60,
     note: "60-day term · a second buyer",
+  },
+  // The pair used for the recorded walkthrough. The ETTN is fixed rather than
+  // minted so it reads the same on screen as in the deck, and the copy carries a
+  // different amount and tenor on purpose: an identical file would leave it
+  // ambiguous whether the ETTN or the document hash was what caught it.
+  {
+    key: "video",
+    fileName: "fatura-A.xml",
+    number: "GIB2026000000900",
+    ettn: "3f9a1b2c-4d5e-4f60-8a71-9b2c3d4e5c21",
+    buyerName: "Marmara Otomotiv San. ve Tic. A.Ş.",
+    buyerTaxId: "3250456789",
+    amount: "50000.00",
+    // Ninety here shows as eighty-nine on screen: the due date is a date, so the
+    // part of today already spent is not counted.
+    tenorDays: 90,
+    note: "89-day term · the invoice the walkthrough follows",
+  },
+  {
+    key: "video-copy",
+    fileName: "fatura-A-kopya.xml",
+    number: "GIB2026000000901",
+    ettn: "3f9a1b2c-4d5e-4f60-8a71-9b2c3d4e5c21",
+    buyerName: "Marmara Otomotiv San. ve Tic. A.Ş.",
+    buyerTaxId: "3250456789",
+    amount: "180000.00",
+    tenorDays: 60,
+    note: "Same ETTN, different amount and tenor · the refusal",
   },
   {
     key: "duplicate",

@@ -8,6 +8,8 @@ import { signPrepared } from "@/lib/wallet/sign";
 import { ScreenHead } from "./Shell";
 
 const SAMPLES = [
+  { variant: "video", file: "fatura-A.xml", note: "89 days · 50.000,00 ₺" },
+  { variant: "video-copy", file: "fatura-A-kopya.xml", note: "same ETTN · 180.000,00 ₺" },
   { variant: "primary", file: "GIB2026000000481.xml", note: "90 days" },
   { variant: "secondary", file: "GIB2026000000512.xml", note: "60 days" },
   { variant: "duplicate", file: "GIB2026000000481-KOPYA.xml", note: "same ETTN" },
