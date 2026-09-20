@@ -20,7 +20,8 @@
     "test:wallet": "tsx scripts/wallet-tx-test.ts",
     "test:fresh": "tsx scripts/fresh-wallet-test.ts",
     "test:buyer": "tsx scripts/wallet-buyer-test.ts",
-    "test:chain": "tsx scripts/wallet-chain-test.ts"
+    "test:chain": "tsx scripts/wallet-chain-test.ts",
+    "demo:files": "bash scripts/demo-files.sh"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.6.0",
