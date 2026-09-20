@@ -1,0 +1,262 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 15mm 14mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Urbanist', sans-serif; color: #0A0A0A; font-size: 10pt; line-height: 1.45; margin: 0; }
+  h1 { font-size: 24pt; font-weight: 700; letter-spacing: -.03em; margin: 0 0 3pt; }
+  .sub { color: #5A5A5A; font-size: 10.5pt; margin-bottom: 4pt; }
+  h2 { font-size: 13pt; font-weight: 700; margin: 16pt 0 5pt; padding-top: 7pt;
+       border-top: 2px solid #0A0A0A; break-after: avoid; }
+  .step { break-inside: avoid; margin-bottom: 11pt; }
+  .step > .hd { display: flex; gap: 7pt; align-items: baseline; margin-bottom: 3pt; }
+  .n { font-family: 'JetBrains Mono', monospace; font-size: 9pt; font-weight: 600; color: #fff;
+       background: #0A0A0A; padding: 1.5pt 5pt; border-radius: 3pt; flex: none; }
+  .ti { font-size: 11.2pt; font-weight: 700; }
+  .do { margin: 0 0 3pt; }
+  .see { margin: 0 0 3pt; color: #2A5C46; }
+  .see::before { content: 'Ekranda: '; font-weight: 700; }
+  .say { margin: 0 0 3pt; color: #5A5A5A; font-style: italic; }
+  .say::before { content: 'Söyle: '; font-style: normal; font-weight: 700; color: #0A0A0A; }
+  pre { font-family: 'JetBrains Mono', monospace; font-size: 7.7pt; line-height: 1.4;
+        background: #0A0A0A; color: #E8E8E8; padding: 7pt 8pt; border-radius: 4pt;
+        margin: 4pt 0 3pt; white-space: pre-wrap; word-break: break-all; }
+  pre.out { background: #F4F5F3; color: #1A4633; }
+  .lbl { font-family: 'JetBrains Mono', monospace; font-size: 7.4pt; font-weight: 600;
+         letter-spacing: .07em; color: #6A6A6A; margin: 5pt 0 1pt; }
+  .box { background: #F4F5F3; border-left: 3px solid #3DE29C; padding: 6pt 9pt; margin: 6pt 0 8pt; break-inside: avoid; }
+  .box.warn { border-left-color: #F5A524; }
+  .box b { display: block; margin-bottom: 2pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 8pt; font-size: 9pt; }
+  th { text-align: left; border-bottom: 1.5px solid #0A0A0A; padding: 3pt 4pt; }
+  td { border-bottom: 1px solid #E4E4E0; padding: 3pt 4pt; vertical-align: top; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 8.4pt; }
+  .page { break-before: page; }
+</style></head><body>
+
+<h1>Demo videosu · çekim listesi</h1>
+<p class="sub">payper · Rise In × Stellar Pro Hackathon 2026 · Genesis Track</p>
+<p style="font-size:9.4pt;color:#5A5A5A;margin-bottom:0">Amaç: jürinin "bunu teknik olarak gerçekten
+yaptınız mı" sorusunu videoyu izlerken cevaplamış olmak. Her adımda ne yapacağın, ekranda ne görünmesi
+gerektiği ve varsa o adımı kanıtlayan terminal komutu yazılı.</p>
+
+<div class="box">
+  <b>Çekim öncesi üç şey</b>
+  1 · Tarayıcıda Freighter kurulu ve <b>testnet</b> ağında olsun, hesabında biraz XLM bulunsun.<br>
+  2 · Terminali ayrı bir pencerede hazır tut, yazı boyutunu büyüt (kod okunabilsin).<br>
+  3 · <code>cd ~/Downloads/payper</code> ile proje dizinine geç — komutlar oradan çalışıyor.
+</div>
+
+<h2>Bölüm 1 · Ürün çalışıyor</h2>
+
+<div class="step">
+  <div class="hd"><span class="n">01</span><span class="ti">Ana sayfa</span></div>
+  <p class="do"><b>Yap:</b> <code>payper.live</code> adresini aç, yavaşça aşağı kaydır.</p>
+  <p class="see">Canlı site, "STELLAR TESTNET · LIVE" etiketi, alt bantta finanse edilen tutar ve fatura sayısı.</p>
+  <p class="say">"Tedarikçi malı sevk etmiş, maaşı ödemiş, parayı doksan gün bekliyor. O açığı kapatacak
+  sermaye yurt içi bankaların bilançosunda. Biz o kapıyı USDC tutan herkese açıyoruz."</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">02</span><span class="ti">Cüzdan ile giriş — Freighter açılır</span></div>
+  <p class="do"><b>Yap:</b> Sağ üstten panele gir, <b>Connect wallet</b> → Freighter'ı seç.</p>
+  <p class="see"><b>Freighter penceresi açılır</b> ve imza ister. Onayla. Panelde hesap adresin görünür.</p>
+  <p class="say">"Giriş SEP-10 challenge ve SEP-53 imzalı mesajla. Sunucu parolayı değil, imzayı görüyor."</p>
+  <div class="lbl">KANIT · İMZA DOĞRULAMA SPEC VEKTÖRLERİYLE TEST EDİLİYOR</div>
+  <pre>npm run test:sep53</pre>
+  <p style="font-size:8.6pt;color:#5A5A5A;margin:2pt 0 0">Spesifikasyonun kendi üç test vektörünü bayt bayt
+  üretiyor — kendi uydurduğumuz bir vektör kendi içinde tutarlı olur ama spec ile uyuşmazdı.</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">03</span><span class="ti">Fatura yükle — belge doğrulanır</span></div>
+  <p class="do"><b>Yap:</b> <b>Upload invoice</b> ekranında örnek dosyalardan <code>GIB2026000000481.xml</code>'e tıkla.</p>
+  <p class="see">Sağda belge açılır: tutar, vade, <b>ETTN</b>, doküman hash'i ve dört yeşil kontrol —
+  UBL-TR yapısı, XAdES imza bloğu, SHA-256, ETTN tekilliği.</p>
+  <p class="say">"Belge imzalanmadan önce doğrulanıyor. ETTN, vergi idaresinin her faturaya verdiği tekil kimlik."</p>
+  <div class="lbl">KANIT · DOĞRULAYICI BOZUK BELGELERİ REDDEDİYOR</div>
+  <pre>npm run test:ubl</pre>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">04</span><span class="ti">Zincire kaydet</span></div>
+  <p class="do"><b>Yap:</b> <b>Register on chain</b> tuşuna bas, bekle.</p>
+  <p class="see">İşlem hash'i ve <b>stellar.expert linki</b> belirir. Linke tıkla, işlemi explorer'da göster.</p>
+  <p class="say">"ETTN'in hash'i artık kontratta. Aynısı bir daha kaydedilemez."</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">05</span><span class="ti">Alıcı onayı — Freighter yine açılır</span></div>
+  <p class="do"><b>Yap:</b> Hesap menüsünden <b>Buyer</b> rolüne geç, <b>Buyer approval</b> → <b>Acknowledge on chain</b>.</p>
+  <p class="see">Cüzdan oturumundaysan <b>Freighter onay ister</b>. Onayla, yeşil teyit ve işlem linki gelir.</p>
+  <p class="say">"Faturada yazılı adres dışında kimse onaylayamıyor. Bu kontratın kuralı, arayüzün değil."</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">06</span><span class="ti">Fiyat — dört bileşen, ikisi canlı</span></div>
+  <p class="do"><b>Yap:</b> <b>Quote</b> ekranına geç, bileşenlerin yanındaki etiketleri göster.</p>
+  <p class="see">Dört satır. <b>Currency risk</b> ve <b>Treasury yield</b> yanında <code>live</code>,
+  diğer ikisinde <code>configured</code> yazıyor.</p>
+  <p class="say">"Her bileşen kaynağını söylüyor. Parametreye düşen bir sayı canlı gibi gösterilemiyor —
+  bunu iddia etmiyoruz, kontrat etiketliyor."</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">07</span><span class="ti">İskontoyu kilitle</span></div>
+  <p class="do"><b>Yap:</b> Rolü <b>Supplier</b>'a al, <b>Accept and lock</b>'a bas.</p>
+  <p class="see">Kilitlenen oran ve işlem linki. Tedarikçinin alacağı tutar liradan görünür.</p>
+  <p class="say">"Oran o anki kurdan kilitleniyor. Teklifin süresi var, dolarsa yeniden fiyatlanıyor."</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">08</span><span class="ti">Fonlama — asıl kanıt, Freighter imzalıyor</span></div>
+  <p class="do"><b>Yap:</b> Rolü <b>Funder</b>'a al, <b>Funding board</b> → tutarı seç → <b>Fund this invoice</b>.</p>
+  <p class="see"><b>Freighter açılır ve ne yetkilendirdiğini gösterir.</b> Onayla. Makbuzda taşınan USDC,
+  imzalayan adres ve <code>signed in Freighter</code> satırı görünür.</p>
+  <p class="say">"Burada imzayı sunucu atmıyor. Sunucu çağrıyı kuruyor ve simüle ediyor, imzasız zarfı
+  cüzdana veriyor. Onaylamazsam hiçbir şey zincire gitmiyor."</p>
+  <div class="lbl">KANIT · SUNUCUNUN VERDİĞİ ZARFTA İMZA YOK</div>
+  <pre>npm run test:wallet</pre>
+  <pre class="out">✓ the envelope arrived unsigned — the server signed nothing
+✓ signed with the wallet's own key
+✓ accepted by the ledger
+✓ the contract recorded 2.0000000 USDC from that signature</pre>
+  <p style="font-size:8.6pt;color:#5A5A5A;margin:2pt 0 0">Test, sunucudan gelen zarfta <b>hiç imza
+  olmadığını</b> doğruluyor. "Sunucu imzalamıyor" iddiası sözle değil testle bağlı.
+  <br><i>Not: bu komut uygulamanın çalışıyor olmasını ister; canlıya karşı çalıştırmak için
+  <code>TEST_BASE=https://payper.live npm run test:wallet</code>.</i></p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">09</span><span class="ti">Anchor — para bankaya gidiyor</span></div>
+  <p class="do"><b>Yap:</b> <b>Anchor</b> ekranı, <b>Supplier withdrawal · USDC → TRY</b> sekmesi,
+  <b>Run the USDC → TRY flow</b>.</p>
+  <p class="see">Altı adım tek tek yeşile döner: stellar.toml keşfi, cüzdan kimliği, kur kilidi, çekim talebi,
+  zincir üstü ödeme, bankaya lira. Sağdaki terminal her isteği ve dönen statüyü yazar.</p>
+  <p class="say">"Anchor hakkında hiçbir şey kodumuzda yazılı değil. Alan adı yapılandırma, gerisi çalışma
+  anında okunuyor. Başka bir anchor'a geçmek tek alan adı değişikliği."</p>
+  <div class="lbl">KANIT · ANCHOR'IN KENDİ UÇLARI, BİZİM SUNUCUMUZ DEĞİL</div>
+  <pre>curl -s https://tr-mock-anchor.fly.dev/.well-known/stellar.toml | head -20</pre>
+  <pre>curl -s https://tr-mock-anchor.fly.dev/sep6/info | python3 -m json.tool | head -25</pre>
+  <p style="font-size:8.6pt;color:#5A5A5A;margin:2pt 0 0">Ekrandaki kutularla bu çıktıyı karşılaştır — aynı
+  uçlar, aynı limitler.</p>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">10</span><span class="ti">Ürünün tek değişmezi — aynı fatura reddedilir</span></div>
+  <p class="do"><b>Yap:</b> <b>Upload invoice</b>'a dön, örnek dosyalardan
+  <code>GIB2026000000481-KOPYA.xml</code>'i seç.</p>
+  <p class="see">Kırmızı <b>Refused</b> kutusu ve bu ETTN'i hangi faturanın tuttuğu. İmzalama aşamasına
+  hiç gelinmiyor.</p>
+  <p class="say">"Bir ETTN, bir finansman. Bu bir veritabanı satırı değil, kontrat değişmezi. Lisanslı bir
+  faktoring şirketi merkezi kayda bakabilir; Berlin'deki bir fonlayıcı bakamaz. Kontrat ona aynı garantiyi
+  hiçbir yere üye olmasını istemeden veriyor."</p>
+</div>
+
+<h2 class="page">Bölüm 2 · Terminal kanıtları</h2>
+<p style="font-size:9.4pt;color:#5A5A5A;margin-bottom:6pt">Bu bölümü ekranı terminale alıp çekebilirsin.
+Sırayla çalıştır, çıktıları göster. Hepsi doğrulandı, olduğu gibi kopyalanabilir.</p>
+
+<div class="step">
+  <div class="hd"><span class="n">11</span><span class="ti">DeFi yield gerçekten DeFindex mi</span></div>
+  <p class="say">"Kasa bizim yazdığımız bir kontrat değil, DeFindex'in kendi factory'sinden açılmış.
+  Bunu iddia etmiyoruz, hash karşılaştırıyoruz."</p>
+  <div class="lbl">ZİNCİRDEKİ KASANIN WASM HASH'İ</div>
+  <pre>curl -s https://api.stellar.expert/explorer/testnet/contract/CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP | grep -o '"wasm":"[a-f0-9]*"'</pre>
+  <div class="lbl">DEFINDEX'İN KENDİ YAYIMLADIĞI HASH</div>
+  <pre>curl -s https://raw.githubusercontent.com/paltalabs/defindex/main/public/testnet.contracts.json | grep -A3 hashes</pre>
+  <pre class="out">İkisi de: f345228dca59c6605789620e9ec62ff4847a0927c33dac7581a955fe746016be</pre>
+  <div class="lbl">KASANIN KENDİ ADI — BİZİM HAZİNEMİZ İÇİN AÇILMIŞ</div>
+  <pre>stellar contract invoke --id CBXHELM65LGO54OOWBCIQKRVHJGQPSG6D2J5QSALXKYHJHR2J5RPODCP \
+  --source payper-admin --network testnet -- name</pre>
+  <pre class="out">"DeFindex-Vault-payper Treasury"</pre>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">12</span><span class="ti">Getiri gerçekten canlı mı okunuyor</span></div>
+  <p class="say">"Getiri bileşeni bir parametre değil. Kasada strateji olmadığı için bir Blend v2 havuzunun
+  tedarikçilere ödediği oranı okuyoruz — USDC'nin Stellar'da borç vererek kazandığı şey."</p>
+  <div class="lbl">HAZİNE ADAPTÖRÜNÜN OKUDUĞU ORAN</div>
+  <pre>stellar contract invoke --id CAFZQFGPDEHV62AMPGNEMYHV6MEPAKFFPVCXDVUAQJA5Q4QWEFBIA3X4 \
+  --source payper-admin --network testnet -- blend_apy_bps</pre>
+  <pre class="out">129</pre>
+  <div class="lbl">FATURA KONTRATININ GÖRDÜĞÜ HÂLİ, KAYNAĞIYLA</div>
+  <pre>stellar contract invoke --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA \
+  --source payper-admin --network testnet -- treasury_apy_bps</pre>
+  <pre class="out">[129,0]      ← 0 = Source::Live, çağrı sırasında zincirden okundu</pre>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">13</span><span class="ti">Deploy edilen kontrat bu kaynaktan mı derlendi</span></div>
+  <p class="say">"Zincirdeki wasm'ı yerelde derleyip yüklemedik. GitHub Actions temiz bir runner'da derledi,
+  GitHub o hash'e imza attı, biz o artefaktı deploy ettik."</p>
+  <div class="lbl">WASM'IN İÇİNDEKİ KAYNAK DEPOSU — ZİNCİRDEN OKUNUYOR</div>
+  <pre>stellar contract info meta --network testnet \
+  --id CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA</pre>
+  <pre class="out">source_repo: github:cansarihan/payper
+home_domain: payper.live</pre>
+  <div class="lbl">CI'IN ÜRETTİĞİ ARTEFAKTIN HASH'İ İLE ZİNCİRDEKİ AYNI MI</div>
+  <pre>gh release download v1.0.2_contracts_invoice_payper-invoice_pkg0.1.0_cli27.0.0 -R cansarihan/payper
+shasum -a 256 payper-invoice_v0.1.0.wasm
+curl -s https://api.stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA | grep -o '"wasm":"[a-f0-9]*"'</pre>
+  <pre class="out">İkisi de: 94dc49bef260c30989615cebf545596cb4370f02a4e19b3a8ea6350250c68af6</pre>
+  <div class="lbl">GITHUB'IN O HASH'E ATTIĞI İMZA</div>
+  <pre>gh api repos/cansarihan/payper/attestations/sha256:94dc49bef260c30989615cebf545596cb4370f02a4e19b3a8ea6350250c68af6</pre>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">14</span><span class="ti">Testler</span></div>
+  <p class="say">"Otuz altı kontrat testi. İçinde devredilebilir alacağın toplamı korumasından, fonlama
+  defterinin yürünebilir kalmasına kadar."</p>
+  <pre>npm run test:contracts</pre>
+  <pre class="out">test result: ok. 36 passed; 0 failed</pre>
+  <div class="lbl">İSTERSEN HEPSİ</div>
+  <pre>npm run test:ubl && npm run test:tranche && npm run test:sep53 \
+  && npm run test:auth && npm run test:chirp</pre>
+</div>
+
+<div class="step">
+  <div class="hd"><span class="n">15</span><span class="ti">Uçtan uca akış, tek komut</span></div>
+  <p class="say">"Bu komut faturayı kaydediyor, alıcıya onaylatıyor, canlı fiyat okuyor, iki fonlayıcı
+  anchor'dan USDC alıp fonluyor, vadede kapatıyor, oransal dağıtıyor ve sonunda aynı ETTN'i tekrar
+  kaydetmeyi deneyip reddediliyor. Altı adımın hepsi testnet'e gerçek işlem yazıyor."</p>
+  <pre>npm run smoke</pre>
+  <pre class="out">6. Aynı ETTN tekrar deneniyor
+   ✕ REDDEDİLDİ · EttnAlreadyUsed
+✅ Zincir akışı baştan sona çalıştı</pre>
+</div>
+
+<h2>Söylenmesi gerekenler</h2>
+<div class="box warn">
+  <b>Bunları sen söyle, jüri bulmasın</b>
+  Anchor bir <b>sandbox</b> — banka ve KYC bacağı simüle, Stellar bacağı gerçek testnet USDC.<br>
+  <b>Passkey</b> ile girildiğinde imza sunucuda kalıyor: WebAuthn secp256r1 üretiyor, Stellar Ed25519
+  bekliyor. Zincirde secp256r1 doğrulayan akıllı hesap gelene kadar passkey Soroban XDR imzalayamıyor.
+  <b>Cüzdanla girildiğinde imza kullanıcının.</b><br>
+  <b>Kur riskini</b> henüz kimse taşımıyor, fonlayıcının hakkının <b>hukuki kabı</b> yok, ve <b>uydurma
+  bir fatura</b> yapısal kontrollerden geçer — kapı <code>acknowledge()</code>, ama muvazaayı durdurmuyor.
+</div>
+
+<h2>Çekim özeti</h2>
+<table>
+  <tr><th style="width:12mm">#</th><th>Adım</th><th style="width:34mm">Kanıt</th></tr>
+  <tr><td>01</td><td>Ana sayfa</td><td>—</td></tr>
+  <tr><td>02</td><td>Cüzdan girişi · <b>Freighter açılır</b></td><td><code>test:sep53</code></td></tr>
+  <tr><td>03</td><td>Fatura yükleme · belge doğrulanır</td><td><code>test:ubl</code></td></tr>
+  <tr><td>04</td><td>Zincire kayıt · işlem linki</td><td>stellar.expert</td></tr>
+  <tr><td>05</td><td>Alıcı onayı · <b>Freighter açılır</b></td><td>—</td></tr>
+  <tr><td>06</td><td>Fiyat · iki bileşen <code>live</code></td><td>adım 12</td></tr>
+  <tr><td>07</td><td>İskonto kilitleme</td><td>—</td></tr>
+  <tr><td>08</td><td>Fonlama · <b>Freighter imzalar</b></td><td><code>test:wallet</code></td></tr>
+  <tr><td>09</td><td>Anchor · altı SEP adımı</td><td><code>curl</code> stellar.toml</td></tr>
+  <tr><td>10</td><td>Aynı fatura reddedilir</td><td><code>smoke</code></td></tr>
+  <tr><td>11</td><td>DeFindex hash eşleşmesi</td><td>iki <code>curl</code></td></tr>
+  <tr><td>12</td><td>Getiri canlı · 129 bps</td><td><code>treasury_apy_bps</code></td></tr>
+  <tr><td>13</td><td>Yeniden üretilebilir derleme</td><td><code>gh</code> + hash</td></tr>
+  <tr><td>14</td><td>36 kontrat testi</td><td><code>test:contracts</code></td></tr>
+  <tr><td>15</td><td>Uçtan uca akış</td><td><code>smoke</code></td></tr>
+</table>
+<p style="font-size:9pt;color:#5A5A5A">Sıra önemli: <b>önce fonlama (08), sonra anchor (09).</b> Fonlama
+ödemeyi tedarikçiye geçiriyor, anchor çekimi de o bakiyeyi bankaya gönderiyor. Tersi olursa çekimde bakiye
+bulunmaz.</p>
+</body></html>

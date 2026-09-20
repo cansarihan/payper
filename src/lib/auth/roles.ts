@@ -42,5 +42,9 @@ export const ROLE_HOME: Record<SessionRole, string> = {
 };
 
 /** The address a session signs with: its linked wallet, else its own. */
+/** Narrow untrusted input to a role, defaulting to the supplier. */
+export const asRole = (r: unknown): SessionRole =>
+  r === "buyer" || r === "funder" ? r : "seller";
+
 export const signerAddress = (session: Session): string =>
   session.wallet?.address ?? session.address;

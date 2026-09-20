@@ -359,7 +359,11 @@ function AccountMenu({
   async function becomeRole(next: SessionRole) {
     setSwitching(next);
     try {
-      await fetch("/api/auth/demo", {
+      // Changing which party you act as must not change who you are. Posting to
+      // the demo sign-in would replace the whole session, and a wallet user
+      // would quietly become a demo user whose next transaction this server
+      // signs for them.
+      await fetch("/api/auth/role", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ role: next }),
