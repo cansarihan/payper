@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { C, FONT, trLira } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
+import { signPrepared } from "@/lib/wallet/sign";
 import { ScreenHead } from "./Shell";
 
 const SAMPLES = [
@@ -26,6 +27,8 @@ interface Result {
   heldBy?: number | null;
   checks?: Check[];
   registered?: { id: number; hash: string } | null;
+  /** Present when the supplier asked to sign the registration themselves. */
+  prepared?: { xdr: string; method: string; summary: string } | null;
   document?: {
     ettn: string;
     docHash: string;
@@ -55,6 +58,7 @@ export function Upload({
   const d = t(lang);
   const input = useRef<HTMLInputElement>(null);
   const [buyerIsWallet, setBuyerIsWallet] = useState(false);
+  const [sellerIsWallet, setSellerIsWallet] = useState(false);
   const [session] = useState(() => `s${Date.now().toString(36)}`);
   const [busy, setBusy] = useState<"inspect" | "register" | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -72,6 +76,7 @@ export function Upload({
       // Naming the connected wallet as the buyer is what lets that wallet
       // acknowledge the invoice itself, instead of a server key doing it.
       if (!inspect && buyerIsWallet) body.append("buyerIsWallet", "1");
+      if (!inspect && sellerIsWallet) body.append("sellerIsWallet", "1");
       const res = await fetch("/api/upload", { method: "POST", body });
       const json = (await res.json()) as Result;
       // A refusal with nothing to render would otherwise leave the screen
@@ -81,6 +86,23 @@ export function Upload({
         return;
       }
       setResult(json);
+
+      // The supplier asked to sign it themselves: the server prepared the call
+      // and signed nothing, so the wallet is what puts it on the ledger.
+      if (json.ok && json.prepared && walletAddress) {
+        const signed = await signPrepared(json.prepared.xdr, walletAddress, network);
+        const sent = await fetch("/api/tx/submit", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ signedXdr: signed, method: json.prepared.method }),
+        });
+        const out = (await sent.json()) as { ok: boolean; hash?: string; error?: string };
+        if (!out.ok) throw new Error(out.error ?? "The registration was not accepted");
+        setResult({ ...json, prepared: null, registered: { id: 0, hash: out.hash ?? "" } });
+        onRegistered(0);
+        return;
+      }
+
       if (json.ok && json.registered) onRegistered(json.registered.id);
     } catch (e) {
       setFatal((e as Error).message);
@@ -433,6 +455,30 @@ export function Upload({
                 ) : (
                   !duplicate && (
                     <>
+                    {walletAddress && (
+                      <button
+                        onClick={() => setSellerIsWallet((v) => !v)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          border: `1px solid ${sellerIsWallet ? C.ink : "rgba(10,10,10,.16)"}`,
+                          background: sellerIsWallet ? C.mint : "transparent",
+                          borderRadius: 16,
+                          padding: "11px 14px",
+                          marginBottom: 9,
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          lineHeight: 1.45,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span style={{ fontWeight: 800 }}>
+                          {sellerIsWallet ? "☑" : "☐"} {d.sellerIsWallet}
+                        </span>
+                        <br />
+                        <span style={{ opacity: 0.7, fontWeight: 500 }}>{d.sellerIsWalletNote}</span>
+                      </button>
+                    )}
                     {walletAddress && (
                       <button
                         onClick={() => setBuyerIsWallet((v) => !v)}

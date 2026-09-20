@@ -31,6 +31,17 @@ async function post<T>(url: string, body: unknown): Promise<T> {
   return json;
 }
 
+/** Sign an envelope the server already prepared, for flows that build it elsewhere. */
+export async function signPrepared(
+  xdr: string,
+  address: string,
+  network: string,
+): Promise<string> {
+  const networkPassphrase = PASSPHRASE[network];
+  if (!networkPassphrase) throw new Error(`Unknown network: ${network}`);
+  return signPreparedTransaction(xdr, address, networkPassphrase);
+}
+
 export async function signAndSubmit(
   action: WalletAction,
   invoiceId: number,

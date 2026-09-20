@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { clientKey, rateLimit, requireRole } from "@/lib/server/guard";
 import { invoiceByEttn, isEttnAvailable, registerInvoice } from "@/lib/server/invoices";
+import { prepareRegister } from "@/lib/server/wallet-tx";
+import { keypair } from "@/lib/server/actors";
 import { fail, ok } from "@/lib/server/respond";
 import { parseUblInvoice, UblParseError } from "@/lib/ubl/parse";
 
@@ -22,10 +24,13 @@ export async function POST(req: NextRequest) {
     const inspectOnly = form.get("inspect") === "1";
     // A wallet buyer asks to be named so they can acknowledge for themselves.
     const buyerIsWallet = form.get("buyerIsWallet") === "1";
+    // The supplier signs the registration in their own wallet, which also makes
+    // them the seller the contract will later ask to authorise the price lock.
+    const sellerIsWallet = form.get("sellerIsWallet") === "1";
     // Inspection writes nothing; only registration spends a key.
     const session = inspectOnly ? null : await requireRole("seller");
-    if (buyerIsWallet && !session?.wallet) {
-      throw new Error("Naming your wallet as the buyer needs a wallet session.");
+    if ((buyerIsWallet || sellerIsWallet) && !session?.wallet) {
+      throw new Error("Signing or naming your wallet needs a wallet session.");
     }
 
     if (!(file instanceof File)) return fail(new Error("No file was sent"), 422);
@@ -87,6 +92,23 @@ export async function POST(req: NextRequest) {
     const health = await anchor.health();
     const rate = Number(health?.rates?.mid_rate ?? 0) || 48.7;
     const faceUsdc = BigInt(Math.round((Number(parsed.amountMinor) / 100 / rate) * 1e7));
+
+    // Signed by the caller: hand back the prepared call instead of submitting.
+    if (sellerIsWallet && session?.wallet) {
+      const prepared = await prepareRegister({
+        signer: session.wallet.address,
+        buyerAddress: buyerIsWallet ? session.wallet.address : undefined,
+        ettnHashHex: parsed.ettnHash,
+        docHashHex: parsed.docHash,
+        sellerTaxId: parsed.seller.taxId,
+        buyerTaxId: parsed.buyer.taxId,
+        amountFiatMinor: BigInt(parsed.amountMinor),
+        faceUsdc,
+        dueDate,
+        demoBuyer: keypair("buyer").publicKey(),
+      });
+      return ok({ document: parsed, checks, registered: null, prepared });
+    }
 
     const { id, hash } = await registerInvoice({
       ettnHashHex: parsed.ettnHash,

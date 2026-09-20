@@ -1,6 +1,6 @@
 import { Asset, BASE_FEE, Horizon, Networks, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
 
-import { addr, i128, prepareForSigner, u32 } from "@/lib/soroban/client";
+import { addr, bytes32, i128, prepareForSigner, sym, u32, u64 } from "@/lib/soroban/client";
 
 import { getInvoice, isWhitelisted, setWhitelist } from "./invoices";
 
@@ -63,6 +63,48 @@ const CONTRACT = () => {
  * that the contract would refuse is a confusing dialog followed by a failure,
  * so it is refused with a sentence instead.
  */
+/**
+ * Registration for the supplier to sign themselves.
+ *
+ * The document is parsed and checked on the server, so none of these values are
+ * taken from the caller — only the signature is theirs. Naming the wallet as the
+ * seller is what later lets that same wallet lock the price, because the
+ * contract asks the seller on the invoice to authorise it.
+ */
+export async function prepareRegister(opts: {
+  signer: string;
+  buyerAddress?: string;
+  ettnHashHex: string;
+  docHashHex: string;
+  sellerTaxId: string;
+  buyerTaxId: string;
+  amountFiatMinor: bigint;
+  faceUsdc: bigint;
+  dueDate: number;
+  demoBuyer: string;
+}): Promise<{ xdr: string; method: string; summary: string }> {
+  return {
+    xdr: await prepareForSigner(
+      CONTRACT(),
+      "register",
+      [
+        addr(opts.signer),
+        addr(opts.buyerAddress ?? opts.demoBuyer),
+        bytes32(Buffer.from(opts.ettnHashHex, "hex")),
+        bytes32(Buffer.from(opts.docHashHex, "hex")),
+        sym(opts.sellerTaxId),
+        sym(opts.buyerTaxId),
+        i128(opts.amountFiatMinor),
+        i128(opts.faceUsdc),
+        u64(opts.dueDate),
+      ],
+      opts.signer,
+    ),
+    method: "register",
+    summary: "Register this invoice on chain, as its supplier",
+  };
+}
+
 export async function prepareInvoiceCall(opts: {
   action: WalletAction;
   invoiceId?: number;

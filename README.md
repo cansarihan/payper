@@ -41,6 +41,8 @@ npm run test:sep53                # signed messages, against the spec's vectors
 npm run test:auth                 # login, from the attacker's side
 npm run test:chirp                # the audio payment frame, 2000 random payloads
 npm run test:wallet               # a wallet signs its own transaction (needs the app running)
+npm run test:fresh                # a brand-new wallet, from empty to funded
+npm run test:chain                # one wallet signs register, acknowledge, lock and fund
 ```
 
 `npm run smoke` is the one to run. It registers an invoice, has the buyer
@@ -353,6 +355,8 @@ Token errors are now matched on their diagnostic text first.
 | `test:auth` | 17 | Wallet framings accepted; wrong keys, forged payloads, replayed nonces and tampered cookies refused |
 | `test:chirp` | 24 | The audio frame over 2,000 random payloads: every one decodes back exactly, and a single flipped symbol never passes the CRC |
 | `test:wallet` | 6 checks | The wallet signing path against a running instance. The envelope the server hands over carries no signature of its own, the wallet signs it, and the contract is read back to confirm what that signature moved |
+| `test:fresh` | 9 checks | A brand-new account with XLM and nothing else: funding refused for want of a trustline, the trustline opened by the wallet, refused again for want of a balance, then funded |
+| `test:chain` | 6 checks | One fresh wallet signing every party's call — register, acknowledge, lock the price, fund — which only works because the registration named that wallet on both sides |
 | `smoke` | 6 steps | The whole flow against testnet, ending in the refusal |
 
 The SEP-53 vectors are worth a note. They were first written from memory and the
