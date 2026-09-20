@@ -131,10 +131,12 @@ export async function depositFromBank(opts: {
     });
     await anchor.simulateBankTransfer(jwt, dep.id, amount);
     // The on-ramp is the leg that strands a caller when the anchor accepts a
-    // deposit and then sits on it. Twenty seconds is long enough for a healthy
-    // sandbox and short enough that a failure reads as a failure rather than as
-    // a frozen screen.
-    const tx = await anchor.waitForStatus(jwt, dep.id, ["completed"], 20_000);
+    // deposit and then sits on it. A healthy settlement measured 13.8s, and the
+    // splitter emits at most two parts, so thirty-five seconds each leaves real
+    // headroom while keeping the whole request inside the proxy's window — long
+    // enough for a slow anchor, short enough that a failure reads as a failure
+    // rather than as a frozen screen.
+    const tx = await anchor.waitForStatus(jwt, dep.id, ["completed"], 35_000);
     legs.push({
       id: dep.id,
       amountIn: amount,
