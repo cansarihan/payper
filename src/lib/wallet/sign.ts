@@ -7,7 +7,7 @@
  */
 import { signPreparedTransaction } from "./kit";
 
-export type WalletAction = "acknowledge" | "accept_quote" | "fund";
+export type WalletAction = "trustline" | "acknowledge" | "accept_quote" | "fund";
 
 /**
  * Network passphrases, by the name `/api/state` reports.
@@ -42,7 +42,8 @@ export async function signAndSubmit(
   if (!networkPassphrase) throw new Error(`Unknown network: ${network}`);
   const prepared = await post<{ xdr: string; method: string; summary: string }>(
     "/api/tx/prepare",
-    { action, invoiceId, amountUsdc },
+    // A trustline belongs to the account, so no invoice is named.
+    action === "trustline" ? { action } : { action, invoiceId, amountUsdc },
   );
   const signed = await signPreparedTransaction(prepared.xdr, address, networkPassphrase);
   const sent = await post<{ hash: string }>("/api/tx/submit", {

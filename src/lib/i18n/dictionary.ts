@@ -231,6 +231,8 @@ interface Copy {
   target: string;
   funders: string;
   fundIt: string;
+  openTrustline: string;
+  trustlineOpened: string;
   fundingClosed: string;
   expectedReturn: string;
   youFund: string;
@@ -565,6 +567,8 @@ const en: Copy = {
   target: "Target",
   funders: "Funders",
   fundIt: "Fund this invoice",
+  openTrustline: "Open a USDC trustline in my wallet",
+  trustlineOpened: "Trustline open. Your wallet can hold USDC now — fund the invoice above.",
   fundingClosed: "Funding closed",
   expectedReturn: "Expected return",
   youFund: "You fund",
@@ -957,6 +961,8 @@ const tr: Copy = {
   target: "Hedef",
   funders: "Fonlayıcılar",
   fundIt: "Bu faturayı fonla",
+  openTrustline: "Cüzdanımda USDC trustline aç",
+  trustlineOpened: "Trustline açıldı. Cüzdanın artık USDC tutabilir — yukarıdan faturayı fonla.",
   fundingClosed: "Fonlama kapalı",
   expectedReturn: "Beklenen getiri",
   youFund: "Fonlarsın",

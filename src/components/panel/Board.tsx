@@ -29,6 +29,7 @@ export function Board({
   const [needsRole, setNeedsRole] = useState<SessionRole | null>(null);
   const [amountFiat, setAmountFiat] = useState(500);
   const [receipt, setReceipt] = useState<{ moved: string; payer: string; steps: { step: string; detail: string }[] } | null>(null);
+  const [trustlineOpen, setTrustlineOpen] = useState(false);
 
   const candidates = state.invoices.filter((i) => i.lockedDiscountBps > 0);
   const invoice =
@@ -54,6 +55,28 @@ export function Board({
   const pct = target > 0n ? Math.min(100, Number((raised * 100n) / target)) : 0;
   const days = invoice ? Math.max(0, Math.round((invoice.dueDate * 1000 - Date.now()) / 86_400_000)) : 0;
   const discountBps = invoice?.lockedDiscountBps ?? 0;
+
+  /**
+   * Open the trustline the funding call needs, signed by the wallet.
+   *
+   * A fresh account cannot hold USDC until it says it will, and that statement
+   * belongs to the account holder — so it is offered here rather than done for
+   * them by a key this server holds.
+   */
+  async function openTrustline() {
+    if (!session?.wallet) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await signAndSubmit("trustline", 0, session.wallet.address, state.network);
+      setError(null);
+      setTrustlineOpen(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function fund() {
     // Same reason as the buyer screen: filling an invoice moves it out of the
@@ -352,6 +375,40 @@ export function Board({
                 }}
               >
                 {error}
+              </div>
+            )}
+
+            {error && /trustline/i.test(error) && session?.wallet && !trustlineOpen && (
+              <button
+                onClick={() => void openTrustline()}
+                disabled={busy}
+                style={{
+                  border: 0,
+                  borderRadius: 999,
+                  padding: "13px 24px",
+                  background: busy ? "rgba(10,10,10,.12)" : C.ink,
+                  color: busy ? C.ink : C.white,
+                  fontSize: 14.5,
+                  fontWeight: 700,
+                  cursor: busy ? "default" : "pointer",
+                }}
+              >
+                {busy ? `${d.loading}…` : d.openTrustline}
+              </button>
+            )}
+
+            {trustlineOpen && (
+              <div
+                style={{
+                  padding: "13px 15px",
+                  borderRadius: 16,
+                  background: C.lime,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  lineHeight: 1.5,
+                }}
+              >
+                {d.trustlineOpened}
               </div>
             )}
 
