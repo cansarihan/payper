@@ -16,6 +16,8 @@ export function fail(e: unknown, status = 400) {
       : undefined;
   const code = contractErrorName(message);
 
+  console.log(`  refused · ${code ?? "error"} · ${message.slice(0, 120)}`);
+
   return NextResponse.json(
     {
       ok: false,
@@ -28,7 +30,14 @@ export function fail(e: unknown, status = 400) {
   );
 }
 
-export const ok = <T extends object>(body: T) => json({ ok: true, ...body });
+export const ok = <T extends object>(body: T) => {
+  // A one-line outcome next to the arrival logged by the middleware. Keys only,
+  // never values: a body here would put signed envelopes and invoice contents
+  // into the journal.
+  const keys = Object.keys(body).slice(0, 6).join(" ");
+  console.log(`  ok${keys ? ` · ${keys}` : ""}`);
+  return json({ ok: true, ...body });
+};
 
 /** JSON with bigint support; chain amounts serialise as decimal strings. */
 export function json(body: unknown, init?: ResponseInit) {
