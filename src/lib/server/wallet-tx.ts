@@ -1,8 +1,54 @@
+import { Asset, BASE_FEE, Horizon, Networks, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
+
 import { addr, i128, prepareForSigner, u32 } from "@/lib/soroban/client";
 
 import { getInvoice, isWhitelisted, setWhitelist } from "./invoices";
 
-export type WalletAction = "acknowledge" | "accept_quote" | "fund";
+export type WalletAction = "trustline" | "acknowledge" | "accept_quote" | "fund";
+
+const horizon = () =>
+  new Horizon.Server(process.env.PUBLIC_HORIZON_URL ?? "https://horizon-testnet.stellar.org");
+
+const usdc = () =>
+  new Asset(
+    process.env.PUBLIC_ANCHOR_ASSET_CODE ?? "USDC",
+    process.env.PUBLIC_USDC_ISSUER ?? "",
+  );
+
+/** What the wallet holds of the asset, and whether it can hold it at all. */
+async function usdcPosition(address: string): Promise<{ trustline: boolean; balance: number }> {
+  const asset = usdc();
+  const account = await horizon().loadAccount(address);
+  const line = account.balances.find(
+    (b) => "asset_code" in b && b.asset_code === asset.code && b.asset_issuer === asset.issuer,
+  );
+  return { trustline: Boolean(line), balance: line ? Number((line as { balance: string }).balance) : 0 };
+}
+
+/**
+ * A trustline for the wallet to sign itself.
+ *
+ * A fresh account cannot hold USDC until it says it will, and that statement is
+ * the account holder's to make — so it is prepared here and signed there, like
+ * every other call on this path.
+ */
+async function prepareTrustline(address: string) {
+  const { trustline } = await usdcPosition(address);
+  if (trustline) throw new Error("This wallet already holds a USDC trustline.");
+  const account = await horizon().loadAccount(address);
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: process.env.PUBLIC_NETWORK_PASSPHRASE ?? Networks.TESTNET,
+  })
+    .addOperation(Operation.changeTrust({ asset: usdc() }))
+    .setTimeout(180)
+    .build();
+  return {
+    xdr: tx.toXDR(),
+    method: "change_trust",
+    summary: `Open a ${usdc().code} trustline on this wallet`,
+  };
+}
 
 const CONTRACT = () => {
   const id = process.env.PUBLIC_INVOICE_CONTRACT_ID;
@@ -19,11 +65,15 @@ const CONTRACT = () => {
  */
 export async function prepareInvoiceCall(opts: {
   action: WalletAction;
-  invoiceId: number;
+  invoiceId?: number;
   signer: string;
   amountUsdc?: number;
 }): Promise<{ xdr: string; method: string; summary: string }> {
-  const invoice = await getInvoice(opts.invoiceId);
+  if (opts.action === "trustline") return prepareTrustline(opts.signer);
+
+  if (!opts.invoiceId) throw new Error("invoiceId is required for this action");
+  const invoiceId = opts.invoiceId;
+  const invoice = await getInvoice(invoiceId);
 
   if (opts.action === "acknowledge") {
     if (invoice.buyer !== opts.signer) {
@@ -35,9 +85,9 @@ export async function prepareInvoiceCall(opts: {
       throw new Error(`This invoice is ${invoice.status}; acknowledgement is only open while registered.`);
     }
     return {
-      xdr: await prepareForSigner(CONTRACT(), "acknowledge", [u32(opts.invoiceId)], opts.signer),
+      xdr: await prepareForSigner(CONTRACT(), "acknowledge", [u32(invoiceId)], opts.signer),
       method: "acknowledge",
-      summary: `Acknowledge invoice #${opts.invoiceId} on chain`,
+      summary: `Acknowledge invoice #${invoiceId} on chain`,
     };
   }
 
@@ -46,15 +96,17 @@ export async function prepareInvoiceCall(opts: {
       throw new Error("Only the supplier named on the invoice can accept a quote for it.");
     }
     return {
-      xdr: await prepareForSigner(CONTRACT(), "accept_quote", [u32(opts.invoiceId)], opts.signer),
+      xdr: await prepareForSigner(CONTRACT(), "accept_quote", [u32(invoiceId)], opts.signer),
       method: "accept_quote",
-      summary: `Lock the discount on invoice #${opts.invoiceId}`,
+      summary: `Lock the discount on invoice #${invoiceId}`,
     };
   }
 
-  const usdc = opts.amountUsdc ?? 0;
-  if (!Number.isFinite(usdc) || usdc <= 0) throw new Error("A positive USDC amount is required");
-  const amount = BigInt(Math.round(usdc * 1e7));
+  const usdcAmount = opts.amountUsdc ?? 0;
+  if (!Number.isFinite(usdcAmount) || usdcAmount <= 0) {
+    throw new Error("A positive USDC amount is required");
+  }
+  const amount = BigInt(Math.round(usdcAmount * 1e7));
 
   if (invoice.status !== "acknowledged") {
     throw new Error(`This invoice is ${invoice.status}; funding is only open once the buyer has acknowledged it.`);
@@ -66,6 +118,23 @@ export async function prepareInvoiceCall(opts: {
     );
   }
 
+  // Check what the wallet can actually do before a prompt appears. The contract
+  // would refuse both of these, but as a token error inside a dialog the person
+  // has already approved — which explains nothing.
+  const pos = await usdcPosition(opts.signer);
+  if (!pos.trustline) {
+    throw new Error(
+      `This wallet has no ${usdc().code} trustline yet, so it cannot hold the asset. ` +
+        "Open one first — the button below prepares it for you to sign.",
+    );
+  }
+  if (pos.balance < usdcAmount) {
+    throw new Error(
+      `This wallet holds ${pos.balance.toFixed(7)} ${usdc().code} and the tranche needs ` +
+        `${usdcAmount.toFixed(7)}. Fund the wallet, or choose a smaller amount.`,
+    );
+  }
+
   // A tranche over the threshold needs a licensed funder. The whitelist is the
   // platform's call, not the funder's, so it stays a server-signed action.
   if (!(await isWhitelisted(opts.signer))) await setWhitelist(opts.signer, true);
@@ -74,10 +143,10 @@ export async function prepareInvoiceCall(opts: {
     xdr: await prepareForSigner(
       CONTRACT(),
       "fund",
-      [u32(opts.invoiceId), addr(opts.signer), i128(amount)],
+      [u32(invoiceId), addr(opts.signer), i128(amount)],
       opts.signer,
     ),
     method: "fund",
-    summary: `Fund invoice #${opts.invoiceId} with ${usdc.toFixed(7)} USDC`,
+    summary: `Fund invoice #${invoiceId} with ${usdcAmount.toFixed(7)} USDC`,
   };
 }

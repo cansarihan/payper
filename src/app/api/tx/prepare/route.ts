@@ -29,7 +29,11 @@ export async function POST(req: NextRequest) {
       invoiceId?: number;
       amountUsdc?: number;
     };
-    if (!body.action || !body.invoiceId) throw new Error("action and invoiceId are required");
+    if (!body.action) throw new Error("action is required");
+    // A trustline belongs to the account, not to an invoice.
+    if (body.action !== "trustline" && !body.invoiceId) {
+      throw new Error("invoiceId is required for this action");
+    }
 
     return ok(
       await prepareInvoiceCall({
