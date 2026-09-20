@@ -7,130 +7,132 @@ if you are asked, every one of them is checkable on chain.
 
 ## ENGLISH
 
+*Simple English, short sentences. Every number here is real and you can check it
+on chain.*
+
 ### 1 · Cover  ·  ~25s
 
 Good afternoon. We are Payper.
 
-A supplier ships the goods, pays the wages, and then waits ninety days to be
-paid. The capital that could close that gap exists — it is just sitting inside
-domestic bank balance sheets, where a funder abroad cannot reach it.
+A supplier sends the goods. He pays his workers. Then he waits ninety days for
+his money.
 
-We built the door.
+The money to close that gap exists. But it sits inside local banks. A funder in
+another country cannot reach it.
+
+We opened that door.
 
 ### 2 · Problem  ·  ~45s
 
-This is not a small market and it is not a speculative one. In our first
-corridor, Türkiye, there are four million active enterprises and ninety-nine
-point six percent of them are SMEs. The factoring sector turned over one point
-eight seven five trillion lira last year across roughly ninety-five thousand
-customers.
+This market is big and it is real.
 
-So the demand is proven. What that market does not have is two things.
+In Türkiye there are four million active companies. Almost all of them —
+ninety-nine percent — are small businesses. Last year the factoring sector moved
+one point eight trillion lira, for about ninety-five thousand customers.
 
-First, a price anyone can check — the cost is quoted per deal, at a desk, with
-no published rate to compare against.
+So people already pay for this. But the market has two problems.
 
-Second, and this is the binding one: the capital is bank capital. A factor can
-only advance what its own balance sheet allows, and that balance sheet is
-bounded by the country it is licensed in. Someone abroad who would happily take
-that risk at that price simply cannot reach it.
+First, nobody can check the price. The cost is decided in a meeting, one deal at
+a time. There is no public rate.
+
+Second — and this is the big one — the money is bank money. A factoring company
+can only lend what its own balance sheet allows. And that balance sheet stops at
+the border. Someone abroad may want to take the same risk for the same price.
+He simply cannot reach it.
 
 ### 3 · Solution  ·  ~50s
 
-Here is what we do.
+This is what we do.
 
-A supplier uploads a signed e-invoice. The contract writes its ETTN — the tax
-authority's unique identifier for that document — and refuses a second
-registration of the same one.
+A supplier uploads a signed e-invoice. The contract writes its ETTN. The ETTN is
+the tax office's unique number for that document. If someone sends the same ETTN
+again, the contract says no.
 
-The buyer acknowledges the debt on chain. From that moment the receivable is an
-instrument anyone holding USDC can fund. In seconds. From fifty dollars.
+Then the buyer confirms the debt on chain. After that, anyone who holds USDC can
+fund this invoice. In seconds. From fifty dollars.
 
-The supplier is paid the same day, in lira, into a normal bank account. They
-never touch crypto. The funder never opens an account in Türkiye.
+The supplier gets paid the same day, in lira, to a normal bank account. He never
+touches crypto. And the funder never opens a bank account in Türkiye.
 
 ### 4 · Architecture  ·  ~60s
 
-Four Soroban contracts on testnet. Let me give you the parts that matter.
+We have four Soroban contracts on testnet. Let me show you three things.
 
-**One ETTN, one financing.** That is the product's single invariant, and it is
-enforced by a contract, not by a database row. A licensed factor inside a
-country with a central registry can already check one. A funder in Berlin
-cannot — and the contract gives them the same guarantee without asking them to
-join anything.
+**One ETTN, one financing.** This is our main rule. It is not a line in a
+database. It is inside the contract. A licensed factoring company in Türkiye can
+already check a central registry. A funder in Berlin cannot. Our contract gives
+him the same safety, and he does not have to join anything.
 
-**The price is computed, not quoted.** Four components. Two of them are read
-from chain on every single call, and every component carries its own
-provenance — so a number that fell back to a parameter cannot be presented as
-live. The interface labels it.
+**We calculate the price. We do not decide it.** There are four parts. Two of
+them are read from the chain every time. And every part says where it comes
+from. So a number that came from a setting cannot look like a live number. The
+screen shows the difference.
 
-**The money reaches a bank account.** SEP-6, in both directions, against a real
-anchor. The supplier sells USDC for lira; the buyer settles in lira at maturity.
-Everything about that anchor is discovered at run time — moving to another one
-is a single domain change.
+**The money reaches a bank account.** We use SEP-6, in both directions, with a
+real anchor. The supplier sells USDC and gets lira. The buyer pays in lira at
+the end. We read everything about the anchor at run time. To use a different
+anchor, we only change one domain name.
 
 ### 5 · Competitive advantage  ·  ~35s
 
-Two things make this different from the on-chain supply chain finance projects
-that came before.
+Two things make us different from other on-chain supply chain finance projects.
 
-The first is that financing is bound to a **sovereign document identifier**. The
-ETTN is issued by the tax authority and is unique per document, so uniqueness is
-inherited from the tax system rather than maintained by us.
+First, we connect financing to a **government document number**. The tax office
+gives the ETTN. It is unique for every invoice. So we do not have to keep that
+list ourselves. The tax system does it.
 
-The second is verifiable pricing. Our DeFi yield is not a claim — our treasury
-vault's code hash matches the hash DeFindex publishes, byte for byte. And the
-rate itself is read live from a Blend v2 pool: one hundred and twenty-nine basis
-points, on chain, right now, not configured.
+Second, our numbers can be checked. Our DeFi yield is not a promise. The code
+hash of our vault is the same as the hash DeFindex publishes — byte for byte.
+And the rate comes live from a Blend v2 pool: one hundred twenty-nine basis
+points, right now, from the chain.
 
 ### 6 · Honest limitations  ·  ~40s
 
-I want to tell you what this does not solve, before you find it.
+Now I want to tell you what we do not solve. I prefer to say it myself.
 
-**Nobody bears the currency risk yet.** The funder's claim is fixed in USDC
-while the buyer owes a fixed amount of lira. Over ninety days those stop
-matching, and the contract does not say who absorbs the difference. We price
-that risk into the discount — we do not assign it.
+**Nobody carries the currency risk yet.** The funder is paid in USDC. The buyer
+owes lira. After ninety days these two numbers move apart. Our contract does not
+say who pays the difference. We put that risk into the price. But we do not give
+it to anyone.
 
-**The funder's claim has no legal wrapper.** The contract creates a pro-rata
-economic interest in a payout, not an assignment of the receivable. What that is
-under securities law differs by country, and production needs counsel.
+**The funder's claim has no legal form yet.** The contract gives him a share of
+a payment. It is not a legal transfer of the invoice. What this means under
+securities law is different in every country. We need lawyers before we go live.
 
-**A fabricated invoice would pass our structural checks.** The gate is the
-buyer's acknowledgement — the address on the invoice has to sign. What that does
-not stop is collusion.
+**A fake invoice can pass our checks.** We check the structure, not the reality.
+Our real protection is the buyer's confirmation — only the address on the
+invoice can sign. But that does not stop two people working together.
 
-We would rather say these ourselves than have you find them.
+We prefer to say these things before you find them.
 
 ### 7 · Business model  ·  ~30s
 
-Fifty basis points on every funded invoice, embedded in the pricing engine
-itself. A performance fee on treasury yield. A share of the FX conversion. And
-an enterprise tier for corporate buyers.
+We take fifty basis points from every funded invoice. It is inside the price
+engine. We also take a fee from treasury yield, a share of the currency
+exchange, and a subscription from big corporate buyers.
 
-Acquisition is the interesting part: we sell to the **buyer**, not the supplier.
-One corporate buyer brings dozens of its suppliers with it, and the buyer's
-acknowledgement is both our lock and our distribution channel.
+The interesting part is how we grow. We sell to the **buyer**, not to the
+supplier. One big company brings tens of its suppliers with it. The buyer's
+confirmation is our lock and also our sales channel.
 
 ### 8 · Roadmap and the ask  ·  ~35s
 
-Next: a passkey smart account that verifies secp256r1 on chain, so a passkey
-signs its own transactions. Integration with a production fiat anchor. Legal
-structure. Then a closed pilot with one corporate buyer and its suppliers.
+Next steps. A passkey smart account, so a passkey can sign its own
+transactions. A real production anchor. The legal structure. Then a small pilot
+with one corporate buyer and its suppliers.
 
 We are applying to the Stellar Community Fund and to InstaAwards.
 
 ### 9 · Close  ·  ~20s
 
-Everything I have said is on payper.live right now, on testnet, and the README
-gives you the commands to check each claim without trusting us.
+Everything I said is live on payper.live right now, on testnet. Our README shows
+you the commands. You can check every number yourself. You do not have to
+believe me.
 
 One ETTN, one financing. The supplier is paid today. The funder never opens a
 Turkish bank account.
 
 Thank you.
-
----
 
 ## TÜRKÇE
 
@@ -261,7 +263,7 @@ Teşekkürler.
 - Total is about four and a half minutes at a normal pace. If you are cut to
   four, drop the business model slide — the roadmap carries enough of it.
 - The two lines worth slowing down for: **"one ETTN, one financing"** and
-  **"we would rather say these ourselves than have you find them."**
+  **"we prefer to say these things before you find them."**
 - If a judge interrupts on DeFindex, the answer is one sentence: *the vault holds
   the position, the rate is read from Blend, and our vault's code hash matches
   theirs byte for byte.*
