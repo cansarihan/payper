@@ -7,7 +7,7 @@ import { C, FONT, ROLE_COLOUR, shortKey } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
 import type { AppState, Session, SessionRole } from "@/lib/types";
 
-export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats" | "wallet" | "bank";
+export type Screen = "overview" | "upload" | "buyer" | "quote" | "anchor" | "board" | "pay" | "settle" | "market" | "invoices" | "stats" | "wallet" | "bank" | "treasury";
 export const SCREENS: Screen[] = ["overview", "upload", "buyer", "quote", "anchor", "pay", "board", "settle"];
 
 const DOTS = [C.mint, C.blue, C.coral, C.blue, C.amber, C.green, C.mint, C.lime];
@@ -441,7 +441,17 @@ function AccountMenu({
       fg: C.white,
       go: "market",
     },
-    { label: d.acct[4][0], meta: state?.treasury.mode ?? "—", icon: "◉", bg: C.ink, fg: C.mint },
+    // The treasury has no screen of its own; the vault card on the overview is
+    // where its position and rate are shown, so the row leads there rather than
+    // looking like a button that does nothing.
+    {
+      label: d.acct[4][0],
+      meta: state?.treasury.mode ?? "—",
+      icon: "◉",
+      bg: C.ink,
+      fg: C.mint,
+      go: "treasury",
+    },
   ];
 
   return (

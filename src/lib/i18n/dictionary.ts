@@ -43,6 +43,26 @@ interface Copy {
   deployed: string;
   idle: string;
   firstLossLabel: string;
+  treasuryStep: string;
+  treasuryTitle: string;
+  treasuryLead: string;
+  treasuryPosition: string;
+  treasuryShares: string;
+  treasurySupply: string;
+  treasuryRate: string;
+  treasuryRateNote: string;
+  treasuryBlendPool: string;
+  treasuryProof: string;
+  treasuryProofOk: string;
+  treasuryProofNote: string;
+  treasuryOnChain: string;
+  treasuryPublished: string;
+  treasuryVault: string;
+  treasuryName: string;
+  treasurySymbol: string;
+  treasuryVaultId: string;
+  treasuryAdapter: string;
+  treasuryRepeat: string;
   treasuryMode: string;
   invoicesLabel: string;
   all: string;
@@ -317,6 +337,29 @@ const en: Copy = {
   deployed: "Deployed",
   idle: "Idle",
   firstLossLabel: "First loss",
+  treasuryStep: "TREASURY · DEFINDEX",
+  treasuryTitle: "Where the money waits",
+  treasuryLead:
+    "Capital contributed by funders is held in a DeFindex vault until the invoice matures. The vault is theirs, opened through their own factory — and that is checkable rather than asserted.",
+  treasuryPosition: "OUR POSITION",
+  treasuryShares: "Vault shares held",
+  treasurySupply: "Shares in issue",
+  treasuryRate: "THE RATE THE PRICE USES",
+  treasuryRateNote:
+    "The vault carries no strategy on testnet, so there is no realised gain to measure and the adapter refuses to invent one. It reads a Blend v2 pool instead — what USDC earns lending on Stellar, which is the cost of money the discount is meant to carry.",
+  treasuryBlendPool: "Reference pool",
+  treasuryProof: "Comparing the deployed code with theirs",
+  treasuryProofOk: "Identical to the vault DeFindex publishes",
+  treasuryProofNote:
+    "The hash of the code running at our vault address, next to the hash DeFindex lists in its own manifest. A vault claiming to be a DeFindex vault while running different code would fail this comparison, which is why it is the check worth running first.",
+  treasuryOnChain: "ON CHAIN, AT OUR VAULT ADDRESS",
+  treasuryPublished: "PUBLISHED BY DEFINDEX",
+  treasuryVault: "The vault itself",
+  treasuryName: "Name",
+  treasurySymbol: "Token",
+  treasuryVaultId: "Vault",
+  treasuryAdapter: "Our adapter",
+  treasuryRepeat: "# repeat it yourself",
   treasuryMode: "mode",
   invoicesLabel: "Invoices",
   all: "All",
@@ -713,6 +756,29 @@ const tr: Copy = {
   deployed: "Kullanımda",
   idle: "Atıl",
   firstLossLabel: "İlk zarar",
+  treasuryStep: "HAZİNE · DEFINDEX",
+  treasuryTitle: "Paranın beklediği yer",
+  treasuryLead:
+    "Fonlayıcıların koyduğu sermaye, fatura vadesine kadar bir DeFindex kasasında duruyor. Kasa onların, kendi factory'lerinden açılmış — ve bu iddia değil, kontrol edilebilir bir şey.",
+  treasuryPosition: "POZİSYONUMUZ",
+  treasuryShares: "Tutulan kasa payı",
+  treasurySupply: "Dolaşımdaki pay",
+  treasuryRate: "FİYATIN KULLANDIĞI ORAN",
+  treasuryRateNote:
+    "Testnet'te kasaya strateji bağlı değil, yani ölçülecek gerçekleşmiş kazanç yok ve adaptör sayı uydurmayı reddediyor. Onun yerine bir Blend v2 havuzunu okuyor — USDC'nin Stellar'da borç vererek kazandığı şey, yani iskontonun taşıması gereken paranın maliyeti.",
+  treasuryBlendPool: "Referans havuz",
+  treasuryProof: "Çalışan kod onlarınkiyle karşılaştırılıyor",
+  treasuryProofOk: "DeFindex'in yayımladığı kasayla birebir aynı",
+  treasuryProofNote:
+    "Kasamızın adresinde çalışan kodun hash'i, DeFindex'in kendi manifestinde listelediği hash'in yanında. DeFindex kasası olduğunu söyleyip başka kod çalıştıran bir kasa bu karşılaştırmayı geçemezdi; ilk yapılacak kontrol bu yüzden budur.",
+  treasuryOnChain: "ZİNCİRDE, BİZİM KASA ADRESİMİZDE",
+  treasuryPublished: "DEFINDEX'İN YAYIMLADIĞI",
+  treasuryVault: "Kasanın kendisi",
+  treasuryName: "Ad",
+  treasurySymbol: "Token",
+  treasuryVaultId: "Kasa",
+  treasuryAdapter: "Adaptörümüz",
+  treasuryRepeat: "# kendin tekrarla",
   treasuryMode: "mod",
   invoicesLabel: "Faturalar",
   all: "Tümü",

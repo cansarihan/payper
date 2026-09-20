@@ -6,6 +6,7 @@ import { Connect } from "@/components/Connect";
 import { Anchor } from "@/components/panel/Anchor";
 import { Bank } from "@/components/panel/Bank";
 import { Board } from "@/components/panel/Board";
+import { Treasury } from "@/components/panel/Treasury";
 import { Invoices } from "@/components/panel/Invoices";
 import { Market } from "@/components/panel/Market";
 import { Overview } from "@/components/panel/Overview";
@@ -130,6 +131,8 @@ export function App({ lang }: { lang: Lang }) {
             <Board lang={lang} state={state} session={session} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} session={session} onDone={refresh} />
+          ) : screen === "treasury" ? (
+            <Treasury lang={lang} state={state} />
           ) : screen === "bank" ? (
             <Bank lang={lang} />
           ) : screen === "wallet" ? (
