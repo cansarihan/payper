@@ -118,6 +118,7 @@ export function App({ lang }: { lang: Lang }) {
             <Upload
               lang={lang}
               network={state.network}
+              walletAddress={session.method === "wallet" ? session.wallet?.address : undefined}
               onRegistered={() => {
                 void refresh();
                 setScreen("buyer");
@@ -128,7 +129,7 @@ export function App({ lang }: { lang: Lang }) {
           ) : screen === "board" ? (
             <Board lang={lang} state={state} session={session} onDone={refresh} />
           ) : screen === "quote" ? (
-            <Quote lang={lang} state={state} onDone={refresh} />
+            <Quote lang={lang} state={state} session={session} onDone={refresh} />
           ) : screen === "bank" ? (
             <Bank lang={lang} />
           ) : screen === "wallet" ? (

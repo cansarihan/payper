@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { C, FONT, trLira, trNumber, trPct, usdc } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
-import type { AppState, QuoteView } from "@/lib/types";
+import type { AppState, QuoteView, Session } from "@/lib/types";
+import { signAndSubmit } from "@/lib/wallet/sign";
 import { ScreenHead } from "./Shell";
 
 /**
@@ -17,10 +18,12 @@ import { ScreenHead } from "./Shell";
 export function Quote({
   lang,
   state,
+  session,
   onDone,
 }: {
   lang: Lang;
   state: AppState;
+  session: Session | null;
   onDone: () => void;
 }) {
   const d = t(lang);
@@ -60,6 +63,20 @@ export function Quote({
     setBusy(true);
     setError(null);
     try {
+      // The contract lets only the supplier named on the invoice lock its price,
+      // so a supplier who brought their own wallet signs that themselves.
+      if (session?.method === "wallet" && session.wallet) {
+        const out = await signAndSubmit(
+          "accept_quote",
+          invoice.id,
+          session.wallet.address,
+          state.network,
+        );
+        setHash(out.hash);
+        onDone();
+        return;
+      }
+
       const res = await fetch("/api/quote", {
         method: "POST",
         headers: { "content-type": "application/json" },

@@ -177,6 +177,15 @@ export async function registerInvoice(input: {
   amountFiatMinor: bigint;
   faceUsdc: bigint;
   dueDate: number;
+  /**
+   * Who may acknowledge this invoice.
+   *
+   * Defaults to the demo buyer whose key this process holds. Naming a different
+   * address means only that address can acknowledge — which is the point of the
+   * field: a buyer who brought their own wallet can then sign for themselves
+   * instead of a server doing it on their behalf.
+   */
+  buyerAddress?: string;
 }): Promise<{ id: number; hash: string }> {
   const seller = keypair("seller");
   const { value, hash } = await invoke<number>(
@@ -184,7 +193,7 @@ export async function registerInvoice(input: {
     "register",
     [
       addr(seller.publicKey()),
-      addr(keypair("buyer").publicKey()),
+      addr(input.buyerAddress ?? keypair("buyer").publicKey()),
       bytes32(Buffer.from(input.ettnHashHex, "hex")),
       bytes32(Buffer.from(input.docHashHex, "hex")),
       sym(input.sellerTaxId),

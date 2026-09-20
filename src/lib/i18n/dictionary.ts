@@ -189,6 +189,8 @@ interface Copy {
   files: string;
   checks: string;
   register: string;
+  buyerIsWallet: string;
+  buyerIsWalletNote: string;
   registered: string;
   rejected: string;
   documentTitle: string;
@@ -524,6 +526,8 @@ const en: Copy = {
   files: "files",
   checks: "Checks",
   register: "Register on chain",
+  buyerIsWallet: "Name my wallet as the buyer",
+  buyerIsWalletNote: "Then only this wallet can acknowledge the invoice, and it signs that itself.",
   registered: "Registered",
   rejected: "Refused",
   documentTitle: "Document",
@@ -918,6 +922,8 @@ const tr: Copy = {
   files: "dosya",
   checks: "Kontroller",
   register: "Zincire kaydet",
+  buyerIsWallet: "Alıcı olarak cüzdanımı yaz",
+  buyerIsWalletNote: "O zaman faturayı yalnızca bu cüzdan onaylayabilir ve onayı kendisi imzalar.",
   registered: "Kaydedildi",
   rejected: "Reddedildi",
   documentTitle: "Belge",

@@ -20,8 +20,13 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get("file");
     const inspectOnly = form.get("inspect") === "1";
+    // A wallet buyer asks to be named so they can acknowledge for themselves.
+    const buyerIsWallet = form.get("buyerIsWallet") === "1";
     // Inspection writes nothing; only registration spends a key.
-    if (!inspectOnly) await requireRole("seller");
+    const session = inspectOnly ? null : await requireRole("seller");
+    if (buyerIsWallet && !session?.wallet) {
+      throw new Error("Naming your wallet as the buyer needs a wallet session.");
+    }
 
     if (!(file instanceof File)) return fail(new Error("No file was sent"), 422);
     if (file.size > 5 * 1024 * 1024) return fail(new Error("The file is larger than 5 MB"), 413);
@@ -91,6 +96,10 @@ export async function POST(req: NextRequest) {
       amountFiatMinor: BigInt(parsed.amountMinor),
       faceUsdc,
       dueDate,
+      // A buyer who signed in with their own wallet can be named here, and then
+      // they are the only address the contract will accept an acknowledgement
+      // from — including instead of the demo key this process holds.
+      buyerAddress: buyerIsWallet ? session?.wallet?.address : undefined,
     });
 
     return ok({ document: parsed, checks, registered: { id, hash } });

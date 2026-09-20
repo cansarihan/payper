@@ -43,14 +43,18 @@ interface Result {
 export function Upload({
   lang,
   network,
+  walletAddress,
   onRegistered,
 }: {
   lang: Lang;
   network: string;
+  /** Present when the session arrived with its own wallet. */
+  walletAddress?: string;
   onRegistered: (id: number) => void;
 }) {
   const d = t(lang);
   const input = useRef<HTMLInputElement>(null);
+  const [buyerIsWallet, setBuyerIsWallet] = useState(false);
   const [session] = useState(() => `s${Date.now().toString(36)}`);
   const [busy, setBusy] = useState<"inspect" | "register" | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -65,6 +69,9 @@ export function Upload({
       const body = new FormData();
       body.append("file", f);
       if (inspect) body.append("inspect", "1");
+      // Naming the connected wallet as the buyer is what lets that wallet
+      // acknowledge the invoice itself, instead of a server key doing it.
+      if (!inspect && buyerIsWallet) body.append("buyerIsWallet", "1");
       const res = await fetch("/api/upload", { method: "POST", body });
       const json = (await res.json()) as Result;
       // A refusal with nothing to render would otherwise leave the screen
@@ -425,6 +432,31 @@ export function Upload({
                   </a>
                 ) : (
                   !duplicate && (
+                    <>
+                    {walletAddress && (
+                      <button
+                        onClick={() => setBuyerIsWallet((v) => !v)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          border: `1px solid ${buyerIsWallet ? C.ink : "rgba(10,10,10,.16)"}`,
+                          background: buyerIsWallet ? C.mint : "transparent",
+                          borderRadius: 16,
+                          padding: "11px 14px",
+                          marginBottom: 9,
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          lineHeight: 1.45,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span style={{ fontWeight: 800 }}>
+                          {buyerIsWallet ? "☑" : "☐"} {d.buyerIsWallet}
+                        </span>
+                        <br />
+                        <span style={{ opacity: 0.7, fontWeight: 500 }}>{d.buyerIsWalletNote}</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => file && void send(file, false)}
                       disabled={busy !== null}
@@ -441,6 +473,7 @@ export function Upload({
                     >
                       {busy === "register" ? `${d.loading}…` : d.register}
                     </button>
+                    </>
                   )
                 )}
               </div>
