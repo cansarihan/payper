@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { C, FONT, shortKey, trLira } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
-import type { AppState, SessionRole } from "@/lib/types";
+import type { AppState, Session, SessionRole } from "@/lib/types";
+import { signAndSubmit } from "@/lib/wallet/sign";
 import { RoleSwitch } from "@/components/RoleSwitch";
 import { ScreenHead } from "./Shell";
 
@@ -17,10 +18,12 @@ import { ScreenHead } from "./Shell";
 export function Buyer({
   lang,
   state,
+  session,
   onDone,
 }: {
   lang: Lang;
   state: AppState;
+  session: Session | null;
   onDone: () => void;
 }) {
   const d = t(lang);
@@ -45,6 +48,21 @@ export function Buyer({
     setError(null);
     setNeedsRole(null);
     try {
+      // The contract lets only the address on the invoice acknowledge it, so a
+      // buyer who brought their own wallet should be the one signing — not a
+      // key this server holds on their behalf.
+      if (session?.method === "wallet" && session.wallet) {
+        const out = await signAndSubmit(
+          "acknowledge",
+          invoice.id,
+          session.wallet.address,
+          state.network,
+        );
+        setHash(out.hash);
+        onDone();
+        return;
+      }
+
       const res = await fetch("/api/acknowledge", {
         method: "POST",
         headers: { "content-type": "application/json" },

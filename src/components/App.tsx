@@ -124,9 +124,9 @@ export function App({ lang }: { lang: Lang }) {
               }}
             />
           ) : screen === "buyer" ? (
-            <Buyer lang={lang} state={state} onDone={refresh} />
+            <Buyer lang={lang} state={state} session={session} onDone={refresh} />
           ) : screen === "board" ? (
-            <Board lang={lang} state={state} onDone={refresh} />
+            <Board lang={lang} state={state} session={session} onDone={refresh} />
           ) : screen === "quote" ? (
             <Quote lang={lang} state={state} onDone={refresh} />
           ) : screen === "bank" ? (

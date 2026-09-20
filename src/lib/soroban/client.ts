@@ -55,6 +55,69 @@ export async function read<T>(
 }
 
 /** Prepare, sign, submit, await inclusion. */
+/**
+ * Build and simulate a call the caller will sign themselves.
+ *
+ * `invoke` signs with a key this process holds. This does not: it returns the
+ * prepared envelope so the address that has to authorise the call can sign it
+ * in their own wallet. Because the authorising address is also the transaction
+ * source, the envelope signature satisfies `require_auth` on it and no separate
+ * auth entry has to be signed.
+ */
+export async function prepareForSigner(
+  contractId: string,
+  method: string,
+  args: xdr.ScVal[],
+  sourcePublicKey: string,
+  env = sorobanEnv(),
+): Promise<string> {
+  const srv = server(env);
+  const account = await srv.getAccount(sourcePublicKey);
+  const built = new TransactionBuilder(account, {
+    fee: (Number(BASE_FEE) * 10_000).toString(),
+    networkPassphrase: env.networkPassphrase,
+  })
+    .addOperation(new Contract(contractId).call(method, ...args))
+    .setTimeout(180)
+    .build();
+  return (await srv.prepareTransaction(built)).toXDR();
+}
+
+/** Submit an envelope somebody else signed, and wait for the ledger. */
+export async function submitSigned<T = unknown>(
+  signedXdr: string,
+  method: string,
+  env = sorobanEnv(),
+): Promise<{ value: T; hash: string }> {
+  const srv = server(env);
+  const tx = TransactionBuilder.fromXDR(signedXdr, env.networkPassphrase);
+  const sent = await srv.sendTransaction(tx);
+  if (sent.status === "ERROR") {
+    throw new SorobanCallError(
+      `${method} was rejected: ${sent.errorResult?.toXDR("base64") ?? "unknown error"}`,
+      method,
+    );
+  }
+
+  const deadline = Date.now() + 90_000;
+  for (;;) {
+    const got = await srv.getTransaction(sent.hash);
+    if (got.status === rpc.Api.GetTransactionStatus.SUCCESS) {
+      return {
+        value: (got.returnValue ? scValToNative(got.returnValue) : undefined) as T,
+        hash: sent.hash,
+      };
+    }
+    if (got.status === rpc.Api.GetTransactionStatus.FAILED) {
+      throw new SorobanCallError(`${method} failed: ${JSON.stringify(got.resultXdr)}`, method);
+    }
+    if (Date.now() > deadline) {
+      throw new SorobanCallError(`${method} did not confirm in time`, method);
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+}
+
 export async function invoke<T = unknown>(
   contractId: string,
   method: string,

@@ -55,6 +55,24 @@ export async function signLoginMessage(
   return { signature: signedMessage, payload: message };
 }
 
+/**
+ * Sign a prepared transaction in the user's own wallet.
+ *
+ * This is the half that was missing: the wallet proved who was asking at login,
+ * but the transaction was signed by a key this server holds. Now the envelope
+ * goes to the wallet, the extension shows what it authorises, and nothing is
+ * submitted unless the person approves it there.
+ */
+export async function signPreparedTransaction(
+  xdr: string,
+  address: string,
+  networkPassphrase: string,
+): Promise<string> {
+  const kit = await ensureInit();
+  const { signedTxXdr } = await kit.signTransaction(xdr, { address, networkPassphrase });
+  return signedTxXdr;
+}
+
 export async function disconnectWallet(): Promise<void> {
   const kit = await ensureInit();
   await kit.disconnect();

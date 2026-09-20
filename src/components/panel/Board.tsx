@@ -5,17 +5,20 @@ import { useCallback, useEffect, useState } from "react";
 import { RoleSwitch } from "@/components/RoleSwitch";
 import { C, FONT, liveRate, shortKey, trLira, trNumber, trPct, usdc } from "@/lib/design";
 import { t, type Lang } from "@/lib/i18n/dictionary";
-import type { AppState, FunderView, SessionRole } from "@/lib/types";
+import type { AppState, FunderView, Session, SessionRole } from "@/lib/types";
+import { signAndSubmit } from "@/lib/wallet/sign";
 import { ScreenHead } from "./Shell";
 
 /** Who backed this invoice, and what the round still needs. */
 export function Board({
   lang,
   state,
+  session,
   onDone,
 }: {
   lang: Lang;
   state: AppState;
+  session: Session | null;
   onDone: () => void;
 }) {
   const d = t(lang);
@@ -63,6 +66,30 @@ export function Board({
     setNeedsRole(null);
     setReceipt(null);
     try {
+      // A wallet session signs its own funding. The server prepares and
+      // simulates the call, the extension shows what it authorises, and nothing
+      // reaches the ledger unless the person approves it there.
+      if (session?.method === "wallet" && session.wallet) {
+        const out = await signAndSubmit(
+          "fund",
+          invoice.id,
+          session.wallet.address,
+          state.network,
+          amountFiat / rate,
+        );
+        setReceipt({
+          moved: String(Math.round((amountFiat / rate) * 1e7)),
+          payer: session.wallet.address,
+          steps: [
+            { step: "prepare", detail: out.summary },
+            { step: "sign", detail: `signed in ${session.wallet.walletName}` },
+            { step: "submit", detail: out.hash },
+          ],
+        });
+        onDone();
+        return;
+      }
+
       const role = funders.length % 2 === 0 ? "funder" : "funderB";
       const res = await fetch("/api/fund", {
         method: "POST",
