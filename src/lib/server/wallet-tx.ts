@@ -119,8 +119,13 @@ export async function prepareInvoiceCall(opts: {
 
   if (opts.action === "acknowledge") {
     if (invoice.buyer !== opts.signer) {
+      // Accurate on its own, but a reader is left guessing what to do. The buyer
+      // is fixed when the invoice is registered, so the fix is upstream.
       throw new Error(
-        "Only the address written on the invoice can acknowledge it. This wallet is not that address.",
+        "Only the address written on the invoice can acknowledge it, and this invoice names " +
+          `${invoice.buyer.slice(0, 6)}…${invoice.buyer.slice(-4)} — not this wallet. ` +
+          "The buyer is fixed at registration: upload a new invoice while signed in with this " +
+          'wallet and tick "Name my wallet as the buyer".',
       );
     }
     if (invoice.status !== "registered") {
