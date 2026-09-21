@@ -4,7 +4,7 @@
 </picture>
 
 [![Stellar Pro Hackathon 2026 — 4th place](https://img.shields.io/badge/Stellar%20Pro%20Hackathon%202026-4th%20place-1f6f4a?style=flat-square)](https://payper.live)
-[![Prize $1,000](https://img.shields.io/badge/prize-%241%2C000-4a4a4a?style=flat-square)](https://payper.live)
+[![Funded](https://img.shields.io/badge/awarded-prize%20funding-4a4a4a?style=flat-square)](https://payper.live)
 
 <br>
 
@@ -24,7 +24,7 @@ first corridor is Türkiye, and that is what runs on testnet today — every
 country-specific detail below (ETTN, lira, the SEP-6 anchor) is that corridor's
 instance of a general rule, marked where it appears.
 
-Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet · **4th place, $1,000 prize** · built by [cansarihan](https://github.com/cansarihan) and [berkcicekk](https://github.com/berkcicekk)
+Rise In x Stellar Pro Hackathon 2026 · Genesis Track · Stellar testnet · **4th place** · awarded prize funding · built by [cansarihan](https://github.com/cansarihan) and [berkcicekk](https://github.com/berkcicekk)
 
 **Live:** [payper.live](https://payper.live) · **Contract:**
 [`CB2EUFAF…3NBA`](https://stellar.expert/explorer/testnet/contract/CB2EUFAFCDKWHCYBHGDTFNOHJEVYH3WKTKL4OTGX5FUKP272GHQG3NBA)
